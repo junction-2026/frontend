@@ -4,6 +4,7 @@ import { errorMessage } from '../api/errors'
 import type { AnalyzerInfo, ApiError, CreateJobBody } from '../api/types'
 import { useT } from '../i18n'
 import { navigate } from '../router'
+import { AmbientBackground } from '../ui/AmbientBackground'
 import '../styles/analyze.css'
 
 const SAMPLES = ['energy', 'breaking', 'editorial']
@@ -87,6 +88,8 @@ export default function HomeView() {
   const shown = problem && describe(problem, t)
 
   return (
+    <>
+    <AmbientBackground />
     <section className="view">
       <div className="home-hero">
         <div className="eyebrow"><span className="dot" /> {t('home.eyebrow')}</div>
@@ -171,5 +174,6 @@ export default function HomeView() {
       </div>
 
     </section>
+    </>
   )
 }
