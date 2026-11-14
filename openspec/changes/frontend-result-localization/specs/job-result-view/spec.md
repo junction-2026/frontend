@@ -104,6 +104,10 @@ A text with `status: translated` SHALL be shown as plain text with a localized "
 - **WHEN** `final_assessment.user_text` is `{status: "translated", text: "…", source_language: "fr"}` and the UI language is `ar`
 - **THEN** the translated text is shown with the Arabic "machine-translated from French" label and a button that shows the original French text
 
+#### Scenario: LLM highlight why
+- **WHEN** an LLM highlight is focused and its explanation is translated
+- **THEN** the why region shows the translated text with the same machine-translated label and toggle as the findings list
+
 ### Requirement: Localization fallback
 An `unavailable` or unknown status, a failed request (409, 400, network error) or a missing entry SHALL show the original text with a localized note that it is not available in the UI language, and SHALL NOT be presented as localized.
 

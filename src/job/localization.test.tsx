@@ -146,7 +146,7 @@ describe('one French analysis in every locale', () => {
       const mark = document.querySelector('mark[data-techniques="Loaded_Language"]') as HTMLElement
       fireEvent.focus(mark)
       expect(screen.getByRole('region', { name: translate(lng as Locale, 'results.jobview.why_region') })).toHaveTextContent(
-        translate(lng as Locale, 'techniques.why_span', { name: name('Loaded_Language'), span: 'mensonges' }),
+        translate(lng as Locale, 'techniques.why_span', { name: name('Loaded_Language'), span: '\u2068mensonges\u2069' }),
       )
       for (const w of FRENCH) expect(chromeText(), `${lng} leaks "${w}"`).not.toContain(w)
     }
@@ -213,6 +213,59 @@ describe('language switch', () => {
     fireEvent.click(screen.getAllByRole('button', { name: translate('ar', 'results.loc.show_original') })[0])
     expect(screen.getByText(FR_USER_TEXT)).toBeInTheDocument()
     expect(screen.queryByText('[ar] user text')).toBeNull()
+  })
+})
+
+describe('LLM highlight why and cache retry', () => {
+  const focusLlm = () => fireEvent.focus(document.querySelector('mark[data-techniques="llm:statistical_cherry_picking"]') as HTMLElement)
+  const region = () => screen.getByRole('region', { name: translate('ar', 'results.jobview.why_region') })
+
+  it('marks a translated LLM why as machine-translated and keeps the original reachable', async () => {
+    serve(analysis())
+    mount('ar')
+    await open()
+    await waitFor(() => expect(screen.getByText('[ar] user text')).toBeInTheDocument())
+    focusLlm()
+    expect(region()).toHaveTextContent('[ar] statistical_cherry_picking explanation')
+    expect(region()).toHaveTextContent(translate('ar', 'results.loc.machine_translated', { language: languageName('fr', 'ar') }))
+    fireEvent.click(within(region()).getByRole('button', { name: translate('ar', 'results.loc.show_original') }))
+    expect(region()).toHaveTextContent('Les chiffres sont choisis pour appuyer la conclusion.')
+  })
+
+  it('shows the not-available note next to an unavailable LLM why', async () => {
+    const unavailable = { status: 'unavailable', text: null, source_language: 'fr' }
+    serve(analysis(), (lng) => json(localization(lng, { llm_findings: FINDINGS.map((f, index) => ({ index, label: f.label, explanation: unavailable })) })))
+    mount('ar')
+    await open()
+    await waitFor(() => expect(screen.getAllByText(translate('ar', 'results.loc.unavailable', { language: languageName('ar', 'ar') })).length).toBeGreaterThan(0))
+    focusLlm()
+    expect(region()).toHaveTextContent('Les chiffres sont choisis pour appuyer la conclusion.')
+    expect(region()).toHaveTextContent(translate('ar', 'results.loc.unavailable', { language: languageName('ar', 'ar') }))
+  })
+
+  it('isolates the span of a localized why', async () => {
+    serve(analysis())
+    mount('ar')
+    await open()
+    fireEvent.focus(document.querySelector('mark[data-techniques="Loaded_Language"]') as HTMLElement)
+    expect(region().textContent).toContain('\u2068mensonges\u2069')
+    expect(region().querySelector('li')).toHaveAttribute('dir', 'auto')
+  })
+
+  it('asks again after an answer with an unavailable text, but not after a good one', async () => {
+    const unavailable = json(localization('ar', { final_assessment: { user_text: { status: 'unavailable', text: null, source_language: 'fr' } } }))
+    serve(analysis(), (lng) => (lng === 'ar' ? unavailable.clone() : json(localization(lng))))
+    mount('fr')
+    await open()
+    fireEvent.click(screen.getByText('switch-ar'))
+    await waitFor(() => expect(locRequests()).toHaveLength(1))
+    fireEvent.click(screen.getByText('switch-de'))
+    await waitFor(() => expect(screen.getByText('[de] user text')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('switch-ar'))
+    await waitFor(() => expect(locRequests()).toHaveLength(3))
+    fireEvent.click(screen.getByText('switch-de'))
+    await waitFor(() => expect(screen.getByText('[de] user text')).toBeInTheDocument())
+    expect(locRequests()).toHaveLength(3) // de was good: not asked again
   })
 })
 

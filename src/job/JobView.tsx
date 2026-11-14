@@ -1,12 +1,20 @@
 import { useState } from 'react'
 import type { Job } from '../api/types'
 import { useFormat, useLocale, useT } from '../i18n'
-import { findingEntry, translatedOf, useLoc, useLocalizedText } from './localize'
+import { findingEntry, useLoc, useLocalizedText } from './localize'
 import { plain, readLlm, readTechniques, str, techniqueInfo, techniqueText, whyText, type Finding } from './read'
 import { segment, validSpans, type Span } from './segments'
 import './job.css'
 
-type Active = { key: string; whys: string[] }
+type Why = { text: string; finding?: Finding } // finding: an LLM explanation, which can be machine-translated
+type WSpan = Span & { finding?: Finding }
+type Active = { key: string; whys: Why[] }
+
+// The why of an LLM highlight: the explanation with the same marker and toggle as in the findings list.
+function LlmWhy({ f }: { f: Finding }) {
+  const { text, note } = useLocalizedText(f.explanation, findingEntry(useLoc(), f.index, f.label))
+  return <li dir="auto">{text}{note}</li>
+}
 
 // One LLM finding: name and definition (catalog by label), explanation from the localization with its marker,
 // the quoted span text verbatim.
@@ -27,7 +35,6 @@ function LlmFinding({ f, name, definition }: { f: Finding; name: string; definit
 export default function JobView({ job }: { job: Job }) {
   const t = useT()
   const { locale } = useLocale()
-  const loc = useLoc()
   const { formatNumber: fmt } = useFormat()
   const [selected, setSelected] = useState<string | null>(null)
   const [active, setActive] = useState<Active | null>(null)
@@ -44,26 +51,25 @@ export default function JobView({ job }: { job: Job }) {
       )
     : []
   const llmText = (f: Finding) => techniqueText(f.label, locale, llm?.lang ?? locale, { name: f.name, definition: f.definition })
-  const llmSpans = (field: string, text: string): Span[] =>
+  const llmSpans = (field: string, text: string): WSpan[] =>
     (llm?.findings ?? [])
       .filter((f) => f.span.field === field)
       .flatMap((f) => {
         names.set(`llm:${f.label}`, `${t('results.jobview.ai_prefix')} ${llmText(f).name}`)
-        const why = (loc.need && translatedOf(findingEntry(loc, f.index, f.label))) || f.explanation
-        return validSpans(text, [{ ...f.span, technique: `llm:${f.label}` }]).map((s) => ({ ...s, why }))
+        return validSpans(text, [{ ...f.span, technique: `llm:${f.label}` }]).map((s) => ({ ...s, why: f.explanation, finding: f }))
       })
   const contentSpans = [...spans, ...llmSpans('content', content)]
   const titleSpans = llmSpans('title', title)
   const spanCount = (name: string) => spans.filter((s) => s.technique === name).length
   const unavailable = techniques && techniques.spanStatus !== undefined && techniques.spanStatus !== 'ok'
 
-  const marked = (field: string, text: string, all: Span[]) => {
+  const marked = (field: string, text: string, all: WSpan[]) => {
     let pos = 0
     return segment(text, all).map((seg, i) => {
       const [a, key] = [pos, `${field}:${i}`]
       pos += seg.text.length
       if (seg.techniques.length === 0) return seg.text
-      const whys = all.filter((s) => s.start <= a && a < s.end && s.why).map((s) => s.why as string)
+      const whys = all.filter((s) => s.start <= a && a < s.end && s.why).map((s) => ({ text: s.why as string, finding: s.finding }))
       const open = () => setActive({ key, whys })
       return (
         <mark
@@ -76,7 +82,7 @@ export default function JobView({ job }: { job: Job }) {
           aria-describedby={active?.key === key && whys.length > 0 ? 'job-why' : undefined}
           onFocus={open}
           onClick={open}
-          onBlur={() => setActive((cur) => (cur?.key === key ? null : cur))}
+          onBlur={(e) => !(e.relatedTarget as Element | null)?.closest?.('#job-why') && setActive((cur) => (cur?.key === key ? null : cur))} // moving into the region (its toggle) keeps it open
           onKeyDown={(e) => e.key === 'Escape' && setActive(null)}
         >
           {seg.text}
@@ -106,7 +112,7 @@ export default function JobView({ job }: { job: Job }) {
         <div id="job-why" role="region" aria-label={t('results.jobview.why_region')} className="job-why">
           <ul>
             {active.whys.map((w, i) => (
-              <li key={i}>{w}</li>
+              w.finding ? <LlmWhy key={i} f={w.finding} /> : <li key={i} dir="auto">{w.text}</li>
             ))}
           </ul>
         </div>

@@ -25,9 +25,12 @@ export function needsLocalization(job: Job, locale: string): boolean {
   return [userText, findings].some((l) => l !== undefined && l !== locale)
 }
 
-// One request per (job, language) for the page's lifetime; failures are not kept, so a later switch may retry.
+// One request per (job, language) for the page's lifetime; failures and answers with an unavailable text are not kept, so a later switch retries.
 const cache = new Map<string, Promise<JobLocalization | null>>()
 export const clearLocalizationCache = () => cache.clear()
+
+const usable = (e: LocalizedText | undefined) => e?.status === 'original' || e?.status === 'translated'
+const settled = (d: JobLocalization) => (!d.final_assessment || usable(d.final_assessment.user_text)) && (d.llm_findings ?? []).every((f) => usable(f?.explanation))
 
 function fetchLocalization(jobId: string, language: string): Promise<JobLocalization | null> {
   const key = `${jobId}\n${language}`
@@ -35,8 +38,9 @@ function fetchLocalization(jobId: string, language: string): Promise<JobLocaliza
   if (!p) {
     p = getJobLocalization(jobId, language).then((r) => {
       const ok = r.ok && typeof r.data === 'object' && r.data !== null && typeof r.data.language === 'string'
-      if (!ok) cache.delete(key)
-      return ok && r.ok ? r.data : null
+      const data = ok && r.ok ? r.data : null
+      if (!data || !settled(data)) cache.delete(key) // an unavailable text is not remembered: a later switch asks again
+      return data
     })
     cache.set(key, p)
   }

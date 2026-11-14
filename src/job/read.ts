@@ -71,7 +71,7 @@ export function techniqueInfo(d: Detection, locale: Locale, lang: string | undef
 // "Why" of a span or detection: the API text, or the catalog template (span text verbatim) when the technique is localized.
 export function whyText(info: { name: string; local: boolean }, locale: Locale, api: string | undefined, span?: string) {
   if (!api || !info.local) return api
-  return span === undefined ? translate(locale, 'techniques.why_no_span', { name: info.name }) : translate(locale, 'techniques.why_span', { name: info.name, span })
+  return span === undefined ? translate(locale, 'techniques.why_no_span', { name: info.name }) : translate(locale, 'techniques.why_span', { name: info.name, span: `\u2068${span}\u2069` }) // FSI..PDI isolates the quoted span from the surrounding direction
 }
 
 // null unless the topic_extraction run succeeded; a result without `claims` counts as none (topic-extraction-result).
