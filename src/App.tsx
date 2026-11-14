@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { checkHealth, type HealthResult } from './health'
+import JobView from './job/JobView'
 
 export default function App() {
+  const job = new URLSearchParams(window.location.search).get('job')
+  return job ? <JobView id={job} /> : <HealthPage />
+}
+
+function HealthPage() {
   const [result, setResult] = useState<HealthResult | null>(null)
 
   useEffect(() => {
