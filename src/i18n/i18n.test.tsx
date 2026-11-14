@@ -48,7 +48,7 @@ describe('language selector', () => {
     pick('de')
     expect(screen.getByRole('link', { name: 'Analysieren' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Verlauf' })).toBeInTheDocument()
-    expect(screen.getByText('Sehen Sie hinter die Erzählung.')).toBeInTheDocument()
+    expect(screen.getByText('Sehen Sie hinter das Narrativ.')).toBeInTheDocument()
     expect(screen.getByText('0 Zeichen')).toBeInTheDocument()
     expect(localStorage.getItem('veil.locale')).toBe('de')
     unmount()
