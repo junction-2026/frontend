@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import JobView from './JobView'
+import DetailView from '../views/DetailView'
 
 const fetchMock = vi.fn()
 beforeEach(() => vi.stubGlobal('fetch', fetchMock))
@@ -33,12 +33,12 @@ const job = (content: string, result: unknown, extra: object = {}) => ({
 })
 const show = async (j: unknown) => {
   fetchMock.mockResolvedValue(json(j))
-  render(<JobView id="j1" />)
+  render(<DetailView id="j1" />)
   return screen.findByTestId('job-text')
 }
 const marks = (el: HTMLElement) => [...el.querySelectorAll('mark')]
 
-describe('job view', () => {
+describe('job result view (Detail)', () => {
   it('fetches the job, highlights an English sentence span and lists the technique', async () => {
     const c = 'Wake up. They are LYING to you.'
     const text = await show(job(c, { span_status: 'ok', detected: [det('Loaded_Language', [span('Loaded_Language', c, 'They are LYING to you.')])] }))
@@ -144,7 +144,7 @@ describe('job view', () => {
     fetchMock
       .mockResolvedValueOnce(json(job('abc', null, { status: 'running', done: false })))
       .mockResolvedValueOnce(json(job('abc', { detected: [] })))
-    render(<JobView id="j1" />)
+    render(<DetailView id="j1" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(fetchMock).toHaveBeenCalledTimes(1)
     await act(() => vi.advanceTimersByTimeAsync(1999))
@@ -158,7 +158,7 @@ describe('job view', () => {
   it('stops polling on unmount', async () => {
     vi.useFakeTimers()
     fetchMock.mockImplementation(async () => json(job('abc', null, { status: 'running', done: false })))
-    const { unmount } = render(<JobView id="j1" />)
+    const { unmount } = render(<DetailView id="j1" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     unmount()
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -168,7 +168,7 @@ describe('job view', () => {
   it('shows an alert for 404 and for a network error, without polling', async () => {
     vi.useFakeTimers()
     fetchMock.mockResolvedValue(json({ error: { code: 'not_found' } }, 404))
-    const { unmount } = render(<JobView id="nope" />)
+    const { unmount } = render(<DetailView id="nope" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(screen.getByRole('alert')).toHaveTextContent(/not found/i)
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -176,9 +176,9 @@ describe('job view', () => {
     unmount()
     fetchMock.mockReset()
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
-    render(<JobView id="nope" />)
+    render(<DetailView id="nope" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
-    expect(screen.getByRole('alert')).toHaveTextContent('Failed to fetch')
+    expect(screen.getByRole('alert')).toHaveTextContent(/Could not reach the backend/)
     await act(() => vi.advanceTimersByTimeAsync(10000))
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
@@ -301,6 +301,43 @@ describe('job view', () => {
       cleanup()
       await show(base)
       expect(screen.queryByText(/AI-assessed/)).toBeNull()
+    })
+  })
+  describe('Detail screen', () => {
+    const topic = (claims: unknown, status = 'succeeded') => ({ id: 'topic_extraction', name: 'Topic extraction', status, result: status === 'succeeded' ? { topics: [], news: [], claims } : null })
+    const metric = (label: string) => (screen.getByText(label).parentElement as HTMLElement).querySelector('strong, .metrics-mock') as HTMLElement
+    const inMock = (el: HTMLElement) => el.closest('[data-mock]')
+
+    it('shows Patterns and Claims as real values and Risk and Latency as Mock, with no confidence', async () => {
+      const c = 'They are LYING.'
+      const j = job(c, { span_status: 'ok', detected: [det('Doubt', []), det('Loaded_Language', [])] }, { finalization: { status: 'completed', result: { verdict: 'detected', confidence: 0.86, user_text: 'x' } } })
+      await show({ ...j, analyzers: [...j.analyzers, topic([{ text: 'a' }, { text: 'b' }, { text: 'c' }])] })
+      expect(metric('Patterns')).toHaveTextContent('2 detected')
+      expect(metric('Claims')).toHaveTextContent('3 extracted')
+      expect(inMock(metric('Patterns'))).toBeNull()
+      expect(inMock(metric('Claims'))).toBeNull()
+      expect(inMock(screen.getByText('High Risk'))).not.toBeNull()
+      expect(inMock(screen.getByText('412ms'))).not.toBeNull()
+      expect(screen.queryByText(/confidence|0\.86|86 ?%/i)).toBeNull()
+      expect(screen.getByRole('link', { name: /Back to summary/ })).toHaveAttribute('href', '/jobs/j1')
+    })
+
+    it('shows — when the techniques or topic_extraction run did not succeed, and counts a result without claims as none', async () => {
+      const j = job('abc', null, { analyzers: [{ id: 'techniques', name: 't', status: 'failed', result: null }, topic(null, 'failed')] })
+      await show(j)
+      expect(metric('Patterns')).toHaveTextContent('—')
+      expect(metric('Claims')).toHaveTextContent('—')
+      cleanup()
+      await show({ ...j, analyzers: [{ id: 'topic_extraction', name: 't', status: 'succeeded', result: { topics: [] } }] })
+      expect(metric('Claims')).toHaveTextContent('0 extracted')
+    })
+
+    it('shows Detection.name as ID badge and no match percentage', async () => {
+      const c = 'They are LYING.'
+      await show(job(c, { span_status: 'ok', detected: [{ ...det('Loaded_Language', [span('Loaded_Language', c, 'LYING')]), score: 0.96 }] }))
+      expect(screen.getByText('ID: Loaded_Language')).toHaveClass('badge-soft')
+      expect(screen.queryByText(/Match|96/)).toBeNull()
+      expect(screen.getByText('Excerpt anchor: “LYING”')).toBeInTheDocument()
     })
   })
 })

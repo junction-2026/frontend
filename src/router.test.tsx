@@ -41,8 +41,8 @@ describe('routes render their stub view in the shell', () => {
   it.each([
     ['/', 'Home'],
     ['/jobs/j1/live', 'Analyzing'],
-    ['/jobs/j1/detail', 'Detail'],
-    ['/history', 'History'],
+    ['/jobs/j1/detail', 'Detailed analysis'],
+    ['/history', 'Analysis History'],
     ['/explore', 'Explore'],
     ['/explore/region', 'Region'],
     ['/ask', 'Ask'],
@@ -103,7 +103,7 @@ describe('navigation', () => {
     open('/')
     fireEvent.click(nav('History'))
     expect(window.location.pathname).toBe('/history')
-    expect(screen.getByRole('heading', { level: 1, name: 'History' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Analysis History' })).toBeInTheDocument()
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
     act(() => {
       window.history.back()

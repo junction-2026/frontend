@@ -1,53 +1,13 @@
 import { useState } from 'react'
-import type { Detection, Job } from './api'
+import type { Job } from '../api/types'
+import { plain, readLlm, readTechniques, str, techniqueName, type Detection } from './read'
 import { segment, validSpans, type Span } from './segments'
-import { useJob } from './useJob'
 import './job.css'
 
-type Techniques = { detected: Detection[]; spanStatus: unknown }
-type Finding = { label: string; name: string; definition: string; explanation: string; span: Record<string, unknown> }
-type Llm = { unavailable: boolean; findings: Finding[] }
 type Active = { key: string; whys: string[] }
 
-const LLM_LABELS = ['evidence_certainty_mismatch', 'misleading_headline', 'statistical_cherry_picking']
-const str = (v: unknown) => (typeof v === 'string' && v !== '' ? v : undefined)
-
-// null when the techniques run is missing, not succeeded or has no usable result.
-function readTechniques(job: Job): Techniques | null {
-  const run = job.analyzers?.find((a) => a.id === 'techniques')
-  const r = run?.result as { detected?: unknown; span_status?: unknown } | null | undefined
-  if (run?.status !== 'succeeded' || typeof r !== 'object' || r === null || !Array.isArray(r.detected)) return null
-  const detected = r.detected.filter(
-    (d): d is Detection => typeof d === 'object' && d !== null && typeof (d as Detection).name === 'string',
-  )
-  return { detected, spanStatus: r.span_status }
-}
-
-// null when the run is absent or still pending; findings with an unknown label or missing texts are ignored.
-function readLlm(job: Job): Llm | null {
-  const run = job.analyzers?.find((a) => a.id === 'llm_techniques')
-  if (!run) return null
-  if (run.status === 'failed' || run.status === 'skipped') return { unavailable: true, findings: [] }
-  const r = run.result as { findings?: unknown } | null | undefined
-  if (run.status !== 'succeeded' || typeof r !== 'object' || r === null || !Array.isArray(r.findings)) return null
-  const findings = r.findings.flatMap((f: unknown): Finding[] => {
-    const o = (typeof f === 'object' && f !== null ? f : {}) as Record<string, unknown>
-    const span = o.span
-    if (typeof o.label !== 'string' || !LLM_LABELS.includes(o.label)) return []
-    if (typeof span !== 'object' || span === null || !str(o.name) || !str(o.definition) || !str(o.explanation)) return []
-    return [{ label: o.label, name: o.name as string, definition: o.definition as string, explanation: o.explanation as string, span: span as Record<string, unknown> }]
-  })
-  return { unavailable: false, findings }
-}
-
-export default function JobView({ id }: { id: string }) {
-  const result = useJob(id)
-  if (!result) return <p role="status">Loading…</p>
-  if (!result.ok) return <p role="alert">{result.message}</p>
-  return <Result job={result.job} />
-}
-
-function Result({ job }: { job: Job }) {
+// The Detail body: highlighted text, technique list and the AI-assessed group of a loaded job.
+export default function JobView({ job }: { job: Job }) {
   const [selected, setSelected] = useState<string | null>(null)
   const [active, setActive] = useState<Active | null>(null)
   const content = typeof job.input?.content === 'string' ? job.input.content : ''
@@ -55,13 +15,7 @@ function Result({ job }: { job: Job }) {
   const title = typeof rawTitle === 'string' && rawTitle.trim() !== '' ? rawTitle : ''
   const techniques = readTechniques(job)
   const llm = readLlm(job)
-  const plain = (d: Detection) => {
-    const p = (typeof d.plain_language === 'object' && d.plain_language !== null ? d.plain_language : {}) as Record<string, unknown>
-    return { name: str(p.name), definition: str(p.definition), why: str(p.why) }
-  }
-  const names = new Map<string, string>(
-    techniques?.detected.map((d) => [d.name, plain(d).name ?? String(d.display ?? d.name)]),
-  )
+  const names = new Map<string, string>(techniques?.detected.map((d: Detection) => [d.name, techniqueName(d)]))
   const spans: Span[] = techniques
     ? techniques.detected.flatMap((d) =>
         validSpans(content, d.spans).map((s) => ({ ...s, technique: d.name, why: str((s as Span).why) })),
@@ -107,17 +61,22 @@ function Result({ job }: { job: Job }) {
     })
   }
 
+  const firstSpan = (name: string) => spans.find((s) => s.technique === name)
   return (
-    <main className="job">
-      <h1>Job result</h1>
-      <p>Status: {job.status}</p>
-      {title !== '' && (
-        <p className="job-text job-title" data-testid="job-title">
-          {marked('title', title, titleSpans)}
-        </p>
-      )}
-      <div className="job-text" data-testid="job-text">
-        {marked('content', content, contentSpans)}
+    <>
+      <div className="soft-card excerpt-box">
+        <div className="label">
+          <span>Analyzed corpus excerpt</span>
+          <span>Target Payload</span>
+        </div>
+        {title !== '' && (
+          <p className="job-text job-title" data-testid="job-title">
+            {marked('title', title, titleSpans)}
+          </p>
+        )}
+        <div className="job-text" data-testid="job-text">
+          {marked('content', content, contentSpans)}
+        </div>
       </div>
       {active && active.whys.length > 0 && (
         <div id="job-why" role="region" aria-label="Why this phrase is highlighted" className="job-why">
@@ -128,45 +87,59 @@ function Result({ job }: { job: Job }) {
           </ul>
         </div>
       )}
-      <h2>Techniques</h2>
-      {!techniques && <p>No technique analysis available.</p>}
-      {techniques && (
-        <>
-          <p>Detections are indicators of a rhetorical technique, not proof that a text is propaganda.</p>
-          {unavailable && <p role="note">Highlighting unavailable: exact phrases could not be located.</p>}
-          {techniques.detected.length === 0 && <p>No technique detected.</p>}
+      <div className="card tech-list">
+        <div className="tech-list-head">
+          <div>
+            <h3>Propaganda Techniques Detected</h3>
+            {techniques && (
+              <p>
+                {techniques.detected.length} {techniques.detected.length === 1 ? 'technique' : 'techniques'} detected. Detections are
+                indicators of a rhetorical technique, not proof that a text is propaganda.
+              </p>
+            )}
+          </div>
+        </div>
+        {!techniques && <p className="tech-note">No technique analysis available.</p>}
+        {unavailable && <p role="note" className="tech-note">Highlighting unavailable: exact phrases could not be located.</p>}
+        {techniques && techniques.detected.length === 0 && <p className="tech-note">No technique detected.</p>}
+        {techniques && (
           <ul className="job-techniques">
             {techniques.detected.map((d) => {
               const n = spanCount(d.name)
               const pl = plain(d)
+              const anchor = firstSpan(d.name)
               return (
-                <li key={d.name}>
+                <li key={d.name} className="tech-item">
                   <button
                     type="button"
                     aria-pressed={selected === d.name}
                     onClick={() => setSelected(selected === d.name ? null : d.name)}
                   >
-                    <strong className="job-technique-name">{names.get(d.name)}</strong>
+                    <span className="tech-item-top">
+                      <strong className="job-technique-name">{names.get(d.name)}</strong>
+                      <span className="badge-soft">ID: {d.name}</span>
+                    </span>
                     <span className="job-technique-definition">{pl.definition ?? String(d.explanation ?? '')}</span>{' '}
-                    <span>({n > 0 ? `${n} ${n === 1 ? 'phrase' : 'phrases'}` : 'no exact phrase found'})</span>
+                    <span className="job-technique-count">({n > 0 ? `${n} ${n === 1 ? 'phrase' : 'phrases'}` : 'no exact phrase found'})</span>
                   </button>
                   {n === 0 && pl.why && <p className="job-technique-why">{pl.why}</p>}
+                  {anchor && <div className="anchor">Excerpt anchor: “{anchor.text}”</div>}
                 </li>
               )
             })}
           </ul>
-        </>
-      )}
+        )}
+      </div>
       {llm && (llm.unavailable || llm.findings.length > 0) && (
-        <section>
-          <h2>Other possible issues (AI-assessed, less reliable)</h2>
-          {llm.unavailable && <p role="note">AI-assessed check not available</p>}
+        <section className="card tech-list job-llm-group">
+          <h3>Other possible issues (AI-assessed, less reliable)</h3>
+          {llm.unavailable && <p role="note" className="tech-note">AI-assessed check not available</p>}
           {llm.findings.length > 0 && (
             <>
-              <p>These findings come from a language model and are less reliable than the techniques above.</p>
+              <p className="tech-note">These findings come from a language model and are less reliable than the techniques above.</p>
               <ul className="job-llm">
                 {llm.findings.map((f, i) => (
-                  <li key={i}>
+                  <li key={i} className="tech-item">
                     <strong>{f.name}</strong>
                     <p>{f.definition}</p>
                     <p>{f.explanation}</p>
@@ -178,6 +151,6 @@ function Result({ job }: { job: Job }) {
           )}
         </section>
       )}
-    </main>
+    </>
   )
 }
