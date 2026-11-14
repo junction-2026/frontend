@@ -35,11 +35,15 @@ A non-2xx response with a valid error envelope SHALL yield its `code`, `message`
 - **THEN** it returns `uncertain`
 
 ### Requirement: Error messages
-`src/api/errors.ts` SHALL map error codes to user copy for `invalid_request`, `validation_failed` (listing `details.fields` per field path), `not_found`, `method_not_allowed`, `payload_too_large` ("Content is larger than 1 MiB"), `internal_error`, `unknown_analyzer` (listing `details.analyzer_ids`), `analyzer_not_selectable`, `job_finished` and `network_error`, and for any other code SHALL fall back to `error.message` as plain text.
+`src/api/errors.ts` SHALL map the codes `invalid_request`, `validation_failed` (listing `details.fields` per path), `not_found`, `method_not_allowed`, `payload_too_large`, `internal_error`, `unknown_analyzer` (listing `details.analyzer_ids`), `analyzer_not_selectable`, `job_finished` and `network_error` to copy from the active locale's `common.errors.*` catalog (en: "Content is larger than 1 MiB" for 413). Any other code SHALL return `error.message` as plain text, untranslated.
 
 #### Scenario: Field errors
 - **WHEN** a `validation_failed` error has `details.fields {"input.content": "must not be blank"}`
 - **THEN** the copy mentions `input.content` and "must not be blank"
+
+#### Scenario: Translated copy
+- **WHEN** the locale is de and the error code is `not_found`
+- **THEN** the German catalog text is returned, and an unknown code still returns `error.message`
 
 ### Requirement: Event stream client
 `src/api/events.ts` SHALL export `subscribeJobEvents(id, handlers)` that opens `ws(s)://<location.host>/api/v1/jobs/<id>/events` and returns an unsubscribe function. It SHALL drop events whose `seq` is not greater than the last seen (always applying `job.snapshot`, which resynchronises state), ignore unknown event types and pass on `job.snapshot`, `analysis.planned`, `analyzer.*`, `scrape.*`, `analysis.finalizing`, `analysis.finalized` and `job.completed`, `job.cancelled`, `job.failed`.
