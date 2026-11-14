@@ -2,9 +2,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const proxy = {
-  '/healthz': { target: process.env.BACKEND_URL ?? 'http://localhost:8080', changeOrigin: true },
-}
+const target = { target: process.env.BACKEND_URL ?? 'http://localhost:8080', changeOrigin: true }
+const proxy = { '/healthz': target, '/api': target }
 
 export default defineConfig({
   plugins: [react()],
