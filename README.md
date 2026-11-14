@@ -54,8 +54,10 @@ The image serves the built bundle with nginx on container port **80**.
 docker build -t frontend .
 docker run --rm -p 8081:80 \
   -e BACKEND_URL=http://host.docker.internal:8080 \
+  -e PUBLIC_ORIGIN=http://localhost:8081 \
   --add-host=host.docker.internal:host-gateway \
   frontend
+# PUBLIC_ORIGIN: the origin users and crawlers reach the site at (local value shown; in production see "Link previews")
 # open http://localhost:8081
 ```
 
@@ -68,9 +70,23 @@ Crawlers do not run the SPA, so the nginx container (njs module of `nginx:alpine
 user agent; only the `<!-- og:start -->…<!-- og:end -->` block differs. `index.html` carries the generic card for
 `vite dev`/`preview`; the images are `public/og/*.png` (1200x630, regenerate with `python3 scripts/og-images.py` after `npm ci`).
 
-`PUBLIC_ORIGIN` (scheme+host[+port], e.g. `https://stiriri.dev`; a trailing slash is stripped) prefixes every `og:url` and
-image URL. It defaults to `http://localhost` and **must be set in production**:
-`docker run -e PUBLIC_ORIGIN=https://stiriri.dev …`.
+`PUBLIC_ORIGIN` **must be set in production** to the real public origin: `scheme://host[:port]`, no path (a single trailing
+slash is stripped), e.g. `docker run -e PUBLIC_ORIGIN=https://veil.example …`. It prefixes every `og:url` and `og:image`
+URL, and crawlers such as Discord, Slack and Twitter fetch the preview image from it; with the default `http://localhost`
+the preview images are broken. The image default is for local use only. At startup `docker/40-check-public-origin.sh`
+(run by the nginx entrypoint) prints one line to the container log, and still starts nginx, when the value is unset,
+empty, not an absolute `http(s)` origin, has a path, or is a loopback host (`localhost`, `127.0.0.1`, `[::1]`, `0.0.0.0`):
+
+```text
+WARNING: PUBLIC_ORIGIN="http://localhost" is unset, not an absolute http(s) origin or a loopback host. og:url and og:image use this value, so crawlers (Discord, Slack, Twitter) cannot fetch the link-preview images. Set PUBLIC_ORIGIN to the public scheme://host[:port], e.g. https://veil.example
+```
+
+Check a deployment with a job id Discord has not seen yet (Discord caches previews), then fetch the image URL:
+
+```sh
+curl -s -A Discordbot https://veil.example/jobs/<fresh-id> | grep og:image
+curl -sI <og:image url> | head -3   # expect HTTP 200 and content-type: image/png
+```
 
 | Route | Card |
 | --- | --- |
@@ -84,4 +100,5 @@ The status is always 200. Cards never contain the input, its source, scrape URLs
 The job is read with an internal subrequest through the `/api/` proxy.
 
 Container smoke test (needs docker, not part of CI): `scripts/og-smoke.sh` builds the image, starts it with a stub
-backend (`scripts/og-stub-backend.mjs`) and checks the tags with `curl -A Twitterbot`.
+backend (`scripts/og-stub-backend.mjs`) and checks the tags with `curl -A Twitterbot`, fetches every `og:image`/`twitter:image` URL (200 `image/png`) and
+checks that a container without `PUBLIC_ORIGIN` logs the startup warning and the configured one does not.
