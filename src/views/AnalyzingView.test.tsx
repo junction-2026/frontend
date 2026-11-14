@@ -94,10 +94,18 @@ describe('AnalyzingView stream', () => {
     expect(document.querySelector('.quote-text b')).toBeNull()
     expect(screen.getByText(/Job j1/)).toBeInTheDocument()
     expect(screen.getByText(/Elapsed: 0[34]\.\ds/)).toBeInTheDocument()
-    expect(screen.getByText('Cluster: eu-west-alpha-2').closest('[data-mock]')).not.toBeNull()
-    expect(screen.getByText('Zero-retention ephemeral pipeline').closest('[data-mock]')).not.toBeNull()
+    expect(screen.queryByText('Cluster: eu-west-alpha-2')).toBeNull()
+    expect(screen.queryByText('Zero-retention ephemeral pipeline')).toBeNull()
+    expect(screen.getByText('Synchronous consensus pool').closest('[data-mock]')).not.toBeNull()
     expect(screen.getByText(/Stage 0 of 4 completed/).closest('[data-mock]')).toBeNull()
     expect(screen.queryByText(/worker load|remaining/)).toBeNull()
+  })
+
+  it('renders no empty .quote-foot before the job is known', () => {
+    mounted()
+    expect(document.querySelector('.quote-foot')).toBeNull()
+    snapshot()
+    expect(document.querySelector('.quote-foot')?.textContent).toMatch(/Elapsed/)
   })
 
   it('renders the ledger from the snapshot and later events, including failed, timed-out and skipped rows', () => {
