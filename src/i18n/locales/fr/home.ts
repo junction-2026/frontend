@@ -13,7 +13,7 @@ export default {
   'chars_one': '{count} caractère',
   'chars_many': '{count} de caractères',
   'chars_other': '{count} caractères',
-  'analyze': 'Analyser ↵',
+  'analyze': 'Analyser',
   'analyzers_loading': 'Chargement des analyseurs…',
   'analyzer_disabled': 'désactivé',
   'final_assessment': 'Évaluation finale',

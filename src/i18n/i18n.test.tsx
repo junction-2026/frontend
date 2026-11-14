@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Shell } from '../ui/Shell'
 import HomeView from '../views/HomeView'
 import { errorMessage } from '../api/errors'
-import { I18nProvider, formatNumber, formatRelativeTime, useLocale, useT } from '.'
+import { I18nProvider, formatNumber, formatRelativeTime, useFormat, useLocale, useT } from '.'
 import { CATALOGS, translate } from './translate'
 
 const setLanguages = (langs: string[]) => vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(langs)
@@ -72,6 +72,23 @@ describe('language selector', () => {
     pick('fr')
     expect(document.documentElement).toHaveAttribute('lang', 'fr')
     expect(document.documentElement).toHaveAttribute('dir', 'ltr')
+  })
+})
+
+describe('Home errors follow the language', () => {
+  it('re-translates the invalid-link error after a language switch', () => {
+    render(app())
+    fireEvent.click(screen.getByRole('tab', { name: 'Social Link' }))
+    fireEvent.change(screen.getByLabelText('Content to analyze'), { target: { value: 'not a url' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Analyze/ }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter a full link starting with http:// or https://.')
+    pick('de')
+    expect(screen.getByRole('alert')).toHaveTextContent('Geben Sie einen vollständigen Link ein')
+  })
+
+  it('marks the submit glyph aria-hidden and mirrorable', () => {
+    render(app())
+    expect(screen.getByRole('button', { name: 'Analyze' }).querySelector('.mirror-rtl')).toHaveAttribute('aria-hidden', 'true')
   })
 })
 
@@ -152,6 +169,36 @@ describe('formatters', () => {
     const now = Date.parse('2026-01-02T00:00:00Z')
     expect(formatRelativeTime('2026-01-01T21:00:00Z', now, 'en')).toBe('3 hours ago')
     expect(formatRelativeTime('2026-01-01T00:00:00Z', now, 'en')).toBe('yesterday')
+  })
+})
+
+describe('useFormat', () => {
+  it('binds the formatters to the active locale', () => {
+    const Probe = () => {
+      const f = useFormat()
+      const { setLocale } = useLocale()
+      return (
+        <>
+          <button onClick={() => setLocale('de')}>de</button>
+          <output>{[f.formatNumber(1234.5), f.formatDate('2026-03-05T12:00:00Z', { dateStyle: 'long', timeZone: 'UTC' }), f.formatRelativeTime('2026-01-01T21:00:00Z', '2026-01-02T00:00:00Z')].join('|')}</output>
+        </>
+      )
+    }
+    render(<I18nProvider><Probe /></I18nProvider>)
+    expect(screen.getByRole('status')).toHaveTextContent('1,234.5|March 5, 2026|3 hours ago')
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.getByRole('status')).toHaveTextContent('1.234,5|5. März 2026|vor 3 Stunden')
+  })
+
+  it('defaults the standalone formatters to the active locale', () => {
+    const Probe = () => {
+      const { setLocale } = useLocale()
+      return <button onClick={() => setLocale('fr')}>x</button>
+    }
+    render(<I18nProvider><Probe /></I18nProvider>)
+    fireEvent.click(screen.getByRole('button'))
+    expect(formatNumber(1234.5)).toBe(formatNumber(1234.5, undefined, 'fr'))
+    expect(formatRelativeTime('2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z')).toBe('hier')
   })
 })
 

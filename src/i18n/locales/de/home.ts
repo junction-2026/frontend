@@ -12,7 +12,7 @@ export default {
   'advanced': 'Erweiterte Optionen ▾',
   'chars_one': '{count} Zeichen',
   'chars_other': '{count} Zeichen',
-  'analyze': 'Analysieren ↵',
+  'analyze': 'Analysieren',
   'analyzers_loading': 'Analyzer werden geladen…',
   'analyzer_disabled': 'deaktiviert',
   'final_assessment': 'Abschlussbewertung',

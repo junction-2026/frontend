@@ -15,20 +15,23 @@ const FEATURES: [string, string][] = [
 ]
 
 const MAX_URL = 2048
-type T = ReturnType<typeof useT>
-function urlProblem(value: string, t: T): string | null {
-  if (value.length > MAX_URL) return t('home.url_too_long', { max: MAX_URL })
+type UrlProblem = 'home.url_too_long' | 'home.url_invalid'
+function urlProblem(value: string): UrlProblem | null {
+  if (value.length > MAX_URL) return 'home.url_too_long'
   try {
     const u = new URL(value)
     if (u.protocol === 'http:' || u.protocol === 'https:') return null
   } catch {
     /* falls through */
   }
-  return t('home.url_invalid')
+  return 'home.url_invalid'
 }
 
-type Problem = { message: string; items: string[] }
-const problemOf = (error: ApiError): Problem => {
+// Errors stay raw in state and are turned into text at render, so a language switch re-translates them.
+type Problem = { url: UrlProblem } | { error: ApiError }
+function describe(problem: Problem, t: ReturnType<typeof useT>): { message: string; items: string[] } {
+  if ('url' in problem) return { message: t(problem.url, { max: MAX_URL }), items: [] }
+  const { error } = problem
   const fields = error.code === 'validation_failed' ? error.details?.fields : undefined
   const items = fields && typeof fields === 'object' ? Object.entries(fields).map(([path, msg]) => `${path}: ${String(msg)}`) : []
   // The field list is rendered separately, so the headline uses the message without details.
@@ -43,7 +46,7 @@ export default function HomeView() {
   const [problem, setProblem] = useState<Problem | null>(null)
   const [open, setOpen] = useState(false)
   const [analyzers, setAnalyzers] = useState<AnalyzerInfo[] | null>(null)
-  const [listError, setListError] = useState<string | null>(null)
+  const [listError, setListError] = useState<ApiError | null>(null)
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set())
   const [finalize, setFinalize] = useState(true)
 
@@ -54,7 +57,7 @@ export default function HomeView() {
     listAnalyzers().then((r) => {
       if (stale) return
       if (r.ok) setAnalyzers(r.data.items.filter((a) => a.selectable))
-      else setListError(errorMessage(r.error))
+      else setListError(r.error)
     })
     return () => {
       stale = true
@@ -64,8 +67,8 @@ export default function HomeView() {
   const submit = async () => {
     if (busy || !value.trim()) return
     if (mode === 'link') {
-      const bad = urlProblem(value.trim(), t)
-      if (bad) return setProblem({ message: bad, items: [] })
+      const bad = urlProblem(value.trim())
+      if (bad) return setProblem({ url: bad })
     }
     const body: CreateJobBody = mode === 'text' ? { input: { content: value } } : { scrape: { url: value.trim() } }
     if (analyzers && unchecked.size) body.analyzers = analyzers.filter((a) => !unchecked.has(a.id)).map((a) => a.id)
@@ -75,7 +78,7 @@ export default function HomeView() {
     const r = await createJob(body)
     setBusy(false)
     if (r.ok) navigate(`/jobs/${encodeURIComponent(r.data.id)}/live`)
-    else setProblem(problemOf(r.error))
+    else setProblem({ error: r.error })
   }
 
   const toggle = (id: string) =>
@@ -84,6 +87,8 @@ export default function HomeView() {
       if (!next.delete(id)) next.add(id)
       return next
     })
+
+  const shown = problem && describe(problem, t)
 
   return (
     <section className="view">
@@ -119,10 +124,10 @@ export default function HomeView() {
               }
             }}
           />
-          {problem && (
+          {shown && (
             <div className="form-error" role="alert">
-              {problem.message}
-              {problem.items.length > 0 && <ul>{problem.items.map((i) => <li key={i}>{i}</li>)}</ul>}
+              {shown.message}
+              {shown.items.length > 0 && <ul>{shown.items.map((i) => <li key={i}>{i}</li>)}</ul>}
             </div>
           )}
           <div className="composer-foot">
@@ -133,12 +138,12 @@ export default function HomeView() {
             </div>
             <div className="composer-actions">
               <span className="char-count">{t('home.chars', { count: value.length })}</span>
-              <button type="button" className="btn-primary" disabled={busy || !value.trim()} onClick={() => void submit()}>{t('home.analyze')}</button>
+              <button type="button" className="btn-primary" disabled={busy || !value.trim()} onClick={() => void submit()}>{t('home.analyze')}<span aria-hidden="true" className="mirror-rtl"> ↵</span></button>
             </div>
           </div>
           {open && (
             <div className="advanced-panel" id="advanced-options">
-              {listError && <div className="form-error" role="alert">{listError}</div>}
+              {listError && <div className="form-error" role="alert">{errorMessage(listError)}</div>}
               {!analyzers && !listError && <span>{t('home.analyzers_loading')}</span>}
               {analyzers?.map((a) => (
                 <label key={a.id}>

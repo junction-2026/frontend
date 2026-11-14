@@ -12,7 +12,7 @@ export default {
   'advanced': 'Lisäasetukset ▾',
   'chars_one': '{count} merkki',
   'chars_other': '{count} merkkiä',
-  'analyze': 'Analysoi ↵',
+  'analyze': 'Analysoi',
   'analyzers_loading': 'Ladataan analysaattoreita…',
   'analyzer_disabled': 'pois käytöstä',
   'final_assessment': 'Loppuarvio',

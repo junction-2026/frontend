@@ -16,7 +16,7 @@ export default {
   'chars_few': '{count} أحرف',
   'chars_many': '{count} حرفًا',
   'chars_other': '{count} حرف',
-  'analyze': 'تحليل ↵',
+  'analyze': 'تحليل',
   'analyzers_loading': 'جارٍ تحميل المحللات…',
   'analyzer_disabled': 'معطّل',
   'final_assessment': 'التقييم النهائي',
