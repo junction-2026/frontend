@@ -44,6 +44,11 @@ server {
         add_header Cache-Control "public, max-age=86400";
     }
 
+    # nginx:alpine's mime.types has no .webmanifest entry (it would be served as octet-stream).
+    location = /site.webmanifest {
+        default_type application/manifest+json;
+    }
+
     # HTML routes: index.html with the link-preview card injected (nginx/og.js); assets are served as files.
     location = / {
         js_content og.html;
