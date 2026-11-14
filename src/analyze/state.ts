@@ -133,7 +133,7 @@ export function previewSummary(key: string, p: Record<string, unknown> | undefin
     : key === 'techniques' ? [n(p.detected_total, 'technique detected', 'techniques detected')]
     : key === 'llm_techniques' ? [n(p.findings_total, 'finding')]
     : key === 'translation' ? [p.translated === false ? 'not translated' : typeof p.source_language === 'string' ? `translated from ${p.source_language}` : null]
-    : key === 'propaganda_detection' ? [typeof p.label === 'string' ? p.label : null]
+    : key === 'propaganda_detection' ? [typeof p.label === 'string' ? (typeof p.score === 'number' && p.score >= 0 && p.score <= 1 ? `${p.label} · ${Math.round(p.score * 100)}% confidence` : p.label) : null]
     : []
   const text = parts.filter(Boolean).join(' · ')
   return text || null
