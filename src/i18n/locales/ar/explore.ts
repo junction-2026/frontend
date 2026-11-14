@@ -107,7 +107,7 @@ export default {
   'region.articles': 'مقالات',
   'region.publishers': 'ناشرين موثّقين',
   'region.lang_primary': 'الفنلندية {n}',
-  'region.lang_secondary': 'EN {n}',
+  'region.lang_secondary': 'الإنجليزية {n}',
   'region.synthesis': 'يركّز التأطير الإقليمي على سلامة البنية التحتية والمرونة السيبرانية. تبقى لغة الإسناد حذرة؛ ولوم الجماعات الخارجية نادر في نصوص الأخبار المفهرسة.',
   'region.factuality': 'درجة المصداقية: {score}',
   'region.redacted': '{n} عبارات محجوبة',
@@ -118,4 +118,7 @@ export default {
   'region.wire.2.tag': 'مكتب التحقيقات',
   'region.wire.3.title': 'افتتاحية: الأدلة الهادئة تتفوق على روايات الذعر في الشبكات الحيوية',
   'region.wire.3.tag': 'رأي',
+  'region.wire.1.src': 'هلسينغين سانومات',
+  'region.wire.2.src': 'يله نيوز',
+  'region.wire.3.src': 'هوفودستادسبلاديت (إتش بي إل)',
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useFormat, useLocale, useT } from '../i18n'
+import { rich, useFormat, useLocale, useT } from '../i18n'
 import { Link } from '../router'
 import { WorldMap } from '../secondary/WorldMap'
 import { EXPLORE_MOCK_COVERAGE } from '../secondary/exploreMockCoverage'
@@ -9,11 +9,11 @@ import '../secondary/secondary.css'
 
 const CODE = 'FI'
 const HOUR = 3_600_000
-// Mock wire items: the source names are proper nouns, the rest is catalog text; `age` is how old the dispatch is.
+// Mock wire items: names and text come from the catalog; `age` is how old the dispatch is.
 const WIRE = [
-  { n: 1, src: 'Helsingin Sanomat', age: 4 * HOUR, cls: 'green' },
-  { n: 2, src: 'Yle News', age: 24 * HOUR, cls: 'gray' },
-  { n: 3, src: 'Hufvudstadsbladet (HBL)', age: 48 * HOUR, cls: 'gray' },
+  { n: 1, age: 4 * HOUR, cls: 'green' },
+  { n: 2, age: 24 * HOUR, cls: 'gray' },
+  { n: 3, age: 48 * HOUR, cls: 'gray' },
 ]
 
 export default function RegionView() {
@@ -48,7 +48,7 @@ export default function RegionView() {
                 <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
                   <span className="btn-primary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.78rem' }}>{t('explore.region.selected_chip', { country })}</span>
                   <label className="field" style={{ padding: '0.4rem 0.7rem', minWidth: 140 }}>
-                    <span aria-hidden="true">⌕</span>
+                    <span aria-hidden="true" className="mirror-rtl">⌕</span>
                     <input key={country} aria-label={t('explore.region.input_aria')} defaultValue={country} />
                   </label>
                 </div>
@@ -66,7 +66,7 @@ export default function RegionView() {
           <Mock block label={t('explore.region.stats_label')}>
             <div className="stat-grid" style={{ marginTop: 0 }}>
               {STATS.map(([label, value, note]) => (
-                <div className="card stat" key={label}><div className="label">{label}</div><strong>{value}</strong><span>{note}</span></div>
+                <div className="card stat" key={label}><div className="label">{label}</div><strong><bdi>{value}</bdi></strong><span>{note}</span></div>
               ))}
             </div>
           </Mock>
@@ -75,7 +75,7 @@ export default function RegionView() {
         <Mock block label={t('explore.region.details_label')}>
           <aside className="card region-panel">
             <div className="region-panel-head">
-              <h3>{CODE} {country}</h3>
+              <h3><bdi>{CODE}</bdi> {country}</h3>
               <Link href="/explore">{t('explore.region.clear')}</Link>
             </div>
             <div className="mini-stats">
@@ -85,11 +85,11 @@ export default function RegionView() {
             </div>
             <div className="synthesis">
               <p>{t('explore.region.synthesis')}</p>
-              <div className="row"><span>{t('explore.region.factuality', { score: percent(0.984) })}</span><span>{t('explore.region.redacted', { n: formatNumber(0) })}</span></div>
+              <div className="row"><span>{rich(t('explore.region.factuality'), { score: <bdi>{percent(0.984)}</bdi> })}</span><span>{t('explore.region.redacted', { n: formatNumber(0) })}</span></div>
             </div>
             {WIRE.map((w) => (
               <div className="wire-item" key={w.n}>
-                <div className="top"><span>{w.src}</span><span>{formatRelativeTime(now - w.age, now)}</span></div>
+                <div className="top"><span>{t(`explore.region.wire.${w.n}.src`)}</span><span>{formatRelativeTime(now - w.age, now)}</span></div>
                 <h4>{t(`explore.region.wire.${w.n}.title`)}</h4>
                 <div className="bottom"><span className={`tag ${w.cls}`}>{t(`explore.region.wire.${w.n}.tag`)}</span><button type="button" className="btn-link">{t('explore.region.read')}</button></div>
               </div>

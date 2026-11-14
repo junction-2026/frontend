@@ -110,4 +110,7 @@ export default {
   'region.wire.2.tag': 'Recherche-Desk',
   'region.wire.3.title': 'Leitartikel: Ruhige Belege schlagen Panik-Narrative bei kritischen Netzen',
   'region.wire.3.tag': 'Meinung',
+  'region.wire.1.src': 'Helsingin Sanomat',
+  'region.wire.2.src': 'Yle News',
+  'region.wire.3.src': 'Hufvudstadsbladet (HBL)',
 }

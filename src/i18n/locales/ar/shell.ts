@@ -10,4 +10,7 @@ export default {
   'health.checking': 'جارٍ فحص الخادم…',
   'health.offline': 'الخادم غير متصل',
   'health.online': 'الخادم متصل',
+  'health.failed': 'فشل فحص حالة الخادم: {detail}',
+  'health.timeout': 'انتهت المهلة بعد {ms} مللي ثانية',
+  'health.bad_body': 'محتوى استجابة غير متوقع',
 }

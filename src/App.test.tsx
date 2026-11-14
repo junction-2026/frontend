@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { HEALTH_TIMEOUT_MS } from './health'
@@ -42,6 +42,16 @@ describe('top bar health indicator', () => {
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Backend offline')
     expect(alert).toHaveAttribute('title', 'Backend health check failed: HTTP 503 Service Unavailable')
+  })
+
+  it('re-words the offline tooltip after a locale switch without a new request', async () => {
+    reply('', { status: 503, statusText: 'Service Unavailable' })
+    render(<App />)
+    await screen.findByRole('alert')
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'de' } })
+    expect(screen.getByRole('alert')).toHaveAttribute('title', 'Gesundheitsprüfung des Servers fehlgeschlagen: HTTP 503 Service Unavailable')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    localStorage.clear()
   })
 
   it('shows an alert for a network error', async () => {

@@ -10,4 +10,7 @@ export default {
   'health.checking': 'Tarkistetaan taustajärjestelmää…',
   'health.offline': 'Taustajärjestelmä ei ole yhteydessä',
   'health.online': 'Taustajärjestelmä on yhteydessä',
+  'health.failed': 'Palvelimen tilatarkistus epäonnistui: {detail}',
+  'health.timeout': 'aikakatkaisu {ms} ms jälkeen',
+  'health.bad_body': 'odottamaton vastauksen sisältö',
 }

@@ -13,7 +13,7 @@ export default {
   'a1_pre': 'Die Passage „unsere Zukunft zerstören… bevor es zu spät ist“ entspricht Katastrophisierungs- und Dringlichkeitsmustern mit ',
   'a1_match': '{percent} Musterübereinstimmung',
   'a1_post': ' im Katalog der Angstappelle.',
-  'chip.corpus': 'Korpusreferenz: #CAT-FEAR-449',
+  'chip.corpus': 'Korpusreferenz: {id}',
   'chip.weight': 'Gewicht: Hoch (+0,42)',
   'q2': 'Wie berichten andere verifizierte Nachrichtenquellen über diese Bevölkerungsgruppe?',
   'a2_and': ' und ',
@@ -26,4 +26,6 @@ export default {
   'input_aria': 'Nachricht',
   'input_placeholder': 'Fragen Sie alles zu dieser Quelle, rhetorischen Markern oder dem Agenturkontext...',
   'send': 'Senden',
+  'src.ft': 'Financial Times',
+  'src.reuters': 'Reuters',
 }

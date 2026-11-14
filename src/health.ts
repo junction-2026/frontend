@@ -1,10 +1,8 @@
 export const HEALTH_TIMEOUT_MS = 5000
 
-export type HealthResult = { ok: true } | { ok: false; message: string }
+export type HealthResult = { ok: true } | { ok: false; kind: 'http' | 'body' | 'timeout' | 'error'; detail: string }
 
-const PREFIX = 'Backend health check failed:'
-
-// Never throws: every failure is returned as { ok: false, message }.
+// Never throws: every failure is returned as { ok: false, kind, detail }; the UI words it in the active locale at render.
 export async function checkHealth(fetchImpl: typeof fetch = fetch): Promise<HealthResult> {
   const controller = new AbortController()
   let timedOut = false
@@ -18,7 +16,7 @@ export async function checkHealth(fetchImpl: typeof fetch = fetch): Promise<Heal
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     })
-    if (!response.ok) return { ok: false, message: `${PREFIX} HTTP ${response.status} ${response.statusText}` }
+    if (!response.ok) return { ok: false, kind: 'http', detail: `HTTP ${response.status} ${response.statusText}` }
     const text = await response.text()
     let body: unknown
     try {
@@ -28,10 +26,10 @@ export async function checkHealth(fetchImpl: typeof fetch = fetch): Promise<Heal
     }
     const status = typeof body === 'object' && body !== null ? (body as { status?: unknown }).status : undefined
     if (response.status === 200 && status === 'ok') return { ok: true }
-    return { ok: false, message: `${PREFIX} unexpected response body ${text.slice(0, 200)}` }
+    return { ok: false, kind: 'body', detail: text.slice(0, 200) }
   } catch (error) {
-    if (timedOut) return { ok: false, message: `${PREFIX} timed out after ${HEALTH_TIMEOUT_MS} ms` }
-    return { ok: false, message: `${PREFIX} ${error instanceof Error ? error.message : String(error)}` }
+    if (timedOut) return { ok: false, kind: 'timeout', detail: String(HEALTH_TIMEOUT_MS) }
+    return { ok: false, kind: 'error', detail: error instanceof Error ? error.message : String(error) }
   } finally {
     clearTimeout(timer)
   }
