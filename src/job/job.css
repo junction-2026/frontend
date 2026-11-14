@@ -29,3 +29,29 @@
 .job-techniques button[aria-pressed='true'] {
   background: #ffa94d;
 }
+.job-technique-name,
+.job-technique-definition {
+  display: block;
+}
+/* #111 on #a5d8ff: contrast >= 11:1; dashed underline marks AI-assessed spans apart from model spans */
+.job-text mark[data-llm='true'] {
+  background: #a5d8ff;
+  text-decoration: underline dashed;
+}
+.job-title {
+  font-weight: bold;
+}
+.job-why {
+  border-left: 4px solid #495057;
+  padding: 0.25rem 0.75rem;
+  margin: 0.5rem 0;
+}
+.job-llm {
+  list-style: none;
+  padding: 0;
+}
+.job-llm blockquote {
+  margin: 0.25rem 0 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 4px solid #a5d8ff;
+}

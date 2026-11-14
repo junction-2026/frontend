@@ -1,9 +1,9 @@
-export type Detection = { name: string; display: string; explanation: string; spans?: unknown }
+export type Detection = { name: string; display: string; explanation: string; spans?: unknown; plain_language?: unknown }
 export type AnalyzerRun = { name?: string; status?: string; result?: unknown }
 export type Job = {
   status: string
   done?: boolean
-  input?: { content?: string } | null
+  input?: { content?: string; source?: { title?: unknown } | null } | null
   analyzers?: AnalyzerRun[]
 }
 
