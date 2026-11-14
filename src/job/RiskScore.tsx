@@ -1,0 +1,164 @@
+import { useId, useState } from 'react'
+import type { Job } from '../api/types'
+import { useFormat, useLocale, useT } from '../i18n'
+import { CATALOGS } from '../i18n/translate'
+import { techniqueText } from './read'
+import { readRisk, type RiskView } from './risk'
+import { enumLabel, percent } from './text'
+import './riskScore.css'
+
+const BANDS = ['low', 'moderate', 'high', 'critical']
+// A key this client's catalog lacks (a newer server id) falls back to the server text.
+const known = (key: string) => CATALOGS.en[key] !== undefined
+
+function RiskInfo() {
+  const t = useT()
+  const id = useId()
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="confidence-info">
+      <button
+        type="button"
+        className="info-btn"
+        aria-label={t('results.risk.info_label')}
+        aria-describedby={open ? id : undefined}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+      >
+        <span aria-hidden="true">i</span>
+      </button>
+      {open && <span role="tooltip" id={id} className="confidence-tip">{t('results.risk.info_tip')}</span>}
+    </span>
+  )
+}
+
+function Caveats({ risk }: { risk: RiskView }) {
+  const t = useT()
+  const id = useId()
+  const [open, setOpen] = useState(true)
+  return (
+    <div className="risk-block">
+      <button type="button" className="risk-toggle" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
+        {t('results.risk.caveats')}
+        <span aria-hidden="true" className="risk-chevron">{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <div id={id} role="region" aria-label={t('results.risk.caveats')}>
+          <ul className="risk-list">
+            {risk.caveats.map((c) => (
+              <li key={c.id}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function RiskSection({ risk }: { risk: RiskView }) {
+  const t = useT()
+  const { locale } = useLocale()
+  const fmt = useFormat().formatNumber
+  const nameOf = (label: string) => {
+    const d = risk.techniques.find((x) => x.label === label)?.display
+    return techniqueText(label, locale, 'en', { name: d || undefined }).name
+  }
+  const bandKnown = risk.band !== null && BANDS.includes(risk.band)
+  const first = risk.drivers[0]
+  const driverKnown = !!first && (first.kind === 'technique' ? !!first.technique : first.kind === 'none' || known(`results.risk.driver_short.${first.kind}`))
+  // Summary composed from the catalog; the server sentence only when the band or the first driver kind is unknown to this client.
+  const driverPhrase = !first ? '' : first.kind === 'technique' ? nameOf(first.technique ?? '') : known(`results.risk.driver_short.${first.kind}`) ? t(`results.risk.driver_short.${first.kind}`) : ''
+  const summary = bandKnown && driverKnown
+      ? `${t(`results.risk.summary.${risk.band}`)} ${first.kind === 'none' ? t('results.risk.summary.none') : t('results.risk.summary.main', { driver: driverPhrase })}`
+      : risk.summary
+  const sentence = (d: RiskView['drivers'][number]) =>
+    d.kind === 'technique' ? (d.technique ? t('results.risk.driver.technique', { technique: nameOf(d.technique) }) : d.text) : known(`results.risk.driver.${d.kind}`) ? t(`results.risk.driver.${d.kind}`) : d.text
+  const heading = useId()
+  return (
+    <section className="card risk" aria-labelledby={heading} data-risk={risk.scored ? 'scored' : 'unavailable'}>
+      <div className="risk-head">
+        <h2 id={heading} className="risk-title">{t('results.risk.title')}</h2>
+        <RiskInfo />
+      </div>
+      {risk.scored && risk.score !== null ? (
+        <div className="risk-headline">
+          <span className="risk-score">{percent(fmt, risk.score)}</span>
+          <span className="risk-chip" data-band={bandKnown ? risk.band : 'moderate'}>{bandKnown ? t(`results.risk.band.${risk.band}`) : risk.band}</span>
+        </div>
+      ) : (
+        <p className="risk-unavailable">
+          {t('results.risk.unavailable')} {t(known(`results.risk.unavailable_reason.${risk.reason}`) ? `results.risk.unavailable_reason.${risk.reason}` : 'results.risk.unavailable_reason.unknown')}
+        </p>
+      )}
+      {risk.scored && <p className="risk-summary">{summary}</p>}
+
+      <div className="risk-block">
+        <h3 className="risk-subtitle">{t('results.risk.breakdown')}</h3>
+        <ul className="risk-list risk-dims">
+          {risk.dimensions.map((d) => {
+            const label = t(`results.risk.dim.${d.key}`)
+            const pct = d.score === null ? 0 : Math.round(d.score * 100)
+            return (
+              <li key={d.key}>
+                <div className="risk-dim-row">
+                  <span className="risk-dim-label">{label}</span>
+                  {d.available && d.low && <span className="risk-low">{t('results.risk.low_confidence')}</span>}
+                  {d.available && <span className="risk-dim-value">{percent(fmt, pct / 100)}</span>}
+                </div>
+                {d.available ? (
+                  <div className="risk-meter" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-valuetext={percent(fmt, pct / 100)}>
+                    <span style={{ inlineSize: `${pct}%` }} />
+                  </div>
+                ) : (
+                  <p className="risk-note">
+                    {t(known(`results.risk.reason.${d.reason}`) ? `results.risk.reason.${d.reason}` : 'results.risk.reason.unknown', { dimension: label })}
+                  </p>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+
+      {/* With intensity unavailable the list is empty because the check did not run, not because nothing was found: show nothing (the dimension note explains it). */}
+      {(risk.techniques.length > 0 || risk.dimensions[0].available) && (
+      <div className="risk-block">
+        <h3 className="risk-subtitle">{t('results.risk.techniques')}</h3>
+        {risk.techniques.length === 0 ? (
+          <p className="risk-note">{t('results.risk.techniques_none')}</p>
+        ) : (
+          <ul className="risk-list risk-techniques">
+            {risk.techniques.map((x) => (
+              <li key={x.label}>
+                <span className="risk-tech-name">{techniqueText(x.label, locale, 'en', { name: x.display || undefined }).name}</span>
+                <span className="risk-tech-pct">{percent(fmt, x.probability)}</span>
+                <span className="risk-tech-impact">{enumLabel(t, 'results.risk.impact', x.impact)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      )}
+
+      {risk.scored && (
+        <div className="risk-block">
+          <h3 className="risk-subtitle">{t('results.risk.drivers')}</h3>
+          <ul className="risk-list">
+            {risk.drivers.map((d, i) => <li key={i}>{sentence(d)}</li>)}
+          </ul>
+        </div>
+      )}
+
+      <Caveats risk={risk} />
+    </section>
+  )
+}
+
+export function RiskScore({ job }: { job: Job }) {
+  const risk = readRisk(job)
+  return risk ? <RiskSection risk={risk} /> : null
+}

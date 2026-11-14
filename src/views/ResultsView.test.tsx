@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement } from 'react'
 import { I18nProvider, useLocale, type Locale } from '../i18n'
-import { assessment, coverage, finalization, job, json, run } from '../job/fixtures'
+import { assessment, coverage, finalization, job, json, risk, run } from '../job/fixtures'
 import ResultsView from './ResultsView'
 
 const fetchMock = vi.fn()
@@ -562,5 +562,23 @@ describe('Results verdict card in Arabic', () => {
     expect([...el.querySelectorAll('.info-card-label')].map((l) => l.textContent)).toEqual(['أبرز أسلوب', 'الأدلة', 'الأساليب'])
     expect(within(el).getByRole('button', { name: 'قراءة الشرح الكامل' })).toHaveAttribute('aria-expanded', 'false')
     expect(el.querySelector('.info-card:nth-child(2) .info-card-value')?.textContent).toBe(`${new Intl.NumberFormat('ar').format(1)} مقطع`) // Intl digits
+  })
+})
+
+describe('Results: risk score section', () => {
+  it('renders above the verdict card when the job has a risk score', async () => {
+    fetchMock.mockResolvedValue(json(job({ risk: risk() })))
+    render(<ResultsView id="j1" />)
+    await screen.findByRole('heading', { name: 'Manipulation Risk Score' })
+    const section = document.querySelector('.risk') as HTMLElement
+    expect(section).not.toBeNull()
+    expect(section.compareDocumentPosition(verdictEl()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it.each([['null', { risk: null }], ['missing', {}]])('shows no risk section and no error when risk is %s', async (_n, extra) => {
+    await show(job(extra))
+    expect(document.querySelector('.risk')).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(verdictEl()).not.toBeNull()
   })
 })

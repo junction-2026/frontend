@@ -46,6 +46,18 @@
   --verdict-not-detected-text: #246b45;
   --verdict-not-detected-pill-bg: #e5f7ec;
   --verdict-not-detected-pill-text: #246b45;
+  --risk-low-bg: #e5f7ec;
+  --risk-low-text: #246b45;
+  --risk-low-border: #a8e4bf;
+  --risk-moderate-bg: #fff6c9;
+  --risk-moderate-text: #675200;
+  --risk-moderate-border: #e8d36b;
+  --risk-high-bg: #fde6d3;
+  --risk-high-text: #8a3b07;
+  --risk-high-border: #f0b080;
+  --risk-critical-bg: #fde8e8;
+  --risk-critical-text: #8b2525;
+  --risk-critical-border: #f5b8b8;
   --fw-extrabold: 800; /* verdict headline only */
   --font: "Inter Variable", Inter, system-ui, sans-serif;
   --fw-regular: 400;
