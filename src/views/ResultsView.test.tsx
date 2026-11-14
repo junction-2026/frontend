@@ -71,9 +71,17 @@ describe('Results: verdict component', () => {
     expect(screen.queryByRole('button', { name: 'Read full explanation' })).toBeNull()
   })
 
-  it('chooses the state only from the verdict, never from confidence', async () => {
-    await show(withResult({ verdict: 'not_detected', confidence: 0.99 }))
-    expect(verdictEl().dataset.verdict).toBe('not_detected')
+  it.each([['detected'], ['not_detected'], ['uncertain']])('chooses the %s state only from the verdict, never from confidence', async (verdict) => {
+    const seen: string[][] = []
+    for (const confidence of [0.05, 0.95]) {
+      const h = await show(withResult({ verdict, confidence }))
+      const el = verdictEl()
+      expect(el.dataset.verdict).toBe(verdict)
+      seen.push([el.className, h.textContent ?? '', el.querySelector('.verdict-pill')?.textContent ?? '', el.querySelector('.verdict-summary')?.textContent ?? ''])
+      expect(el.querySelectorAll('.info-card')).toHaveLength(0) // fixture has no card data: none appear or vanish with confidence
+      cleanup()
+    }
+    expect(seen[0]).toEqual(seen[1])
   })
 
   it('shows the confidence as a rounded percentage', async () => {
