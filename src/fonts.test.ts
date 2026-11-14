@@ -58,4 +58,8 @@ describe('fonts', () => {
     const [a, b] = [lum(hex('muted')), lum(hex('bg'))].sort((x, y) => y - x)
     expect((a + 0.05) / (b + 0.05)).toBeGreaterThanOrEqual(4.5)
   })
+
+  it('the 780px analyzing column outranks .view regardless of import order', () => {
+    expect(readFileSync('src/styles/analyze.css', 'utf8')).toMatch(/\.view\.analyze-view\s*{[^}]*780px/)
+  })
 })

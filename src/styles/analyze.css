@@ -252,7 +252,7 @@
   to { transform: rotate(360deg); }
 }
 
-.analyze-view {
+.view.analyze-view {
   width: min(780px, calc(100% - 2rem));
 }
 
