@@ -138,7 +138,7 @@
   color: var(--ink-2);
   text-decoration: underline;
   text-underline-offset: 3px;
-  font-weight: 560;
+  font-weight: 500;
 }
 
 .feature-grid {
@@ -190,8 +190,9 @@
 
 .quote-text {
   margin: 0 0 0.9rem;
-  font-family: var(--serif);
+  font-family: var(--font);
   font-style: italic;
+  font-weight: 400;
   font-size: clamp(1.15rem, 2.2vw, 1.45rem);
   line-height: 1.35;
   letter-spacing: -0.01em;
@@ -211,33 +212,32 @@
 }
 
 .progress-ring {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   margin: 0 auto 1rem;
   position: relative;
 }
 
-.progress-ring svg {
-  width: 64px;
-  height: 64px;
-  transform: rotate(-90deg);
+.progress-ring > svg {
+  width: 56px;
+  height: 56px;
+  animation: ring-spin 1.2s linear infinite;
+}
+
+.progress-ring .track,
+.progress-ring .arc {
+  fill: none;
+  stroke-width: 2.5;
 }
 
 .progress-ring .track {
-  fill: none;
-  stroke: var(--line);
-  stroke-width: 4;
+  stroke: var(--progress-track);
 }
 
 .progress-ring .arc {
-  fill: none;
-  stroke: var(--blue);
-  stroke-width: 4;
+  stroke: var(--progress-active);
   stroke-linecap: round;
-  stroke-dasharray: 150;
-  stroke-dashoffset: 55;
-  animation: spin-arc 1.4s linear infinite;
-  transform-origin: 32px 32px;
+  stroke-dasharray: 42 126;
 }
 
 .progress-ring .core {
@@ -245,18 +245,58 @@
   inset: 0;
   display: grid;
   place-items: center;
-  color: var(--blue);
+  color: var(--progress-active);
+}
+
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
+
+.analyze-view {
+  width: min(780px, calc(100% - 2rem));
 }
 
 .analyze-center h2 {
   margin: 0 0 0.4rem;
-  font-size: 1.45rem;
-  letter-spacing: -0.03em;
+  font-size: 1.5rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.02em;
 }
 
 .analyze-center p {
   margin: 0 auto 1.2rem;
   max-width: 34rem;
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: var(--fw-regular);
+}
+
+.analyze-center .bar,
+.analyze-center .bar-meta {
+  max-width: none;
+}
+
+.analyze-controls .btn-secondary {
+  padding: 0.35rem 0.85rem;
+  font-weight: var(--fw-medium);
+  font-size: 0.85rem;
+}
+
+.analyze-controls .btn-secondary::after {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.analyze-controls .btn-secondary[aria-expanded="false"]::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.analyze-controls .btn-link {
+  font-weight: var(--fw-medium);
   color: var(--muted);
 }
 
@@ -269,14 +309,18 @@
 }
 
 .ledger {
-  padding: 1rem 1.1rem 0.4rem;
+  padding: 0 1.1rem 0.4rem;
+  overflow: hidden;
 }
 
 .ledger-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.7rem;
+  margin: 0 -1.1rem 0.4rem;
+  padding: 0.75rem 1.1rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
   gap: 1rem;
 }
 
@@ -291,8 +335,8 @@
 .ledger-head span {
   color: var(--faint);
   font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.05em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -471,8 +515,14 @@
   font-size: 0.9rem;
 }
 
-.progress-ring.idle .arc {
+.progress-ring.idle > svg {
   animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-ring > svg {
+    animation: none;
+  }
 }
 
 @media (max-width: 960px) {

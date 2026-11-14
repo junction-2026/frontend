@@ -1,7 +1,3 @@
-/* Self-hosted (bundled woff2, font-display: swap). Never link Google Fonts: it leaks visitor IPs. */
-@import '@fontsource-variable/newsreader/opsz.css';
-@import '@fontsource-variable/newsreader/opsz-italic.css';
-@import '@fontsource/plus-jakarta-sans/400.css';
-@import '@fontsource/plus-jakarta-sans/500.css';
-@import '@fontsource/plus-jakarta-sans/600.css';
-@import '@fontsource/plus-jakarta-sans/700.css';
+/* Self-hosted Inter (bundled woff2, font-display: swap). Never link Google Fonts: it leaks visitor IPs. */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter/wght-italic.css';
