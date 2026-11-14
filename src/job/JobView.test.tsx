@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from '../App'
+import JobView from './JobView'
 
 const fetchMock = vi.fn()
 beforeEach(() => vi.stubGlobal('fetch', fetchMock))
@@ -33,8 +33,7 @@ const job = (content: string, result: unknown, extra: object = {}) => ({
 })
 const show = async (j: unknown) => {
   fetchMock.mockResolvedValue(json(j))
-  window.history.replaceState(null, '', '/?job=j1')
-  render(<App />)
+  render(<JobView id="j1" />)
   return screen.findByTestId('job-text')
 }
 const marks = (el: HTMLElement) => [...el.querySelectorAll('mark')]
@@ -145,8 +144,7 @@ describe('job view', () => {
     fetchMock
       .mockResolvedValueOnce(json(job('abc', null, { status: 'running', done: false })))
       .mockResolvedValueOnce(json(job('abc', { detected: [] })))
-    window.history.replaceState(null, '', '/?job=j1')
-    render(<App />)
+    render(<JobView id="j1" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(fetchMock).toHaveBeenCalledTimes(1)
     await act(() => vi.advanceTimersByTimeAsync(1999))
@@ -160,8 +158,7 @@ describe('job view', () => {
   it('stops polling on unmount', async () => {
     vi.useFakeTimers()
     fetchMock.mockImplementation(async () => json(job('abc', null, { status: 'running', done: false })))
-    window.history.replaceState(null, '', '/?job=j1')
-    const { unmount } = render(<App />)
+    const { unmount } = render(<JobView id="j1" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     unmount()
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -170,9 +167,8 @@ describe('job view', () => {
 
   it('shows an alert for 404 and for a network error, without polling', async () => {
     vi.useFakeTimers()
-    window.history.replaceState(null, '', '/?job=nope')
     fetchMock.mockResolvedValue(json({ error: { code: 'not_found' } }, 404))
-    const { unmount } = render(<App />)
+    const { unmount } = render(<JobView id="nope" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(screen.getByRole('alert')).toHaveTextContent(/not found/i)
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -180,7 +176,7 @@ describe('job view', () => {
     unmount()
     fetchMock.mockReset()
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
-    render(<App />)
+    render(<JobView id="nope" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(screen.getByRole('alert')).toHaveTextContent('Failed to fetch')
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -306,13 +302,5 @@ describe('job view', () => {
       await show(base)
       expect(screen.queryByText(/AI-assessed/)).toBeNull()
     })
-  })
-
-  it('keeps the health page without ?job and when job is empty', async () => {
-    fetchMock.mockResolvedValue(json({ status: 'ok' }))
-    window.history.replaceState(null, '', '/?job=')
-    render(<App />)
-    expect(await screen.findByRole('heading', { name: 'Hello, World!' })).toBeInTheDocument()
-    expect(fetchMock.mock.calls[0][0]).toBe('/healthz')
   })
 })

@@ -1,0 +1,143 @@
+/* Shared components ported from UI_DESIGN/css/styles.css. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.status-pill.blue {
+  background: var(--blue-soft);
+  color: #2456c8;
+}
+
+.status-pill.orange {
+  background: var(--orange-soft);
+  color: var(--orange);
+}
+
+.status-pill.green {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.status-pill.purple {
+  background: var(--purple-soft);
+  color: #5d4a8a;
+}
+
+.bar {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  overflow: hidden;
+  max-width: 420px;
+  margin: 0 auto 0.7rem;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  width: 62.5%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ea0ff, var(--blue));
+}
+
+.bar-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 420px;
+  margin: 0 auto 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.tag.orange {
+  background: #f8e0cc;
+  color: #9a4a12;
+}
+.tag.pink {
+  background: #f4dce6;
+  color: #8a3d5c;
+}
+.tag.purple {
+  background: #e7dff4;
+  color: #5b4588;
+}
+.tag.gray {
+  background: var(--bg-soft);
+  color: var(--muted);
+}
+.tag.green {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.toggle {
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.analyzer-row .icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-soft);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.analyzer-main {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.badge-soft {
+  display: inline-flex;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: var(--bg-soft);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.badge-blue {
+  display: inline-flex;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: var(--blue-soft);
+  color: #2456c8;
+  font-size: 0.72rem;
+  font-weight: 650;
+}

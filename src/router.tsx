@@ -1,0 +1,86 @@
+import { useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from 'react'
+
+export type RouteName =
+  | 'home' | 'analyzing' | 'results' | 'detail' | 'history' | 'explore' | 'region' | 'ask' | 'settings' | 'states'
+export type Route = { name: RouteName; id?: string }
+
+// Ordered table; the first match wins and an unknown path falls back to Home.
+const ROUTES: [RegExp, RouteName][] = [
+  [/^\/$/, 'home'],
+  [/^\/jobs\/([^/]+)\/live$/, 'analyzing'],
+  [/^\/jobs\/([^/]+)\/detail$/, 'detail'],
+  [/^\/jobs\/([^/]+)$/, 'results'],
+  [/^\/history$/, 'history'],
+  [/^\/explore$/, 'explore'],
+  [/^\/explore\/region$/, 'region'],
+  [/^\/ask$/, 'ask'],
+  [/^\/settings$/, 'settings'],
+  [/^\/states$/, 'states'],
+]
+
+export function matchRoute(pathname: string): Route {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
+  for (const [re, name] of ROUTES) {
+    const m = re.exec(path)
+    if (!m) continue
+    if (m[1] === undefined) return { name }
+    try {
+      return { name, id: decodeURIComponent(m[1]) }
+    } catch {
+      return { name: 'home' } // malformed %-escape in the id
+    }
+  }
+  return { name: 'home' }
+}
+
+// Which primary nav tab a route belongs to (null: none, e.g. Settings).
+export function navFor(name: RouteName): 'analyze' | 'explore' | 'history' | null {
+  if (name === 'explore' || name === 'region') return 'explore'
+  if (name === 'history') return 'history'
+  if (name === 'settings') return null
+  return 'analyze'
+}
+
+// `/?job=<id>` (old shared links) becomes `/jobs/<id>`, without a reload.
+function redirectLegacy() {
+  const { pathname, search } = window.location
+  const job = pathname === '/' ? new URLSearchParams(search).get('job') : null
+  if (job) window.history.replaceState(null, '', `/jobs/${encodeURIComponent(job)}`)
+}
+
+const listeners = new Set<() => void>()
+const notify = () => listeners.forEach((l) => l())
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  window.addEventListener('popstate', listener)
+  return () => {
+    listeners.delete(listener)
+    window.removeEventListener('popstate', listener)
+  }
+}
+
+export function navigate(to: string) {
+  window.history.pushState(null, '', to)
+  redirectLegacy()
+  notify()
+  window.scrollTo(0, 0)
+}
+
+export function useRoute(): Route {
+  const pathname = useSyncExternalStore(subscribe, () => window.location.pathname)
+  return matchRoute(pathname)
+}
+
+// Runs once before the first render (see App).
+export const initRouter = redirectLegacy
+
+export function Link({ href, onClick, target, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
+  const handle = (e: MouseEvent<HTMLAnchorElement>) => {
+    onClick?.(e)
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || target) return
+    e.preventDefault()
+    navigate(href)
+  }
+  return <a href={href} target={target} onClick={handle} {...rest} />
+}

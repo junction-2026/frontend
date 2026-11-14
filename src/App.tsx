@@ -1,26 +1,36 @@
-import { useEffect, useState } from 'react'
-import { checkHealth, type HealthResult } from './health'
-import JobView from './job/JobView'
+import { useState, type ComponentType } from 'react'
+import { initRouter, useRoute, type RouteName } from './router'
+import { Shell } from './ui/Shell'
+import AnalyzingView from './views/AnalyzingView'
+import AskView from './views/AskView'
+import DetailView from './views/DetailView'
+import ExploreView from './views/ExploreView'
+import HistoryView from './views/HistoryView'
+import HomeView from './views/HomeView'
+import RegionView from './views/RegionView'
+import ResultsView from './views/ResultsView'
+import SettingsView from './views/SettingsView'
+import StatesView from './views/StatesView'
+import './styles/fonts.css'
+import './styles/tokens.css'
+import './styles/base.css'
+import './styles/shell.css'
+import './styles/components.css'
 
-export default function App() {
-  const job = new URLSearchParams(window.location.search).get('job')
-  return job ? <JobView id={job} /> : <HealthPage />
+type ViewProps = { id: string }
+// Job routes always carry an id; the others ignore it.
+const VIEWS: Record<RouteName, ComponentType<ViewProps>> = {
+  home: HomeView, analyzing: AnalyzingView, results: ResultsView, detail: DetailView, history: HistoryView,
+  explore: ExploreView, region: RegionView, ask: AskView, settings: SettingsView, states: StatesView,
 }
 
-function HealthPage() {
-  const [result, setResult] = useState<HealthResult | null>(null)
-
-  useEffect(() => {
-    let active = true
-    void checkHealth().then((r) => {
-      if (active) setResult(r)
-    })
-    return () => {
-      active = false
-    }
-  }, [])
-
-  if (!result) return <p role="status">Loading…</p>
-  if (!result.ok) return <p role="alert">{result.message}</p>
-  return <h1>Hello, World!</h1>
+export default function App() {
+  useState(initRouter) // legacy /?job=<id> redirect before the first route is read
+  const route = useRoute()
+  const View = VIEWS[route.name]
+  return (
+    <Shell>
+      <View id={route.id ?? ''} />
+    </Shell>
+  )
 }
