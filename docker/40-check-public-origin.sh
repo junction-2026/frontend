@@ -7,7 +7,7 @@ o="${v%/}"
 ok=
 case "$o" in
   *[[:space:]]*) ;;
-  *) if printf '%s\n' "$o" | grep -Eq '^https?://[^/?#@]+$'; then
+  *) if printf '%s\n' "$o" | grep -Eq '^https?://([^[:space:]/?#@:[]+|\[[^][:space:]/?#@]+\])(:[0-9]+)?$'; then
        h="${o#*://}"
        case "$h" in '['*) h="${h%%]*}]" ;; *) h="${h%%:*}" ;; esac
        case "$(printf '%s' "$h" | tr 'A-Z' 'a-z')" in localhost|127.0.0.1|'[::1]'|0.0.0.0) ;; *) ok=1 ;; esac

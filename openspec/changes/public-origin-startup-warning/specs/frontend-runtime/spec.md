@@ -12,10 +12,10 @@ The image SHALL contain `/docker-entrypoint.d/40-check-public-origin.sh` (mode 0
 - **THEN** the script prints nothing and exits 0
 
 ### Requirement: Public origin acceptance
-The startup check SHALL accept `PUBLIC_ORIGIN` only when, after one optional trailing `/` is stripped, it matches `^https?://[^/?#[:space:]@]+$` (scheme http or https, a host, optional `:port`, no path, query, fragment or userinfo) and its host is not `localhost`, `127.0.0.1`, `[::1]` or `0.0.0.0` (case-insensitive).
+The startup check SHALL accept `PUBLIC_ORIGIN` only when, after one optional trailing `/` is stripped, it matches `^https?://([^[:space:]/?#@:[]+|\[[^][:space:]/?#@]+\])(:[0-9]+)?$` (scheme http or https, a non-empty host or bracketed IPv6 literal, optional all-digit `:port`, no path, query, fragment or userinfo) and its host is not `localhost`, `127.0.0.1`, `[::1]` or `0.0.0.0` (case-insensitive).
 
 #### Scenario: Invalid origins warn
-- **WHEN** `PUBLIC_ORIGIN` is unset, empty, `localhost:8080`, `ftp://veil.example`, `https://veil.example/app`, `https://veil.example?x=1`, `http://LOCALHOST:8080`, `http://127.0.0.1:8081` or `http://[::1]`
+- **WHEN** `PUBLIC_ORIGIN` is unset, empty, `localhost:8080`, `ftp://veil.example`, `https://veil.example/app`, `https://veil.example?x=1`, `http://:8080`, `https://veil.example:abc`, `http://LOCALHOST:8080`, `http://127.0.0.1:8081` or `http://[::1]`
 - **THEN** the script prints the WARNING line to stderr and exits 0
 
 #### Scenario: Test coverage of the script

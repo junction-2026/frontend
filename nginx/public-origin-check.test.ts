@@ -13,6 +13,7 @@ describe('public origin startup check', () => {
   it.each([
     undefined, '', 'http://localhost', 'http://LOCALHOST:8080', 'http://127.0.0.1:8081', 'http://[::1]',
     'localhost:8080', 'ftp://veil.example', 'https://veil.example/app', 'https://veil.example?x=1',
+    'http://:8080', 'https://veil.example:abc', 'https://veil.example:', 'http://[]',
   ])('warns for %j', (origin) => {
     const r = run(origin)
     expect(r.status).toBe(0)
@@ -22,7 +23,7 @@ describe('public origin startup check', () => {
     expect(r.stderr).toContain(`PUBLIC_ORIGIN="${origin ?? ''}"`)
   })
 
-  it.each(['https://veil.example', 'https://veil.example/', 'http://veil.example:8443'])('is silent for %j', (origin) => {
+  it.each(['https://veil.example', 'https://veil.example/', 'http://veil.example:8443', 'http://[2001:db8::1]:8443'])('is silent for %j', (origin) => {
     const r = run(origin)
     expect(r.status).toBe(0)
     expect(r.stderr).toBe('')
