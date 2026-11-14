@@ -140,13 +140,14 @@ describe('one French analysis in every locale', () => {
       expect(within(list).getByText(name('Doubt'))).toBeInTheDocument()
       const tags = [...document.querySelectorAll('.tags .tag')].map((e) => e.textContent)
       expect(tags).toEqual([name('Loaded_Language'), name('Doubt')])
+      // the one localization response translates both the verdict text and the LLM explanation: wait for it first
+      await userText(`[${lng}] user text`)
       // LLM group: catalog name and definition by label, translated explanation, verbatim quote in bdi
       const llm = document.querySelector('.job-llm') as HTMLElement
       expect(within(llm).getByText(name('statistical_cherry_picking'))).toBeInTheDocument()
       expect(within(llm).getByText(`[${lng}] statistical_cherry_picking explanation`)).toBeInTheDocument()
       expect(llm.querySelector('blockquote bdi[dir=auto]')?.textContent).toBe('300 % de hausse')
       // verdict text translated and labelled with the source language
-      await userText(`[${lng}] user text`)
       expect(screen.getAllByText(translate(lng as Locale, 'results.loc.machine_translated', { language: languageName('fr', lng) })).length).toBeGreaterThan(0)
       expect(locRequests()).toHaveLength(1)
       // highlight why: catalog template with the span text verbatim
