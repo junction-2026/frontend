@@ -117,6 +117,25 @@ describe('chatting', () => {
     expect([...document.querySelectorAll('.bubble-user, .bubble-ai')].map((e) => e.textContent?.replace(/^V/, ''))).toEqual(['Warum?', 'An answer.', 'Und weiter?', 'Second.'])
   })
 
+  it('keeps the page when scrollIntoView returns a Promise (Chromium scroll promises)', async () => {
+    // a returned Promise must not become the auto-scroll effect's cleanup, or React throws on the next send
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = (() => Promise.resolve()) as unknown as typeof original
+    try {
+      const box = await show()
+      fireEvent.change(box, { target: { value: 'first' } })
+      fireEvent.keyDown(box, { key: 'Enter' })
+      expect(await screen.findByText('An answer.')).toBeInTheDocument()
+      chat = () => reply('Second.')
+      fireEvent.change(box, { target: { value: 'second' } })
+      fireEvent.keyDown(box, { key: 'Enter' })
+      expect(await screen.findByText('Second.')).toBeInTheDocument()
+      expect(screen.getByRole('textbox')).toBeInTheDocument()
+    } finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+
   it('sends on Enter, adds a line on Shift+Enter and never sends a blank question', async () => {
     const box = await show()
     fireEvent.change(box, { target: { value: 'line one' } })
