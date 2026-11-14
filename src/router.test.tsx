@@ -41,16 +41,16 @@ describe('matchRoute', () => {
 })
 
 describe('routes render their stub view in the shell', () => {
-  it.each<[string, string, number?]>([
+  it.each<[string, string | RegExp, number?]>([
     ['/', 'See beyond the narrative.'],
     ['/jobs/j1/live', 'Analyzing your content...', 2],
     ['/jobs/j1/detail', 'Detailed analysis'],
     ['/history', 'Analysis History'],
-    ['/explore', 'Explore'],
-    ['/explore/region', 'Region'],
-    ['/ask', 'Ask'],
-    ['/settings', 'Settings'],
-    ['/states', 'States'],
+    ['/explore', 'Explore the world.'],
+    ['/explore/region', 'Explore the world.'],
+    ['/ask', /^Ask VEIL/],
+    ['/settings', 'Settings & Methodology'],
+    ['/states', 'Edge Cases & System States'],
     ['/unknown', 'See beyond the narrative.'],
   ])('%s', (path, heading, level = 1) => {
     open(path)
