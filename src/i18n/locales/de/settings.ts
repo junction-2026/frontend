@@ -1,7 +1,7 @@
 export default {
   'eyebrow': 'Einstellungen & Audit / ● Framework v3.18',
   'title': 'Einstellungen & Methodik',
-  'lede': 'Konfigurieren Sie Analyseeinstellungen und Barrierefreiheit und lernen Sie das epistemische Framework von VEIL kennen.',
+  'lede': 'Konfigurieren Sie Analyseeinstellungen und Barrierefreiheit und lernen Sie das epistemische Framework von Stiriri kennen.',
   'tabs_label': 'Einstellungs-Tabs',
   'tab.interface': 'Oberfläche & Sprache',
   'tab.analyzers': 'Analysatoren & Ensembles',
@@ -11,7 +11,7 @@ export default {
   'language_block': 'Oberflächen- & Analysesprache',
   'local_override': 'Lokale Überschreibung',
   'interface_language': 'Oberflächensprache',
-  'interface_language_text': 'Steuert Beschriftungen, Hilfetexte und Ask-VEIL-Antworten in der Produktoberfläche.',
+  'interface_language_text': 'Steuert Beschriftungen, Hilfetexte und Ask-Stiriri-Antworten in der Produktoberfläche.',
   'interface_language_value': 'Englisch (US) ▾',
   'input_language': 'Sprache der Analyseeingabe',
   'recommended': 'Empfohlen',

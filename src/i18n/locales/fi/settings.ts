@@ -1,7 +1,7 @@
 export default {
   'eyebrow': 'Asetukset ja auditointi / ● Viitekehys v3.18',
   'title': 'Asetukset ja menetelmät',
-  'lede': 'Määritä analyysiasetukset ja saavutettavuusvaihtoehdot ja tutustu VEILin episteemiseen viitekehykseen.',
+  'lede': 'Määritä analyysiasetukset ja saavutettavuusvaihtoehdot ja tutustu Stiririn episteemiseen viitekehykseen.',
   'tabs_label': 'Asetusvälilehdet',
   'tab.interface': 'Käyttöliittymä ja kieli',
   'tab.analyzers': 'Analysaattorit ja kokonaisuudet',
@@ -11,7 +11,7 @@ export default {
   'language_block': 'Käyttöliittymän ja analyysin kieli',
   'local_override': 'Paikallinen ohitus',
   'interface_language': 'Käyttöliittymän kieli',
-  'interface_language_text': 'Ohjaa tuotteen käyttöliittymän nimikkeitä, ohjetekstejä ja Ask VEIL -vastauksia.',
+  'interface_language_text': 'Ohjaa tuotteen käyttöliittymän nimikkeitä, ohjetekstejä ja Ask Stiriri -vastauksia.',
   'interface_language_value': 'englanti (US) ▾',
   'input_language': 'Analysoitavan syötteen kieli',
   'recommended': 'Suositeltu',

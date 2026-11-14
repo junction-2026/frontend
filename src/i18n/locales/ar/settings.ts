@@ -1,7 +1,7 @@
 export default {
   'eyebrow': 'التفضيلات والتدقيق / ● الإطار v3.18',
   'title': 'الإعدادات والمنهجية',
-  'lede': 'اضبط تفضيلات التحليل وخيارات إمكانية الوصول، وتعرّف على الإطار المعرفي لـ VEIL.',
+  'lede': 'اضبط تفضيلات التحليل وخيارات إمكانية الوصول، وتعرّف على الإطار المعرفي لـ Stiriri.',
   'tabs_label': 'تبويبات الإعدادات',
   'tab.interface': 'الواجهة واللغة',
   'tab.analyzers': 'المحلِّلات والمجموعات',
@@ -11,7 +11,7 @@ export default {
   'language_block': 'لغة الواجهة والتحليل',
   'local_override': 'تجاوز محلي',
   'interface_language': 'لغة الواجهة',
-  'interface_language_text': 'تتحكم في التسميات ونصوص المساعدة وردود Ask VEIL في واجهة المنتج.',
+  'interface_language_text': 'تتحكم في التسميات ونصوص المساعدة وردود Ask Stiriri في واجهة المنتج.',
   'interface_language_value': 'الإنجليزية (الولايات المتحدة) ▾',
   'input_language': 'لغة مدخلات التحليل',
   'recommended': 'موصى به',
