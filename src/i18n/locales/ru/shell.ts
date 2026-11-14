@@ -1,0 +1,16 @@
+export default {
+  'brand_subtitle': '/ Intelligence',
+  'nav.label': 'Основная навигация',
+  'nav.analyze': 'Анализ',
+  'nav.explore': 'Обзор',
+  'nav.history': 'История',
+  'language': 'Язык',
+  'new_analysis': '+ Новый анализ',
+  'account': 'Аккаунт',
+  'health.checking': 'Проверка бэкенда…',
+  'health.offline': 'Бэкенд недоступен',
+  'health.online': 'Бэкенд работает',
+  'health.failed': 'Проверка бэкенда не удалась: {detail}',
+  'health.timeout': 'время ожидания истекло ({ms} мс)',
+  'health.bad_body': 'неожиданное тело ответа',
+}

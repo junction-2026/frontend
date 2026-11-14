@@ -5,7 +5,7 @@ import { article, exploreJob, factCheck, outlet, query } from '../explore/fixtur
 import { coverage, job, json } from '../job/fixtures'
 import { CATALOGS } from './translate'
 
-const LOCALES = ['en', 'fr', 'ar', 'de', 'fi'] as const
+const LOCALES = ['en', 'fr', 'ar', 'de', 'fi', 'ru'] as const
 const ARTICLES = [
   article(1, { title: 'Grid outage in Helsinki', date: 'today', source: 'Wire' }),
   article(2, { title: 'Storm in Berlin', language: 'de', query: 'q two' }),

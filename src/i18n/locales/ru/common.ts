@@ -1,0 +1,17 @@
+export default {
+  'mock.badge': 'ТЕСТ',
+  'mock.title': 'Тестовые данные – нет подключения к бэкенду',
+  'mock.title_labeled': 'Тестовые данные – нет подключения к бэкенду ({label})',
+  'errors.invalid_request': 'Запрос некорректен. Проверьте ввод и попробуйте снова.',
+  'errors.validation_failed': 'Некоторые поля заполнены неверно.',
+  'errors.validation_failed_fields': 'Некоторые поля заполнены неверно: {fields}',
+  'errors.not_found': 'Не найдено. Возможно, анализ был удалён.',
+  'errors.method_not_allowed': 'Это действие не поддерживается.',
+  'errors.payload_too_large': 'Содержимое больше 1 МиБ',
+  'errors.internal_error': 'На сервере что-то пошло не так. Повторите попытку позже.',
+  'errors.unknown_analyzer': 'Неизвестный анализатор: {ids}.',
+  'errors.unknown_value': 'неизвестно',
+  'errors.analyzer_not_selectable': 'Этот анализатор нельзя выбрать.',
+  'errors.job_finished': 'Этот анализ уже завершён.',
+  'errors.network_error': 'Не удалось связаться с бэкендом. Проверьте подключение и попробуйте снова.',
+}

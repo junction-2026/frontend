@@ -12,6 +12,7 @@ describe('dayLabel', () => {
     ['en', 'Today', 'Yesterday', 'Unknown date'],
     ['de', 'Heute', 'Gestern', 'Unbekanntes Datum'],
     ['fi', 'Tänään', 'Eilen', 'Tuntematon päivämäärä'],
+    ['ru', 'Сегодня', 'Вчера', 'Неизвестная дата'],
   ] as const)('translates today, yesterday and unknown in %s', (l, today, yesterday, unknown) => {
     expect(dayLabel(iso(NOW - H), NOW, l, t(l))).toBe(today)
     expect(dayLabel(iso(NOW - 24 * H), NOW, l, t(l))).toBe(yesterday)
@@ -39,6 +40,7 @@ describe('relativeTime', () => {
     expect(relativeTime(iso(NOW - H), NOW, 'en', t('en'))).toBe('1 hour ago')
     expect(relativeTime(iso(NOW - 3 * H), NOW, 'de', t('de'))).toBe('vor 3 Stunden')
     expect(relativeTime(iso(NOW - 3 * H), NOW, 'fi', t('fi'))).toBe('3 tuntia sitten')
+    expect(relativeTime(iso(NOW - 3 * H), NOW, 'ru', t('ru'))).toBe('3 часа назад')
     expect(relativeTime(iso(NOW - 2 * 24 * H), NOW, 'de', t('de'))).toBe('vorgestern')
   })
 
