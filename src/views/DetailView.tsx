@@ -1,6 +1,6 @@
-import type { Job } from '../api/types'
+import { verdictOf, type Job } from '../api/types'
 import JobView from '../job/JobView'
-import { claimCount, readTechniques } from '../job/read'
+import { claimCount, readTechniques, VERDICT_UI } from '../job/read'
 import { WithJob } from '../job/WithJob'
 import { Link } from '../router'
 import { Mock } from '../ui/MockBadge'
@@ -9,8 +9,18 @@ import '../job/results.css'
 function Detail({ job }: { job: Job }) {
   const patterns = readTechniques(job)?.detected.length
   const claims = claimCount(job)
+  const f = job.finalization
+  const result = f?.status === 'completed' ? f.result : null
   return (
     <>
+      {result && (
+        <section className="card final-assessment">
+          <h2>Final assessment</h2>
+          <strong>{VERDICT_UI[verdictOf(result.verdict)].label}</strong>
+          {result.produced_by === 'orchestrator' && <> <span className="tag gray">Insufficient evidence</span></>}
+          <p>{result.user_text}</p>
+        </section>
+      )}
       <div className="metrics-bar">
         <div><span>Patterns</span><strong>{patterns === undefined ? '—' : `${patterns} detected`}</strong></div>
         <div><span>Claims</span><strong>{claims === null ? '—' : `${claims} extracted`}</strong></div>

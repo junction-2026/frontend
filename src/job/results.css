@@ -55,6 +55,41 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.verdict-banner {
+  margin: 0 0 0.9rem;
+  padding: 1.1rem 1.35rem;
+  border-radius: var(--radius-sm);
+  color: #fff;
+}
+.verdict-banner.red {
+  background: var(--danger);
+}
+.verdict-banner.orange {
+  background: var(--orange);
+}
+.verdict-banner.green {
+  background: var(--green);
+}
+.verdict-card .verdict-banner h2 {
+  margin: 0;
+  max-width: none;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+.final-assessment {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+}
+.final-assessment h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+.final-assessment p {
+  margin: 0.4rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .verdict-body {
   margin: 0 0 1rem;
   color: var(--muted);

@@ -23,29 +23,31 @@ const inMock = (el: HTMLElement) => el.closest('[data-mock]')
 
 describe('Results: verdict card', () => {
   it.each([
-    ['detected', 'Manipulation detected', 'orange'],
+    ['detected', 'Manipulation detected', 'red'],
     ['not_detected', 'No manipulation indicators', 'green'],
-    ['uncertain', 'Uncertain', 'purple'],
-    ['suspicious', 'Uncertain', 'purple'], // unknown verdict reads as uncertain
-  ])('maps verdict %s to "%s"', async (verdict, label, tone) => {
-    await show(withResult({ verdict }))
-    const pill = screen.getByText(label)
-    expect(pill).toHaveClass('status-pill', tone)
-    expect(inMock(pill)).toBeNull()
+    ['uncertain', 'Uncertain', 'orange'],
+    ['suspicious', 'Uncertain', 'orange'], // unknown verdict reads as uncertain
+  ])('shows verdict %s as a "%s" banner coloured %s', async (verdict, label, colour) => {
+    const h = await show(withResult({ verdict }))
+    expect(h).toHaveTextContent(label)
+    expect(h.parentElement).toHaveClass('verdict-banner', colour)
+    expect(document.querySelector('.verdict-card .status-pill')).toBeNull()
+    expect(inMock(h)).toBeNull()
   })
 
-  it('shows user_text as literal text and no confidence number', async () => {
+  it('does not show user_text or a confidence number', async () => {
     const text = '<b>fake</b> [click](https://example.com) http://example.com'
-    const h = await show(withResult({ user_text: text, confidence: 0.86 }))
-    expect(h).toHaveTextContent(text)
-    expect(h.querySelector('b, a')).toBeNull()
+    await show(withResult({ user_text: text, confidence: 0.86 }))
+    expect(screen.queryByText(text)).toBeNull()
+    expect(document.body).not.toHaveTextContent('fake')
     expect(screen.queryByText(/0\.86|86 ?%/)).toBeNull()
     expect(screen.queryByText(/confidence/i)).toBeNull()
   })
 
-  it('labels an orchestrator result as insufficient evidence', async () => {
+  it('labels an orchestrator result as insufficient evidence next to the banner', async () => {
     const h = await show(withResult({ verdict: 'uncertain', confidence: null, produced_by: 'orchestrator', user_text: 'Nothing could be checked.' }))
-    expect(h).toHaveTextContent('Nothing could be checked.')
+    expect(screen.queryByText('Nothing could be checked.')).toBeNull()
+    expect(h).toHaveTextContent('Uncertain')
     expect(screen.getByText('Insufficient evidence')).toBeInTheDocument()
   })
 
@@ -78,6 +80,8 @@ describe('Results: finalization and job states', () => {
     await show(job({ status: 'finalizing', done: false, finalization: finalization(status), analyzers }))
     expect(screen.getByText('Final assessment in progress')).toBeInTheDocument()
     expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
+    expect(document.querySelector('.verdict-banner')).toBeNull()
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('The analyzers are still working.')
   })
 
   it.each([
@@ -89,6 +93,14 @@ describe('Results: finalization and job states', () => {
     expect(screen.getByText(text)).toBeInTheDocument()
     expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
     expect(screen.queryByText('Analysis failed')).toBeNull()
+    expect(document.querySelector('.verdict-banner')).toBeNull()
+    expect(screen.getByText('Final assessment skipped')).toHaveClass('status-pill', 'gray')
+  })
+
+  it('shows "No final assessment" for a done job without a finalization result', async () => {
+    await show(job({ finalization: finalization('pending') }))
+    expect(screen.getByText('No final assessment')).toHaveClass('status-pill', 'gray')
+    expect(document.querySelector('.verdict-banner')).toBeNull()
   })
 
   it('shows a failed finalization with its code, and Timed out for timeout', async () => {
