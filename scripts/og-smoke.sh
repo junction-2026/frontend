@@ -51,6 +51,12 @@ for img in site verdict-detected verdict-not_detected verdict-uncertain pending 
   h="$(curl -sI "http://127.0.0.1:$PORT/og/$img.png")"
   grep -q '200' <<<"$(head -1 <<<"$h")" && grep -qi '^content-type: image/png' <<<"$h" && grep -qi '^cache-control: public, max-age=86400' <<<"$h" || { echo "FAIL /og/$img.png"; fail=1; }
 done
+# Favicon set and manifest: static files, never the SPA/njs HTML handler.
+for f in favicon.ico favicon.svg apple-touch-icon.png icon-192.png icon-512.png site.webmanifest; do
+  h="$(curl -sI "http://127.0.0.1:$PORT/$f")"
+  { head -1 <<<"$h" | grep -q ' 200' && grep -qi '^content-type:' <<<"$h" && ! grep -qi '^content-type: *text/html' <<<"$h"; } || { echo "FAIL /$f"; fail=1; continue; }
+  echo "ok   /$f"
+done
 curl -sI -A Twitterbot "http://127.0.0.1:$PORT/" | grep -qi '^cache-control: no-cache' || { echo "FAIL html cache-control"; fail=1; }
 
 # og:image / twitter:image: each distinct URL starts with $ORIGIN/ and, fetched from the local container, is a 200 image/png.

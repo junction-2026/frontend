@@ -102,3 +102,10 @@ The job is read with an internal subrequest through the `/api/` proxy.
 Container smoke test (needs docker, not part of CI): `scripts/og-smoke.sh` builds the image, starts it with a stub
 backend (`scripts/og-stub-backend.mjs`) and checks the tags with `curl -A Twitterbot`, fetches every `og:image`/`twitter:image` URL (200 `image/png`) and
 checks that a container without `PUBLIC_ORIGIN` logs the startup warning and the configured one does not.
+
+## Favicon
+
+`public/favicon.svg` is the master (a monochrome "V", `#111111` on `#fafaf9`). `favicon.ico` (16/32/48), `apple-touch-icon.png`,
+`icon-192.png`, `icon-512.png` are rendered from it: after `npm ci`, run `python3 scripts/favicon.py` (Pillow only) and commit
+the result. `index.html` links them outside the `og:start`/`og:end` block, so the njs head injection keeps them;
+`site.webmanifest` is served as `application/manifest+json` by a `location` in `nginx/default.conf.template`.
