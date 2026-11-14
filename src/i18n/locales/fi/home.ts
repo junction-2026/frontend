@@ -15,7 +15,6 @@ export default {
   'analyze': 'Analysoi',
   'analyzers_loading': 'Ladataan analysaattoreita…',
   'analyzer_disabled': 'pois käytöstä',
-  'final_assessment': 'Loppuarvio',
   'try': 'Kokeile:',
   'sample.energy.label': 'Viraali väite sähköverkosta',
   'sample.energy.text': 'Kaikki tietävät, että nämä ihmiset tuhoavat tulevaisuutemme. Meidän on toimittava ennen kuin on liian myöhäistä!',

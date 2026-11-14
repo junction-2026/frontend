@@ -48,7 +48,6 @@ export default function HomeView() {
   const [analyzers, setAnalyzers] = useState<AnalyzerInfo[] | null>(null)
   const [listError, setListError] = useState<ApiError | null>(null)
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set())
-  const [finalize, setFinalize] = useState(true)
 
   // The analyzers are fetched the first time the panel opens.
   useEffect(() => {
@@ -72,7 +71,6 @@ export default function HomeView() {
     }
     const body: CreateJobBody = mode === 'text' ? { input: { content: value } } : { scrape: { url: value.trim() } }
     if (analyzers && unchecked.size) body.analyzers = analyzers.filter((a) => !unchecked.has(a.id)).map((a) => a.id)
-    if (!finalize) body.options = { finalize: false }
     setBusy(true)
     setProblem(null)
     const r = await createJob(body)
@@ -153,10 +151,6 @@ export default function HomeView() {
                   {!a.enabled && <span className="hint">{t('home.analyzer_disabled')}</span>}
                 </label>
               ))}
-              <label>
-                <input type="checkbox" checked={finalize} onChange={(e) => setFinalize(e.target.checked)} />
-                <span>{t('home.final_assessment')}</span>
-              </label>
             </div>
           )}
         </div>

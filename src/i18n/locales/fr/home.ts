@@ -16,7 +16,6 @@ export default {
   'analyze': 'Analyser',
   'analyzers_loading': 'Chargement des analyseurs…',
   'analyzer_disabled': 'désactivé',
-  'final_assessment': 'Évaluation finale',
   'try': 'Essayez :',
   'sample.energy.label': 'Affirmation virale sur le réseau électrique',
   'sample.energy.text': 'Tout le monde sait que ces gens détruisent notre avenir. Il faut agir avant qu’il ne soit trop tard !',

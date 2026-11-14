@@ -19,7 +19,6 @@ export default {
   'analyze': 'تحليل',
   'analyzers_loading': 'جارٍ تحميل المحللات…',
   'analyzer_disabled': 'معطّل',
-  'final_assessment': 'التقييم النهائي',
   'try': 'جرّب:',
   'sample.energy.label': 'ادعاء منتشر عن شبكة الطاقة',
   'sample.energy.text': 'الجميع يعلم أن هؤلاء الناس يدمرون مستقبلنا. يجب أن نتحرك قبل فوات الأوان!',

@@ -15,7 +15,6 @@ export default {
   'analyze': 'Analyze',
   'analyzers_loading': 'Loading analyzers…',
   'analyzer_disabled': 'disabled',
-  'final_assessment': 'Final assessment',
   'try': 'Try:',
   'sample.energy.label': 'Viral social claim on energy grid',
   'sample.energy.text': "Everyone knows these people are destroying our future. We must act before it's too late!",
