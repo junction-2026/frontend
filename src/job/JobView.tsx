@@ -4,6 +4,7 @@ import { useFormat, useLocale, useT } from '../i18n'
 import { findingEntry, useLoc, useLocalizedText } from './localize'
 import { plain, readLlm, readTechniques, str, techniqueInfo, techniqueText, whyText, type Finding } from './read'
 import { segment, validSpans, type Span } from './segments'
+import { TermContext } from './TermContext'
 import { WikipediaLookup } from './WikipediaLookup'
 import './job.css'
 
@@ -175,6 +176,7 @@ export default function JobView({ job }: { job: Job }) {
         </section>
       )}
       <WikipediaLookup job={job} />
+      <TermContext job={job} />
     </>
   )
 }
