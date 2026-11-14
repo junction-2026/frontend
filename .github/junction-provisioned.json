@@ -1,0 +1,8 @@
+{
+  "approved_digest": "sha256:0b8ed9d3bc209aa75b521acbd114729cf916a9523a6f6bea420e1870f89c624d",
+  "approving_discord_user_id": "689044050413879413",
+  "plan_id": "init-frontend-1571007018695659642-v1",
+  "provisioned_at": "2026-11-14T03:41:47Z",
+  "step_id": "step-1",
+  "template_id": "node-service"
+}

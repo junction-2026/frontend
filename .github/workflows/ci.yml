@@ -1,0 +1,82 @@
+# Template node-service: ORG/<repo>/.github/workflows/ci.yml, check name `repo-ci`.
+# Node.js / TypeScript services and frontends (React, Vite, Next, ...).
+# PRs: install, lint, test, build (each only if the package.json script
+# exists) + OpenSpec validation, with minimal permissions. Push to main:
+# build the image tagged sha-<full sha> when the repo has a Dockerfile, so
+# release manifests can pin its digest. Spec-finalization heads (integration/*)
+# are PR heads, so the PR run is their repo-ci; integration CI builds
+# candidate images itself.
+# Steps are skipped until package.json exists, so the seed commit is green.
+name: repo-ci
+on:
+  pull_request:
+    branches: [main]
+    # labeled: Junction's junction:no-spec label on a standalone change re-runs repo-ci
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main]
+  workflow_dispatch:   # the orchestrator re-runs main when GitHub started no push run
+permissions:
+  contents: read
+jobs:
+  repo-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4      # PIN BY SHA
+        with: {fetch-depth: 0}
+      - uses: actions/setup-node@v4    # PIN BY SHA
+        with:
+          node-version-file: .nvmrc
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+      # node_modules keyed on the exact lockfile, with no restore-keys, so a tree
+      # is only reused for the lockfile it was installed from. Saved on main
+      # only: PR code never writes a tree that other runs reuse.
+      - uses: actions/cache@v4         # PIN BY SHA
+        if: hashFiles('package-lock.json') != '' && github.ref == 'refs/heads/main'
+        with: &nmcache
+          path: node_modules
+          key: nm-${{ runner.os }}-node${{ hashFiles('.nvmrc') }}-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache/restore@v4 # PIN BY SHA
+        if: hashFiles('package-lock.json') != '' && github.ref != 'refs/heads/main'
+        with: *nmcache
+      - name: Install
+        if: hashFiles('package.json') != ''
+        run: |
+          if [ ! -f package-lock.json ]; then npm install --no-audit --no-fund; exit 0; fi
+          # npm ci unless the restored tree was installed from this exact lockfile
+          want=$(sha256sum package-lock.json | cut -c1-64)
+          [ "$(cat node_modules/.lockhash 2>/dev/null)" = "$want" ] || { npm ci && echo "$want" > node_modules/.lockhash; }
+      - name: Lint
+        if: hashFiles('package.json') != ''
+        run: npm run lint --if-present
+      - name: Test
+        if: hashFiles('package.json') != ''
+        run: npm test --if-present
+      - name: Build
+        if: hashFiles('package.json') != ''
+        run: npm run build --if-present
+      - name: OpenSpec validation
+        env: {OPENSPEC_VERSION: "1.16.1"}
+        run: bash scripts/validate-openspec.sh
+  image:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    needs: repo-ci
+    runs-on: ubuntu-latest
+    permissions: {contents: read, packages: write}
+    steps:
+      - uses: actions/checkout@v4      # PIN BY SHA
+      - uses: docker/login-action@v3   # PIN BY SHA
+        if: hashFiles('Dockerfile') != ''
+        with: {registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}"}
+      # Layer cache in the registry (:buildcache, never referenced by a release
+      # manifest). No provenance attestation, so the sha tag stays a single
+      # image manifest as with `docker build`.
+      - name: Build and push sha-tagged image (never :latest in manifests)
+        if: hashFiles('Dockerfile') != ''
+        run: |
+          repo="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker buildx create --use --driver docker-container >/dev/null
+          docker buildx build --push --provenance=false -t "$repo:sha-${GITHUB_SHA}" \
+            --cache-from "type=registry,ref=$repo:buildcache" \
+            --cache-to "type=registry,ref=$repo:buildcache,mode=max" .
