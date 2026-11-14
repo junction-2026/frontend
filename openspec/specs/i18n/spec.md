@@ -227,3 +227,10 @@ The Russian strings of the shell navigation, Home, Results and History SHALL NOT
 #### Scenario: No overflow
 - **WHEN** the locale is ru and the shell, Home, History and Results are rendered at 360px and 1280px
 - **THEN** the document is not wider than the viewport and no control text is clipped
+
+### Requirement: Propaganda map strings
+Every string of the global propaganda map SHALL be a key in the `explore` namespace of en, fr, ar, de, fi and ru, with the plural forms of each locale for counted phrases. The i18n runtime SHALL NOT change.
+
+#### Scenario: Catalog completeness
+- **WHEN** the catalog completeness test runs
+- **THEN** every new `explore` key exists in all six locales with matching placeholders
