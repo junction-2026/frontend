@@ -109,7 +109,7 @@ Every string in the en, de, fr, fi, ar and ru catalogs that names the product SH
 
 #### Scenario: Inflection
 - **WHEN** the fi catalog says "ask VEIL" or "VEIL's"
-- **THEN** the strings read "Kysy VEILiltä" and "VEILin", the fi mock label reads "Ask VEIL:llä ei ole taustajärjestelmää", the de string reads "VEIL fragen" and the fr string reads "Demander à VEIL"
+- **THEN** the strings read "Kysy VEILiltä" and "VEILin", the de string reads "VEIL fragen" and the fr string reads "Demander à VEIL"
 
 #### Scenario: Russian brand
 - **WHEN** the ru catalog names the product
