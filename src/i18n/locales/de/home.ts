@@ -1,6 +1,6 @@
 export default {
   'eyebrow': 'KI-Propagandaerkennung & Medienanalyse',
-  'title': 'Sehen Sie hinter die Erzählung.',
+  'title': 'Sehen Sie hinter das Narrativ.',
   'lede': 'Verstehen Sie die Techniken hinter dem, was Sie lesen.',
   'mode.label': 'Eingabeart',
   'mode.text': 'Text',
