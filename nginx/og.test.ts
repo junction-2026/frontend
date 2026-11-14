@@ -135,3 +135,12 @@ describe('public/og images', () => {
     expect(statSync(`${dir}/${f}`).size).toBeLessThanOrEqual(300 * 1024)
   })
 })
+
+describe('og generator', () => {
+  it('maps verdict-detected to the red palette', () => {
+    const entry = /'verdict-detected': \([^\n]*\),/.exec(readFileSync('scripts/og-images.py', 'utf8'))?.[0] ?? ''
+    expect(entry).toContain('#c0392b')
+    expect(entry).not.toContain('#1f8a4c')
+    expect(entry).not.toContain('#e4f3e8')
+  })
+})

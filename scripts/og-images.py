@@ -9,7 +9,7 @@ W, H = 1200, 630
 # name -> (background, accent, headline lines, subline)
 CARDS = {
     'site': (BG, '#4c82fb', ['Propaganda and', 'manipulation analysis'], 'Paste a post or article. VEIL shows the signs.'),
-    'verdict-detected': ('#e4f3e8', '#1f8a4c', ['Manipulation', 'detected'], 'VEIL verdict'),
+    'verdict-detected': ('#fbe5e2', '#c0392b', ['Manipulation', 'detected'], 'VEIL verdict'),
     'verdict-not_detected': ('#e6f0ff', '#4c82fb', ['No manipulation', 'indicators'], 'VEIL verdict'),
     'verdict-uncertain': ('#fff0d9', '#c45a1a', ['Uncertain'], 'VEIL verdict'),
     'pending': (BG, '#4c82fb', ['Analysis in progress'], 'Open the link to follow it live.'),
