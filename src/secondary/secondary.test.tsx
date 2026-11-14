@@ -80,15 +80,13 @@ describe('States', () => {
 })
 
 describe('Settings', () => {
-  it('marks tabs and the language block as mock with non-functional toggles', async () => {
+  it('marks tabs as mock and renders no language block', async () => {
     open('/settings')
     expect(screen.getByRole('heading', { level: 1, name: 'Settings & Methodology' })).toBeInTheDocument()
     expect(mocked(screen.getByRole('button', { name: 'Data Retention' }))).not.toBeNull()
-    expect(mocked(screen.getByText('Interface Language'))).not.toBeNull()
-    const sw = screen.getByRole('switch')
-    expect(sw).toHaveAttribute('aria-disabled', 'true')
-    fireEvent.click(sw)
-    expect(sw).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByText('Interface Language')).toBeNull()
+    expect(screen.queryByText('Recommended')).toBeNull()
+    expect(screen.queryByRole('switch')).toBeNull()
     const block = within(screen.getByRole('region', { name: 'Active AI analyzers & ensembles' }))
     expect(block.getByRole('status')).toHaveTextContent('Loading analyzers')
     expect(mocked(block.getByRole('status'))).toBeNull()
@@ -141,16 +139,13 @@ describe('Settings', () => {
 })
 
 describe('Localized screens', () => {
-  it('keeps the Settings language block mock and non-functional under fr', () => {
+  it('keeps Settings tabs mock and renders no language block under fr', () => {
     localStorage.setItem('veil.locale', 'fr')
     open('/settings')
     expect(screen.getByRole('heading', { level: 1, name: 'Paramètres et méthodologie' })).toBeInTheDocument()
-    expect(mocked(screen.getByText('Langue de l’interface'))).not.toBeNull()
+    expect(screen.queryByText('Langue de l’interface')).toBeNull()
     expect(mocked(screen.getByRole('button', { name: 'Conservation des données' }))).not.toBeNull()
-    const sw = screen.getByRole('switch', { name: 'Langue du texte analysé' })
-    expect(sw).toHaveAttribute('aria-disabled', 'true')
-    fireEvent.click(sw)
-    expect(sw).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByRole('switch')).toBeNull()
     expect(screen.getByRole('region', { name: 'Analyseurs IA et ensembles actifs' })).toBeInTheDocument()
   })
 
