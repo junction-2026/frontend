@@ -2,6 +2,7 @@ import { verdictOf, type Job } from '../api/types'
 import { DetailedAnalysis } from '../job/DetailedAnalysis'
 import { useT } from '../i18n'
 import { WithJob } from '../job/WithJob'
+import { useLoc, useLocalizedText, userTextEntry } from '../job/localize'
 import { Link } from '../router'
 import '../job/results.css'
 
@@ -9,6 +10,7 @@ function Detail({ job }: { job: Job }) {
   const t = useT()
   const f = job.finalization
   const result = f?.status === 'completed' ? f.result : null
+  const { text, note } = useLocalizedText(typeof result?.user_text === 'string' ? result.user_text : '', userTextEntry(useLoc()))
   return (
     <>
       {result && (
@@ -16,7 +18,8 @@ function Detail({ job }: { job: Job }) {
           <h2>{t('results.detail.final')}</h2>
           <strong>{t(`results.verdict.label.${verdictOf(result.verdict)}`)}</strong>
           {result.produced_by === 'orchestrator' && <> <span className="tag gray">{t('results.insufficient')}</span></>}
-          <p>{result.user_text}</p>
+          <p dir="auto">{text}</p>
+          {note}
         </section>
       )}
       <DetailedAnalysis job={job} />

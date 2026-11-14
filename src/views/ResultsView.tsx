@@ -1,9 +1,9 @@
 import { useId, useState } from 'react'
 import { verdictOf, type Job } from '../api/types'
-import { useFormat, useT } from '../i18n'
+import { useFormat, useLocale, useT } from '../i18n'
 import { Coverage } from '../job/Coverage'
 import { DetailedAnalysis } from '../job/DetailedAnalysis'
-import { techniqueName, readTechniques } from '../job/read'
+import { techniqueInfo, readTechniques } from '../job/read'
 import { seconds } from '../job/text'
 import { resultOf, Verdict } from '../job/Verdict'
 import { WithJob } from '../job/WithJob'
@@ -25,17 +25,19 @@ const TAG_TONES = ['orange', 'pink', 'purple']
 // Everything below the verdict: collapsed by default and not rendered until opened.
 function Detailed({ job, id }: { job: Job; id: string }) {
   const t = useT()
+  const { locale } = useLocale()
   const { formatNumber } = useFormat()
   const [copied, setCopied] = useState(false)
   const content = typeof job.input?.content === 'string' ? job.input.content : ''
-  const techniques = readTechniques(job)?.detected ?? []
+  const read = readTechniques(job)
+  const techniques = read?.detected ?? []
   const r = resultOf(job)
   const copy = () => navigator.clipboard?.writeText(window.location.href).then(() => setCopied(true), () => undefined)
   return (
     <div id={id} role="region" aria-label={t('results.detailed_region')} className="detailed-region">
       {content && (
         <div className="soft-card results-excerpt">
-          <p className="quote-text">“{content.length > EXCERPT_MAX ? `${content.slice(0, EXCERPT_MAX)}…` : content}”</p>
+          <p className="quote-text">“<bdi dir="auto">{content.length > EXCERPT_MAX ? `${content.slice(0, EXCERPT_MAX)}…` : content}</bdi>”</p>
         </div>
       )}
       <div className="card detailed-summary">
@@ -55,7 +57,7 @@ function Detailed({ job, id }: { job: Job; id: string }) {
         {techniques.length > 0 && (
           <div className="tags">
             {techniques.map((d, i) => (
-              <span key={d.name} className={`tag ${TAG_TONES[i % TAG_TONES.length]}`}>{techniqueName(d)}</span>
+              <span key={d.name} className={`tag ${TAG_TONES[i % TAG_TONES.length]}`}>{techniqueInfo(d, locale, read?.lang).name}</span>
             ))}
           </div>
         )}
