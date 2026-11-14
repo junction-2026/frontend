@@ -55,6 +55,31 @@ export type Finalization = {
   [k: string]: unknown
 }
 
+// Manipulation risk score (shared manipulation-risk-score). Read tolerantly (src/job/risk.ts): unknown status, band, reason,
+// kind and caveat ids are expected, and every text member is untrusted plain text.
+export type RiskDimension = {
+  available: boolean; score: number | null; confidence: string | null; reason: string | null; basis?: string | null
+  [k: string]: unknown
+}
+export type RiskTechnique = { label: string; display: string; probability: number; impact: string; [k: string]: unknown }
+export type RiskDriver = { kind: string; dimension: string | null; technique: string | null; contribution: number; text: string; [k: string]: unknown }
+export type RiskCaveat = { id: string; text: string; [k: string]: unknown }
+export type RiskScore = {
+  version: number
+  status: string // scored | unavailable | (unknown)
+  reason: string | null
+  score: number | null; raw_score: number | null
+  band: string | null // low | moderate | high | critical | (unknown)
+  dampened: boolean
+  summary: string
+  dimensions: { intensity: RiskDimension; confirmation: RiskDimension; amplification: RiskDimension; [k: string]: unknown }
+  techniques: RiskTechnique[]
+  drivers: RiskDriver[]
+  caveats: RiskCaveat[]
+  config: Record<string, unknown>
+  [k: string]: unknown
+}
+
 export type Job = {
   id: string
   status: string // queued | scraping | running | finalizing | completed | cancelled | failed | (unknown)
@@ -69,6 +94,7 @@ export type Job = {
   analyzers: AnalyzerRun[]
   coverage: Coverage
   finalization: Finalization
+  risk?: RiskScore | null // missing reads like null
   [k: string]: unknown
 }
 

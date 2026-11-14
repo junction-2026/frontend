@@ -1,0 +1,8 @@
+## Decisions
+- **Reader** (`src/job/risk.ts`): `readRisk(job)` returns null for a missing/non-object `risk`; otherwise a normalized view. A `scored` risk without a finite score in 0..1, a string band or at least one driver is shown like `unavailable` (the score is never shown without band, drivers and caveats). An unknown `status` reads as `unavailable`. `content_not_reader` is prepended when the server list lacks it.
+- **Texts**: the summary is composed from `risk.summary.<band>` plus `risk.summary.main` with the first driver; driver sentences by `kind` (and technique name); caveats by `id`. Anything the catalog lacks (unknown band, kind, caveat id) falls back to the server text, rendered as plain text (React text nodes). Technique names use `techniqueText` (catalog name when the UI language is not English, else the server `display`).
+- **Order**: techniques are shown in the order of `risk.techniques` (the shared contract sorts by probability descending).
+- **Tooltip**: same hover/focus pattern as the confidence info; click also opens it (touch), Escape closes. Wording avoids model, algorithm, classifier and probability; a test checks every locale.
+- **Colours**: band chip tokens `--risk-<band>-bg|text|border` (low green, moderate yellow, high orange, critical red); a test asserts text contrast ≥ 4.5:1. Unknown band uses the moderate tokens and shows its id.
+- **Caveats** open by default so a score never appears without visible caveats; the button toggles `aria-expanded`.
+- **RTL**: logical CSS properties only; bar fill is an inline-size percentage of a flow-direction track.
