@@ -121,6 +121,11 @@ export type ClaimLookup = {
 }
 export type WikipediaLookup = { languages: string[]; claims: ClaimLookup[]; requests_used: number; cached: number; [k: string]: unknown }
 
+// POST /jobs/{id}/chat (shared analysis-chat-api). A reply's `content` is untrusted model output: render as plain text only.
+export type ChatMessage = { role: 'user' | 'assistant'; content: string }
+export type ChatRequest = { messages: ChatMessage[]; language?: string }
+export type ChatReply = { job_id: string; message: ChatMessage; history_truncated: boolean; created_at: Timestamp; [k: string]: unknown }
+
 export type CreateJobBody =
   | { input: Input; analyzers?: string[]; options?: { finalize?: boolean }; public?: boolean }
   | { scrape: { url: string; max_posts?: number; max_comments?: number }; analyzers?: string[]; options?: { finalize?: boolean }; public?: boolean }

@@ -98,7 +98,7 @@ function Results({ job }: { job: Job }) {
           <button type="button" className="btn-primary" aria-expanded={open} aria-controls={regionId} onClick={() => setOpen(!open)}>
             {open ? t('results.hide_detailed') : t('results.view_detailed')}
           </button>
-          <Link className="btn-secondary" href="/ask">{t('results.ask')}</Link>
+          <Link className="btn-secondary" href={`/jobs/${encodeURIComponent(job.id)}/ask`}>{t('results.ask')}</Link>
         </div>
         {open && <Detailed job={job} id={regionId} />}
       </div>

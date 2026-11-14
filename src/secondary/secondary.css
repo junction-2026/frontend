@@ -153,10 +153,13 @@
   background: #fafafa;
 }
 
-.chat-input input {
+.chat-input textarea {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
+  resize: none;
+  font: inherit;
   background: transparent;
   padding: 0.55rem 0.65rem;
 }
@@ -740,3 +743,12 @@
 .related-card a { color: var(--blue); font-weight: 600; }
 .related-card p { margin: 0.3rem 0 0; font-size: 0.86rem; color: var(--ink-2); }
 .related-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; margin-top: 0.25rem; font-size: 0.8rem; color: var(--muted); }
+
+/* Ask VEIL: real chat */
+.bubble-user, .bubble-ai .content p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble-ai .content { min-width: 0; }
+.chat-error { color: var(--orange); }
+.chat-status { min-height: 1.3rem; margin: 0 0 0.4rem; color: var(--muted); font-size: 0.88rem; }
+.chat-note { margin: 0 0 0.7rem; color: var(--muted); font-size: 0.85rem; }
+.chat-count { color: var(--faint); font-size: 0.78rem; white-space: nowrap; }
+.chat-card h2 { margin: 0.3rem 0 0.4rem; font-size: 1.05rem; }

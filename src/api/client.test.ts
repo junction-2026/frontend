@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cancelJob, createJob, getJob, getJobLocalization, listAnalyzers, listJobs } from './client'
+import { cancelJob, createJob, getJob, getJobLocalization, listAnalyzers, listJobs, postJobChat } from './client'
 import { errorMessage } from './errors'
 import { isDone, verdictOf } from './types'
 
@@ -114,4 +114,47 @@ describe('errorMessage', () => {
   it('falls back to the server message for other codes', () => {
     expect(errorMessage(e('scrape_unavailable'))).toBe('server scrape_unavailable')
   })
+})
+
+describe('postJobChat', () => {
+  const body = { messages: [{ role: 'user' as const, content: 'hi' }], language: 'de' }
+
+  it('posts the JSON body to the encoded chat path and ignores unknown reply members', async () => {
+    fetchMock.mockResolvedValue(json({ job_id: 'a/b', message: { role: 'assistant', content: 'yo' }, history_truncated: false, created_at: 't', extra: 1 }))
+    const r = await postJobChat('a/b', body)
+    expect(r.ok && r.data.message.content).toBe('yo')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/v1/jobs/a%2Fb/chat')
+    expect(init.method).toBe('POST')
+    expect(init.headers).toMatchObject({ 'Content-Type': 'application/json', Accept: 'application/json' })
+    expect(JSON.parse(init.body)).toEqual(body)
+  })
+
+  it('maps an error envelope and a network failure without throwing', async () => {
+    fetchMock.mockResolvedValueOnce(json({ error: { code: 'rate_limited', message: 'slow down', details: { retry_after_s: 3 } } }, 429))
+    expect(await postJobChat('j', body)).toEqual({ ok: false, error: { status: 429, code: 'rate_limited', message: 'slow down', details: { retry_after_s: 3 } } })
+    fetchMock.mockRejectedValueOnce(new TypeError('offline'))
+    expect(await postJobChat('j', body)).toMatchObject({ ok: false, error: { status: 0, code: 'network_error' } })
+  })
+
+  it('aborts after the timeout and reports code timeout', async () => {
+    vi.useFakeTimers()
+    fetchMock.mockImplementation((_u: string, init: RequestInit) => new Promise((_, reject) => init.signal!.addEventListener('abort', () => reject(new DOMException('x', 'AbortError')))))
+    const pending = postJobChat('j', body, 1000)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(await pending).toMatchObject({ ok: false, error: { status: 0, code: 'timeout' } })
+    vi.useRealTimers()
+  })
+})
+
+describe('chat error copy', () => {
+  it.each([
+    [{ code: 'chat_unavailable' }, /not available/],
+    [{ code: 'chat_timeout' }, /too long/],
+    [{ code: 'job_not_completed' }, /not finished/],
+    [{ code: 'timeout' }, /in time/],
+    [{ code: 'rate_limited', details: { retry_after_s: 1 } }, /1 second and/],
+    [{ code: 'rate_limited', details: { retry_after_s: 12 } }, /12 seconds/],
+    [{ code: 'rate_limited' }, /a moment/],
+  ])('%j', (e, text) => expect(errorMessage({ status: 0, message: 'raw', ...e })).toMatch(text))
 })
