@@ -47,7 +47,9 @@ const show = async (j: unknown = full()) => {
 }
 const path = (code: string) => document.querySelector<SVGPathElement>(`path[data-code="${code}"]`)!
 const cards = () => screen.queryAllByRole('listitem').filter((li) => li.classList.contains('related-card'))
-const status = (t: string | RegExp) => screen.findByText(t, { selector: '[role="status"]' })
+// Source text sits in <bdi>, so a sentence is matched by the text content of its element.
+const whole = (t: string | RegExp) => (_: string, el: Element | null) => (typeof t === 'string' ? el?.textContent === t : t.test(el?.textContent ?? ''))
+const status = (t: string | RegExp) => screen.findByText(whole(t), { selector: '[role="status"]' })
 
 describe('Explore without a job', () => {
   it('shows disabled filters, an empty map, a History link and makes no API call', () => {
@@ -165,7 +167,7 @@ describe('Explore data', () => {
     await show()
     expect(cards()).toHaveLength(4)
     expect(screen.getByText('3 publishers across 2 countries · 1 article with country unknown')).toBeInTheDocument()
-    expect(screen.getByText(/Searched topics: Topic one · Topic two ·/)).toBeInTheDocument()
+    expect(screen.getByText(whole(/Searched topics: Topic one · Topic two ·/), { selector: 'p' })).toBeInTheDocument()
     expect(document.querySelector('.view [data-mock]')).toBeNull()
     expect(screen.getByText('4 articles · 4 publishers')).toBeInTheDocument()
     const first = within(cards()[0])
@@ -211,9 +213,9 @@ describe('Explore data', () => {
     expect(screen.getByLabelText('Country')).toHaveValue('FI')
     const panel = within(document.querySelector<HTMLElement>('.country-panel')!)
     expect(panel.getByText('2 articles · 2 publishers')).toBeInTheDocument()
-    expect(panel.getByText('Languages: EN, FI')).toBeInTheDocument()
+    expect(panel.getByText(whole('Languages: EN, FI'))).toBeInTheDocument()
     expect(panel.getAllByRole('listitem')).toHaveLength(2)
-    expect(panel.getByText(/Grid outage in Helsinki — Helsingin Sanomat · 3 hours ago/)).toBeInTheDocument()
+    expect(panel.getByText(whole(/Grid outage in Helsinki — Helsingin Sanomat · 3 hours ago/), { selector: 'li' })).toBeInTheDocument()
     expect(panel.getByRole('link', { name: 'Inspect wire feeds →' })).toHaveAttribute('href', '/explore/region')
     expect(cards()).toHaveLength(2)
     expect(path('DE')).toHaveAttribute('fill', '#BFD9F4') // other countries stay shaded
@@ -265,8 +267,8 @@ describe('Explore data', () => {
     fireEvent.click(box)
     expect(cards()).toHaveLength(1)
     // the reviewed claim differs from the extracted one: it must not read as a check of it
-    expect(screen.getByText('Similar claim reviewed: Claim')).toBeInTheDocument()
-    expect(screen.getByText('Found for: Claim text')).toBeInTheDocument()
+    expect(screen.getByText(whole('Similar claim reviewed: Claim'))).toBeInTheDocument()
+    expect(screen.getByText(whole('Found for: Claim text'))).toBeInTheDocument()
     expect(screen.queryByText(/Fact-check of/)).toBeNull()
     expect(within(cards()[0]).getByText('False')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Check title' })).toHaveAttribute('href', 'https://fc.example/check')
@@ -277,8 +279,8 @@ describe('Explore data', () => {
   it('calls a fact-check "Fact-check of" only when the reviewed claim equals the extracted one', async () => {
     await show(exploreJob({ articles: [article(1)], checks: [factCheck({ claim: '  claim TEXT ' }), factCheck({ url: 'https://fc.example/2', claim: null })] }))
     fireEvent.click(screen.getByLabelText('Verified fact-checks only'))
-    expect(screen.getByText('Fact-check of: Claim text')).toBeInTheDocument()
-    expect(screen.getAllByText('Found for: Claim text')).toHaveLength(1) // no claim sent: cannot confirm, so not "Fact-check of"
+    expect(screen.getByText(whole('Fact-check of: Claim text'))).toBeInTheDocument()
+    expect(screen.getAllByText(whole('Found for: Claim text'))).toHaveLength(1) // no claim sent: cannot confirm, so not "Fact-check of"
     expect(screen.queryByText(/Similar claim reviewed/)).toBeNull()
   })
 

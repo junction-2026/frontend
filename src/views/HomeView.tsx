@@ -112,6 +112,7 @@ export default function HomeView() {
           <label className="sr-only" htmlFor="analyze-input">{t('home.input_label')}</label>
           <textarea
             id="analyze-input"
+            dir="auto"
             placeholder={t(`home.placeholder_${mode}`)}
             value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -125,7 +126,7 @@ export default function HomeView() {
           {shown && (
             <div className="form-error" role="alert">
               {shown.message}
-              {shown.items.length > 0 && <ul>{shown.items.map((i) => <li key={i}>{i}</li>)}</ul>}
+              {shown.items.length > 0 && <ul>{shown.items.map((i) => <li key={i}><bdi>{i}</bdi></li>)}</ul>}
             </div>
           )}
           <div className="composer-foot">
@@ -146,8 +147,8 @@ export default function HomeView() {
               {analyzers?.map((a) => (
                 <label key={a.id}>
                   <input type="checkbox" checked={!unchecked.has(a.id)} onChange={() => toggle(a.id)} />
-                  <span>{a.name}</span>
-                  <span className="badge-soft">{a.category}</span>
+                  <span><bdi>{a.name}</bdi></span>
+                  <span className="badge-soft"><bdi>{a.category}</bdi></span>
                   {!a.enabled && <span className="hint">{t('home.analyzer_disabled')}</span>}
                 </label>
               ))}

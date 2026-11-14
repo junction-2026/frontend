@@ -110,4 +110,7 @@ export default {
   'region.wire.2.tag': 'Investigative Desk',
   'region.wire.3.title': 'Editorial: Calm Evidence Beats Panic Narratives on Critical Networks',
   'region.wire.3.tag': 'Opinion',
+  'region.wire.1.src': 'Helsingin Sanomat',
+  'region.wire.2.src': 'Yle News',
+  'region.wire.3.src': 'Hufvudstadsbladet (HBL)',
 }

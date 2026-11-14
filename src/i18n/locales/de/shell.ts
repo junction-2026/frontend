@@ -10,4 +10,7 @@ export default {
   'health.checking': 'Backend wird geprüft…',
   'health.offline': 'Backend offline',
   'health.online': 'Backend online',
+  'health.failed': 'Gesundheitsprüfung des Servers fehlgeschlagen: {detail}',
+  'health.timeout': 'Zeitüberschreitung nach {ms} ms',
+  'health.bad_body': 'unerwarteter Antworttext',
 }

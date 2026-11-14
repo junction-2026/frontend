@@ -110,4 +110,7 @@ export default {
   'region.wire.2.tag': 'Tutkiva toimitus',
   'region.wire.3.title': 'Pääkirjoitus: Rauhallinen näyttö voittaa paniikkikertomukset kriittisissä verkoissa',
   'region.wire.3.tag': 'Mielipide',
+  'region.wire.1.src': 'Helsingin Sanomat',
+  'region.wire.2.src': 'Yle News',
+  'region.wire.3.src': 'Hufvudstadsbladet (HBL)',
 }

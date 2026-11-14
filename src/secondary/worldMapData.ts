@@ -2,6 +2,7 @@ import { geoEqualEarth, geoPath } from 'd3-geo'
 import { feature } from 'topojson-client'
 import type { GeometryCollection, Topology } from 'topojson-specification'
 import topology from '../assets/countries-110m.json'
+import { formatCountryName } from '../i18n/format'
 import { ALPHA2_BY_NUMERIC } from './countryCodes'
 
 export type Level = 'low' | 'medium' | 'high'
@@ -26,16 +27,6 @@ const NAMES = new Map(COUNTRIES.flatMap((c) => (c.code ? [[c.code, c.name] as co
 /** Every interactive country, for the Country select. */
 export const SELECTABLE = [...NAMES].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name))
 export const bundledName = (code: string) => NAMES.get(code)
-const displayNames = new Map<string, Intl.DisplayNames>()
-// The locale's own name of the country; without one (unknown code, no ICU data) the English name that came with the data.
-export function countryName(code: string, coverage: Coverage, locale = 'en'): string {
-  try {
-    let dn = displayNames.get(locale)
-    if (!dn) displayNames.set(locale, (dn = new Intl.DisplayNames(locale, { type: 'region' })))
-    const n = dn.of(code)
-    if (n && n !== code) return n
-  } catch {
-    /* Intl.DisplayNames missing or invalid code */
-  }
-  return coverage[code]?.name ?? NAMES.get(code) ?? code
-}
+// The locale's own name of the country; without one the English name that came with the data.
+export const countryName = (code: string, coverage: Coverage, locale = 'en'): string =>
+  formatCountryName(code, coverage[code]?.name ?? NAMES.get(code) ?? code, locale)

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { listAnalyzers } from '../api/client'
 import { errorMessage } from '../api/errors'
 import type { AnalyzerInfo, ApiError } from '../api/types'
-import { useT } from '../i18n'
+import { rich, useT } from '../i18n'
 
 type State = { items: AnalyzerInfo[] } | { error: ApiError } | null
 
@@ -44,13 +44,13 @@ export function AnalyzersBlock() {
               <div className="icon" aria-hidden="true">◈</div>
               <div>
                 <h4>
-                  {a.name} <span className="badge-soft">{a.id}</span>
+                  <bdi>{a.name}</bdi> <span className="badge-soft"><bdi>{a.id}</bdi></span>
                   {a.trigger === 'after_all_analyzers_settled' && <span className="badge-blue">{t('settings.analyzers.final')}</span>}
                   {a.selectable === false && <span className="badge-soft">{t('settings.analyzers.not_selectable')}</span>}
                 </h4>
                 <p>
-                  {t('settings.analyzers.category', { category: a.category })}
-                  {deps.length > 0 && ` · ${t('settings.analyzers.depends_on', { ids: deps.join(', ') })}`}
+                  {rich(t('settings.analyzers.category'), { category: <bdi>{a.category}</bdi> })}
+                  {deps.length > 0 && <> · {rich(t('settings.analyzers.depends_on'), { ids: <bdi>{deps.join(', ')}</bdi> })}</>}
                 </p>
               </div>
             </div>

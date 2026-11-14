@@ -24,7 +24,7 @@ export function HealthIndicator() {
     )
   if (!result.ok)
     return (
-      <span className="health offline" role="alert" title={result.message}>
+      <span className="health offline" role="alert" title={t('shell.health.failed', { detail: result.kind === 'timeout' ? t('shell.health.timeout', { ms: result.detail }) : result.kind === 'body' ? `${t('shell.health.bad_body')} ${result.detail}` : result.detail })}>
         <span className="dot" /> {t('shell.health.offline')}
       </span>
     )

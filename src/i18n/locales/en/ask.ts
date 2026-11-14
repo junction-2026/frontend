@@ -13,7 +13,7 @@ export default {
   'a1_pre': 'The span “destroying our future… before it’s too late” matches catastrophizing + urgency patterns at a ',
   'a1_match': '{percent} pattern match',
   'a1_post': ' against the fear-appeal catalog.',
-  'chip.corpus': 'Corpus ref: #CAT-FEAR-449',
+  'chip.corpus': 'Corpus ref: {id}',
   'chip.weight': 'Weight: High (+0.42)',
   'q2': 'How do other verified news sources cover this demographic?',
   'a2_and': ' and ',
@@ -26,4 +26,6 @@ export default {
   'input_aria': 'Message',
   'input_placeholder': 'Ask anything about this source, rhetorical markers, or wire context...',
   'send': 'Send',
+  'src.ft': 'Financial Times',
+  'src.reuters': 'Reuters',
 }

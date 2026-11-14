@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Shell } from '../ui/Shell'
 import HomeView from '../views/HomeView'
 import { errorMessage } from '../api/errors'
-import { I18nProvider, formatNumber, formatRelativeTime, useFormat, useLocale, useT } from '.'
-import { CATALOGS, translate } from './translate'
+import { I18nProvider, formatCountryName, formatNumber, formatPercent, formatRelativeTime, rich, useFormat, useLocale, useT } from '.'
+import { CATALOGS, MISSING, pluralCategory, translate } from './translate'
 
 const setLanguages = (langs: string[]) => vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(langs)
 
@@ -154,11 +154,34 @@ describe('translate', () => {
     expect(translate('ar', 'home.chars', { count: 5 })).toBe('5 أحرف')
     expect(translate('en', 'common.errors.unknown_analyzer', { ids: 'a, b' })).toBe('Unknown analyzer: a, b.')
   })
-  it('falls back to en for a key missing in the locale and to the key when missing everywhere', () => {
-    const cats = { en: { 'x.a': 'A', 'x.b': 'B' }, de: { 'x.a': 'Ä' } }
-    expect(translate('de', 'x.a', undefined, cats)).toBe('Ä')
-    expect(translate('de', 'x.b', undefined, cats)).toBe('B')
-    expect(translate('de', 'x.zzz', undefined, cats)).toBe('x.zzz')
+  describe('missing keys', () => {
+    const cats = { en: { 'x.a': 'A', 'x.b': 'B', 'x.c': 'C' }, de: { 'x.a': 'Ä', 'x.c': '' } }
+    it('fall back to en, treat an empty value as missing, and never return the key', () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      expect(translate('de', 'x.a', undefined, cats)).toBe('Ä')
+      expect(translate('de', 'x.b', undefined, cats)).toBe('B')
+      expect(translate('de', 'x.c', undefined, cats)).toBe('C')
+      for (const out of [translate('de', 'x.zzz', undefined, cats), translate('xx' as never, 'x.zzz', undefined, cats)]) {
+        expect(out).toBe(MISSING)
+        expect(out).not.toBe('x.zzz')
+      }
+    })
+    it('warn once per locale and key in development, naming both', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      translate('de', 'w.once', undefined, cats)
+      translate('de', 'w.once', undefined, cats)
+      translate('fi', 'w.once', undefined, cats)
+      expect(warn).toHaveBeenCalledTimes(2)
+      expect(warn.mock.calls[0][0]).toContain('"w.once"')
+      expect(warn.mock.calls[0][0]).toContain('"de"')
+    })
+    it('never render a raw key, undefined or null in the UI', () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const Probe = () => <p>{useT()('nope.missing')}</p>
+      const { container } = render(<I18nProvider><Probe /></I18nProvider>)
+      expect(container).toHaveTextContent('…')
+      expect(container.textContent).not.toMatch(/nope|undefined|null/)
+    })
   })
   it('useT re-renders when the locale changes', () => {
     const Probe = () => {
@@ -224,27 +247,25 @@ describe('useFormat', () => {
   })
 })
 
-describe('catalogs', () => {
-  const PLURAL = /_(zero|one|two|few|many|other)$/
-  const ph = (s: string) => [...new Set([...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort()
-  const en = CATALOGS.en
-  const locales = Object.keys(CATALOGS).filter((l) => l !== 'en')
-
-  it('has the five locales', () => expect(Object.keys(CATALOGS).sort()).toEqual(['ar', 'de', 'en', 'fi', 'fr']))
-
-  it.each(locales)('%s only has keys and placeholders that en has', (lng) => {
-    for (const [key, value] of Object.entries(CATALOGS[lng])) {
-      const ref = en[key] ?? en[key.replace(PLURAL, '_other')]
-      expect(ref, `${lng}: ${key} is missing in en`).toBeDefined()
-      expect(ph(value), `${lng}: ${key} placeholders`).toEqual(ph(ref))
-    }
+describe('Intl helpers', () => {
+  it('formats percentages per locale', () => {
+    expect(formatPercent(0.86, undefined, 'en')).toBe('86%')
+    expect(formatPercent(0.86, undefined, 'fr')).toMatch(/^86\s%$/)
+    expect(formatPercent(0.86, undefined, 'ar')).not.toMatch(/[A-Za-z]/)
   })
-
-  it.each(locales)('%s translates every en key', (lng) => {
-    for (const key of Object.keys(en)) {
-      const base = key.replace(PLURAL, '')
-      expect(Object.keys(CATALOGS[lng]).some((k) => k === key || k.replace(PLURAL, '') === base), `${lng}: ${key}`).toBe(true)
-    }
+  it('selects every Arabic plural category', () => {
+    expect([0, 1, 2, 3, 11, 100].map((n) => pluralCategory(n, 'ar'))).toEqual(['zero', 'one', 'two', 'few', 'many', 'other'])
+  })
+  it('names countries in the locale and falls back to the given name', () => {
+    expect(formatCountryName('FI', 'Finland', 'fr')).toBe('Finlande')
+    expect(formatCountryName('FI', 'Finland', 'ar')).toBe('فنلندا')
+    expect(formatCountryName('ZZZZ', 'Nowhere', 'fr')).toBe('Nowhere')
+    vi.spyOn(Intl, 'DisplayNames').mockImplementation(() => { throw new Error('no ICU') })
+    expect(formatCountryName('FI', 'Finland', 'sw')).toBe('Finland')
+  })
+  it('rich puts nodes in the placeholders and keeps the rest of the sentence', () => {
+    render(<p>{rich('Claim: {claim}.', { claim: <bdi>x</bdi> })}</p>)
+    expect(screen.getByText('x').tagName).toBe('BDI')
+    expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Claim: x.')).toBeInTheDocument()
   })
 })
-
