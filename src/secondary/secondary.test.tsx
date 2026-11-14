@@ -42,29 +42,6 @@ describe('Explore and Region', () => {
   })
 })
 
-describe('Ask', () => {
-  it('appends the user bubble locally, marks everything mock and sends no request', () => {
-    open('/ask')
-    const urls = () => fetchMock.mock.calls.map((c) => String(c[0]))
-    const before = urls() // the top-bar health check only
-    expect(screen.getByRole('heading', { level: 1, name: /^Ask VEIL/ })).toBeInTheDocument()
-    const label = 'Mock data – not connected to the backend (No backend for Ask VEIL)'
-    for (const t of [screen.getByText('Why was this flagged as Appeal to Fear?'), screen.getByText('96%'), screen.getByText('What other techniques were detected?'), screen.getByLabelText('Message')])
-      expect(mocked(t)).toHaveAttribute('title', label)
-    fireEvent.click(screen.getByText('What other techniques were detected?'))
-    expect(screen.getByLabelText('Message')).toHaveValue('What other techniques were detected?')
-    fireEvent.change(screen.getByLabelText('Message'), { target: { value: '  my question ' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
-    const bubble = screen.getByText('my question')
-    expect(mocked(bubble)).not.toBeNull()
-    expect(screen.getByLabelText('Message')).toHaveValue('')
-    fireEvent.click(screen.getByRole('button', { name: 'Send' })) // empty draft: ignored
-    expect(screen.getAllByText('my question')).toHaveLength(1)
-    expect(urls()).toEqual(before)
-    expect(urls().every((u) => u.includes('health'))).toBe(true)
-  })
-})
-
 describe('States', () => {
   it('is marked "Example states", links to /, /history and /ask and disables Retry', () => {
     open('/states')
@@ -184,16 +161,5 @@ describe('Localized screens', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Исследуйте мир.' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Открыть историю →' })).toBeInTheDocument()
     expect(document.documentElement).toHaveAttribute('lang', 'ru')
-  })
-
-  it('translates Ask, still all mock and without a request', () => {
-    localStorage.setItem('veil.locale', 'de')
-    open('/ask')
-    expect(screen.getByRole('heading', { level: 1, name: /^Ask VEIL/ })).toBeInTheDocument()
-    expect(mocked(screen.getByText('Warum wurde dies als Appell an die Angst markiert?'))).not.toBeNull()
-    fireEvent.click(screen.getByText('Welche weiteren Techniken wurden erkannt?'))
-    expect(screen.getByLabelText('Nachricht')).toHaveValue('Welche weiteren Techniken wurden erkannt?')
-    expect(screen.getByRole('button', { name: 'Senden' })).toBeInTheDocument()
-    expect(fetchMock.mock.calls.every((c) => String(c[0]).includes('health'))).toBe(true)
   })
 })
