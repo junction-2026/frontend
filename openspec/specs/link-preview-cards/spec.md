@@ -23,8 +23,8 @@ The frontend container SHALL add a link-preview card block to the `<head>` of ev
 The generic card SHALL have og:type `website`, og:site_name `VEIL`, og:title `VEIL / Intelligence`, one fixed product sentence of at most 200 characters as og:description and `<meta name="description">`, og:url `<PUBLIC_ORIGIN>/`, and og:image `<PUBLIC_ORIGIN>/og/site.png`. Every route without a specific card (`/`, `/ask`, `/history`, unknown paths, `/?job=<id>`) SHALL use it.
 
 #### Scenario: Home
-- **WHEN** `GET /` is requested with `-A Twitterbot` and `PUBLIC_ORIGIN=https://stiriri.dev`
-- **THEN** the response has og:type `website`, og:title `VEIL / Intelligence` and og:image `https://stiriri.dev/og/site.png`
+- **WHEN** `GET /` is requested with `-A Twitterbot` and `PUBLIC_ORIGIN=https://veil.example`
+- **THEN** the response has og:type `website`, og:title `VEIL / Intelligence` and og:image `https://veil.example/og/site.png`
 
 #### Scenario: Other routes
 - **WHEN** `/history` or `/unknown` is requested
@@ -117,11 +117,11 @@ Every attribute value and the `<title>` text SHALL be escaped for `&`, `<`, `>`,
 - **THEN** the description contains `&lt;script&gt;&quot;&#39;&amp;` and no `<script>`
 
 ### Requirement: Public origin
-The env var `PUBLIC_ORIGIN` (scheme, host and optional port; a trailing slash is stripped) SHALL prefix every og:url and image URL. Its default SHALL be `http://localhost`; it is required in production (for example `https://stiriri.dev`). It SHALL reach njs through `js_var $og_origin` and the template substitution and SHALL NOT be hard-coded.
+The env var `PUBLIC_ORIGIN` (scheme, host and optional port, no path; a trailing slash is stripped) SHALL prefix every og:url and image URL; it defaults to `http://localhost`. Production SHALL set the real public origin, because crawlers fetch og:image from it; a loopback or invalid value is reported by the frontend-runtime startup check. It SHALL reach njs through `js_var $og_origin` and SHALL NOT be hard-coded.
 
 #### Scenario: Trailing slash
-- **WHEN** `PUBLIC_ORIGIN` is `https://stiriri.dev/`
-- **THEN** og:image is `https://stiriri.dev/og/site.png`
+- **WHEN** `PUBLIC_ORIGIN` is `https://veil.example/`
+- **THEN** og:image is `https://veil.example/og/site.png`
 
 ### Requirement: Static default card
 The source `index.html` SHALL contain the generic card tags with root-relative image URLs between the `og:start` and `og:end` markers, so that `vite dev` and `vite preview` render a valid head.
