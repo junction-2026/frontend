@@ -1,10 +1,10 @@
 export default {
-  'mock_label': 'Ask VEIL:llä ei ole taustajärjestelmää',
+  'mock_label': 'Ask Stiririllä ei ole taustajärjestelmää',
   'context.status': '● Manipulointi havaittu (luottamus {confidence})',
   'context.source': 'Lähdekohde: ”Kaikki tietävät, että nämä ihmiset tuhoavat tulevaisuutemme...”',
   'context.summary': 'Tämä teksti käyttää tunteisiin vetoavaa kieltä, määrittelemätöntä ulkoryhm...',
   'back': '← Takaisin yhteenvetoon',
-  'title': 'Ask VEIL',
+  'title': 'Ask Stiriri',
   'badge': 'Interaktiivinen älykkyys',
   'grounded': 'Perustuu lähetettyyn tekstiin, uutissähkeisiin ja tosiasiantarkistuksiin',
   'prompt': 'Onko kysyttävää tästä lähteestä, retorisista indikaattoreista tai vahvistavasta uutisoinnista?',

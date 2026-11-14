@@ -24,7 +24,7 @@ The "Inspect wire feeds →" link in the Explore country panel SHALL navigate to
 - **THEN** the path stays `/explore` after the click, becomes `/explore/region`, and then `/explore`
 
 ### Requirement: Ask screen
-`/ask` SHALL render the chat layout (context bar, thread, suggestions, composer) with an `<h1>` starting "Ask VEIL". The context bar, the thread (including canned answers), the suggestions and the composer SHALL each be wrapped in `Mock` labelled "No backend for Ask VEIL". Sending a non-blank message SHALL append a user bubble to the thread locally and clear the input; clicking a suggestion SHALL fill the input. The screen SHALL NOT send any network request.
+`/ask` SHALL render the chat layout (context bar, thread, suggestions, composer) with an `<h1>` starting "Ask Stiriri". The context bar, the thread (including canned answers), the suggestions and the composer SHALL each be wrapped in `Mock` labelled "No backend for Ask Stiriri". Sending a non-blank message SHALL append a user bubble to the thread locally and clear the input; clicking a suggestion SHALL fill the input. The screen SHALL NOT send any network request.
 
 #### Scenario: Send appends a local bubble
 - **WHEN** the user types "my question" and submits
@@ -33,6 +33,10 @@ The "Inspect wire feeds →" link in the Explore country panel SHALL navigate to
 #### Scenario: Blank message
 - **WHEN** the user submits a blank input
 - **THEN** no bubble is added
+
+#### Scenario: Brand kept in every locale
+- **WHEN** the locale is `de`, `fr`, `fi` or `ar`
+- **THEN** the Ask `<h1>` and mock label contain "Stiriri" verbatim (inflected only by grammar, e.g. fi "Ask Stiririllä")
 
 ### Requirement: States screen
 `/states` SHALL render the four edge-case cards (input fault, partial results, uncertain result, empty history) as a static showcase with an `<h1>` "Edge Cases & System States". The whole page SHALL be wrapped in `Mock` labelled "Example states". Its links SHALL go only to `/`, `/history` and `/ask`. The "Retry Wire Retrieval" button SHALL be disabled and wrapped in its own `Mock`.

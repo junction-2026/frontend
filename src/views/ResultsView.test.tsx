@@ -19,7 +19,7 @@ afterEach(() => {
 
 // Renders under the real provider in a given locale (the choice is read from storage like on a reload).
 const inLocale = (lng: string, ui: ReactElement) => {
-  localStorage.setItem('veil.locale', lng)
+  localStorage.setItem('stiriri.locale', lng)
   return render(<I18nProvider>{ui}</I18nProvider>)
 }
 const Switch = ({ to }: { to: Locale }) => {
@@ -41,8 +41,8 @@ const long = (n: number) => 'x'.repeat(n)
 
 describe('Results: verdict component', () => {
   it.each([
-    ['detected', 'Yes, propaganda detected.', 'VEIL identified signs of manipulative messaging in this content.'],
-    ['not_detected', 'No clear signs of propaganda.', 'VEIL did not identify strong indicators of propaganda in this content.'],
+    ['detected', 'Yes, propaganda detected.', 'Stiriri identified signs of manipulative messaging in this content.'],
+    ['not_detected', 'No clear signs of propaganda.', 'Stiriri did not identify strong indicators of propaganda in this content.'],
     ['uncertain', "We're not sure yet.", 'The available evidence is insufficient or conflicting.'],
     ['suspicious', "We're not sure yet.", 'The available evidence is insufficient or conflicting.'], // unknown reads as uncertain
   ])('shows verdict %s', async (verdict, heading, body) => {
@@ -80,7 +80,7 @@ describe('Results: verdict component', () => {
     expect(screen.queryByRole('tooltip')).toBeNull()
     act(() => btn.focus())
     const tip = screen.getByRole('tooltip')
-    expect(tip).toHaveTextContent("How confident VEIL's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda.")
+    expect(tip).toHaveTextContent("How confident Stiriri's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda.")
     expect(btn).toHaveAttribute('aria-describedby', tip.id)
     fireEvent.keyDown(btn, { key: 'Escape' })
     expect(screen.queryByRole('tooltip')).toBeNull()
@@ -157,13 +157,13 @@ describe('Results: progressive disclosure', () => {
     const btn = screen.getByRole('button', { name: 'View detailed analysis' })
     expect(btn).toHaveAttribute('aria-expanded', 'false')
     expect(btn).toHaveClass('btn-primary')
-    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/ask')
-    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveClass('btn-secondary')
+    expect(screen.getByRole('link', { name: 'Ask Stiriri' })).toHaveAttribute('href', '/ask')
+    expect(screen.getByRole('link', { name: 'Ask Stiriri' })).toHaveClass('btn-secondary')
     expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
     for (const t of [/Zweifel/, /Loaded Language/, /Analyzer coverage/, /Patterns/, /Polarity/, /bias factor/, /Everyone knows/, /Propaganda Techniques Detected/])
       expect(screen.queryByText(t)).toBeNull()
     expect(screen.queryByText(/Have questions about this verdict/)).toBeNull()
-    expect(inMock(screen.getByRole('link', { name: 'Ask VEIL' }))).toBeNull()
+    expect(inMock(screen.getByRole('link', { name: 'Ask Stiriri' }))).toBeNull()
   })
 
   it('expands to the full detailed analysis and collapses again, keeping focus on the button', async () => {
@@ -353,7 +353,7 @@ describe('Results: page chrome, mock parts and polling', () => {
     for (const el of [
       screen.getByRole('button', { name: 'Copy' }),
       screen.getByRole('link', { name: 'Open detailed analysis page' }),
-      screen.getByRole('link', { name: 'Ask VEIL' }),
+      screen.getByRole('link', { name: 'Ask Stiriri' }),
       screen.getByText('Job j1'),
       screen.getByText('1 succeeded · 1 failed · 1 skipped of 2 applicable'),
     ])

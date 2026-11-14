@@ -9,16 +9,23 @@ export const LOCALES = [
 
 export type Locale = (typeof LOCALES)[number]['code']
 export const DEFAULT_LOCALE: Locale = 'en'
-export const STORAGE_KEY = 'veil.locale'
+export const STORAGE_KEY = 'stiriri.locale'
+export const LEGACY_STORAGE_KEY = 'veil.locale' // pre-rename brand; read once, then migrated
 
 export const isLocale = (v: unknown): v is Locale => LOCALES.some((l) => l.code === v)
 export const dirOf = (locale: Locale) => LOCALES.find((l) => l.code === locale)!.dir
 
-// Stored value, else the first navigator language whose primary subtag is supported, else en.
+// Stored value (new key, else migrated legacy key), else the first navigator language whose primary subtag is supported, else en.
 export function detectLocale(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (isLocale(stored)) return stored
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
+    if (isLocale(legacy)) {
+      localStorage.setItem(STORAGE_KEY, legacy)
+      localStorage.removeItem(LEGACY_STORAGE_KEY)
+      return legacy
+    }
   } catch {
     /* storage unavailable (private mode) */
   }

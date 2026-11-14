@@ -47,8 +47,8 @@ describe('Ask', () => {
     open('/ask')
     const urls = () => fetchMock.mock.calls.map((c) => String(c[0]))
     const before = urls() // the top-bar health check only
-    expect(screen.getByRole('heading', { level: 1, name: /^Ask VEIL/ })).toBeInTheDocument()
-    const label = 'Mock data – not connected to the backend (No backend for Ask VEIL)'
+    expect(screen.getByRole('heading', { level: 1, name: /^Ask Stiriri/ })).toBeInTheDocument()
+    const label = 'Mock data – not connected to the backend (No backend for Ask Stiriri)'
     for (const t of [screen.getByText('Why was this flagged as Appeal to Fear?'), screen.getByText(/96% pattern match/), screen.getByText('What other techniques were detected?'), screen.getByLabelText('Message')])
       expect(mocked(t)).toHaveAttribute('title', label)
     fireEvent.click(screen.getByText('What other techniques were detected?'))
@@ -142,7 +142,7 @@ describe('Settings', () => {
 
 describe('Localized screens', () => {
   it('keeps the Settings language block mock and non-functional under fr', () => {
-    localStorage.setItem('veil.locale', 'fr')
+    localStorage.setItem('stiriri.locale', 'fr')
     open('/settings')
     expect(screen.getByRole('heading', { level: 1, name: 'Paramètres et méthodologie' })).toBeInTheDocument()
     expect(mocked(screen.getByText('Langue de l’interface'))).not.toBeNull()
@@ -155,7 +155,7 @@ describe('Localized screens', () => {
   })
 
   it('shows localized analyzer texts and API error messages in Arabic', async () => {
-    localStorage.setItem('veil.locale', 'ar')
+    localStorage.setItem('stiriri.locale', 'ar')
     respond(() => json({ items: [analyzer({ id: 'x', name: 'Rhetoric', depends_on: ['y'] })] }))
     open('/settings')
     const row = (await screen.findByText('Rhetoric')).closest('.analyzer-row') as HTMLElement
@@ -165,7 +165,7 @@ describe('Localized screens', () => {
   })
 
   it('translates Region, with the country name from Intl.DisplayNames', () => {
-    localStorage.setItem('veil.locale', 'de')
+    localStorage.setItem('stiriri.locale', 'de')
     open('/explore/region')
     expect(screen.getByRole('heading', { level: 1, name: 'Entdecken Sie die Welt.' })).toBeInTheDocument()
     expect(screen.getByText(/Finnland ausgewählt/)).toBeInTheDocument()
@@ -175,7 +175,7 @@ describe('Localized screens', () => {
   })
 
   it('translates Explore and the map labels in Finnish', () => {
-    localStorage.setItem('veil.locale', 'fi')
+    localStorage.setItem('stiriri.locale', 'fi')
     open('/explore')
     expect(screen.getByRole('heading', { level: 1, name: 'Tutki maailmaa.' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Maailmankartta kattavuudesta' })).toBeInTheDocument()
@@ -184,9 +184,9 @@ describe('Localized screens', () => {
   })
 
   it('translates Ask, still all mock and without a request', () => {
-    localStorage.setItem('veil.locale', 'de')
+    localStorage.setItem('stiriri.locale', 'de')
     open('/ask')
-    expect(screen.getByRole('heading', { level: 1, name: /^Ask VEIL/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /^Ask Stiriri/ })).toBeInTheDocument()
     expect(mocked(screen.getByText('Warum wurde dies als Appell an die Angst markiert?'))).not.toBeNull()
     fireEvent.click(screen.getByText('Welche weiteren Techniken wurden erkannt?'))
     expect(screen.getByLabelText('Nachricht')).toHaveValue('Welche weiteren Techniken wurden erkannt?')

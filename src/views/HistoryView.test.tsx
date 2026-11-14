@@ -208,7 +208,7 @@ describe('History', () => {
     }
 
     it('renders translated headings, filters and links in Arabic with rtl', async () => {
-      localStorage.setItem('veil.locale', 'ar')
+      localStorage.setItem('stiriri.locale', 'ar')
       route(() => page([summary('a'), summary('b', { created_at: ago(24 * H) })]))
       render(<I18nProvider><HistoryView /></I18nProvider>)
       expect(screen.getByRole('heading', { level: 1, name: 'سجل التحليلات' })).toBeInTheDocument()
@@ -221,7 +221,7 @@ describe('History', () => {
     })
 
     it('translates a skipped finalization status and shows an unknown one as sent', async () => {
-      localStorage.setItem('veil.locale', 'de')
+      localStorage.setItem('stiriri.locale', 'de')
       route(() => page([summary('a', { finalization: { status: 'skipped', verdict: null } }), summary('b', { finalization: { status: 'odd', verdict: null } })]))
       render(<I18nProvider><HistoryView /></I18nProvider>)
       expect(await screen.findByText('Abschlussbewertung: übersprungen')).toBeInTheDocument()

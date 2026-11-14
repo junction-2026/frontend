@@ -1,7 +1,7 @@
 export default {
   'eyebrow': 'Preferences & audit / ● Framework v3.18',
   'title': 'Settings & Methodology',
-  'lede': 'Configure analysis preferences, accessibility options, and understand VEIL’s epistemic framework.',
+  'lede': 'Configure analysis preferences, accessibility options, and understand Stiriri’s epistemic framework.',
   'tabs_label': 'Settings tabs',
   'tab.interface': 'Interface & Language',
   'tab.analyzers': 'Analyzers & Ensembles',
@@ -11,7 +11,7 @@ export default {
   'language_block': 'Interface & analysis language',
   'local_override': 'Local override',
   'interface_language': 'Interface Language',
-  'interface_language_text': 'Controls labels, helper text, and Ask VEIL responses in the product chrome.',
+  'interface_language_text': 'Controls labels, helper text, and Ask Stiriri responses in the product chrome.',
   'interface_language_value': 'English (US) ▾',
   'input_language': 'Analysis Input Language',
   'recommended': 'Recommended',
