@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent as ReactKeyEvent, type PointerEvent, type ReactNode } from 'react'
 import { useLocale, useT } from '../i18n'
 import { COUNTRIES, HEIGHT, WIDTH, countryName, type Coverage } from './worldMapData'
 
@@ -7,7 +7,8 @@ const HOVER = '#A7C9F0'
 const SELECTED = '#7FADE5'
 const MAX_SCALE = 8
 const STEP = 1.5
-const TIP = { w: 210, h: 84, gap: 14, pad: 8 }
+const TIP_COVERAGE = { w: 210, h: 84, gap: 14, pad: 8 }
+const TIP_CUSTOM = { ...TIP_COVERAGE, w: 280, h: 150 } // custom content has a count line and a technique list
 const DRAG_PX = 3
 
 type View = { k: number; x: number; y: number }
@@ -28,10 +29,14 @@ type Props = {
   selected: string | null
   onSelect?: (code: string | null) => void
   interactive?: boolean
+  fillFor?: (code: string) => string | undefined // base fill; undefined keeps the coverage fill. Hover/selected then show as stroke only
+  renderTooltip?: (code: string) => ReactNode // replaces the coverage tooltip body
+  focusable?: boolean // countries become tab stops; Enter/Space act as click; focus shows the tooltip
 }
 
-export function WorldMap({ coverage, selected, onSelect, interactive = true }: Props) {
+export function WorldMap({ coverage, selected, onSelect, interactive = true, fillFor, renderTooltip, focusable = false }: Props) {
   const t = useT()
+  const tipId = useId()
   const { locale } = useLocale()
   const [view, setView] = useState(HOME)
   const [hover, setHover] = useState<Hover | null>(null)
@@ -105,7 +110,20 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
     setHover({ code, x: e.clientX - r.left, y: e.clientY - r.top, w: r.width, h: r.height })
   }
 
+  const select = (code: string) => onSelect?.(code === selected ? null : code)
+  const focus = (code: string) => (e: FocusEvent<SVGPathElement>) => {
+    const r = stage.current!.getBoundingClientRect()
+    const b = e.currentTarget.getBoundingClientRect()
+    setHover({ code, x: b.left + b.width / 2 - r.left, y: b.top - r.top, w: r.width, h: r.height })
+  }
+  const key = (code: string) => (e: ReactKeyEvent) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    select(code)
+  }
+
   const hovered = hover && coverage[hover.code]
+  const TIP = renderTooltip ? TIP_CUSTOM : TIP_COVERAGE
   const tipLeft = hover && clamp(hover.x + TIP.gap, TIP.pad, Math.max(TIP.pad, hover.w - TIP.w - TIP.pad))
   const tipTop = hover && clamp(hover.y - TIP.h - TIP.gap > TIP.pad ? hover.y - TIP.h - TIP.gap : hover.y + TIP.gap, TIP.pad, Math.max(TIP.pad, hover.h - TIP.h - TIP.pad))
 
@@ -115,7 +133,7 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
         ref={svg}
         className="world"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        role="img"
+        role={focusable ? 'group' : 'img'} // the children of an img are presentational, so focusable countries need a group
         aria-label={t('explore.map.aria')}
         onPointerDown={interactive ? down : undefined}
         onPointerMove={interactive ? move : undefined}
@@ -127,6 +145,9 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
             const live = interactive && c.code !== null
             const isSelected = c.code !== null && c.code === selected
             const isHover = live && hover?.code === c.code
+            const custom = c.code !== null ? fillFor?.(c.code) : undefined
+            const stroke = fillFor && (isSelected || isHover)
+            const base = FILL[(c.code && coverage[c.code]?.level) || 'none']
             return (
               <path
                 key={c.code ?? c.name}
@@ -134,15 +155,25 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
                 d={c.d}
                 data-code={c.code ?? undefined}
                 data-selected={isSelected ? 'true' : undefined}
-                fill={isSelected ? SELECTED : isHover ? HOVER : FILL[(c.code && coverage[c.code]?.level) || 'none']}
-                stroke="#FFFFFF"
-                strokeWidth={isHover ? 1 : 0.5}
+                fill={fillFor ? (custom ?? base) : isSelected ? SELECTED : isHover ? HOVER : base}
+                stroke={stroke ? '#0B2545' : '#FFFFFF'}
+                strokeWidth={stroke ? (isSelected ? 2 : 1.5) : isHover ? 1 : 0.5}
                 strokeLinejoin="miter"
                 vectorEffect="non-scaling-stroke"
                 onPointerEnter={live ? track(c.code!) : undefined}
                 onPointerMove={live ? track(c.code!) : undefined}
                 onPointerLeave={live ? () => setHover(null) : undefined}
-                onClick={live ? () => travel.current <= DRAG_PX && onSelect?.(isSelected ? null : c.code) : undefined}
+                onClick={live ? () => travel.current <= DRAG_PX && select(c.code!) : undefined}
+                {...(live && focusable && {
+                  tabIndex: 0,
+                  role: 'button',
+                  'aria-label': countryName(c.code!, coverage, locale),
+                  'aria-pressed': isSelected,
+                  'aria-describedby': hover?.code === c.code ? tipId : undefined,
+                  onFocus: focus(c.code!),
+                  onBlur: () => setHover(null),
+                  onKeyDown: key(c.code!),
+                })}
               />
             )
           })}
@@ -156,9 +187,9 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
         </div>
       )}
       {hover && (
-        <div className="map-tooltip" role="tooltip" style={{ left: tipLeft!, top: tipTop!, width: TIP.w }}>
-          <strong>{countryName(hover.code, coverage, locale)}</strong>
-          {hovered ? (
+        <div id={tipId} className="map-tooltip" role="tooltip" style={{ left: tipLeft!, top: tipTop!, width: TIP.w }}>
+          {renderTooltip ? renderTooltip(hover.code) : <strong>{countryName(hover.code, coverage, locale)}</strong>}
+          {renderTooltip ? null : hovered ? (
             <span>{t('explore.map.tooltip_counts', { articles: t('explore.article', { count: hovered.articles }), publishers: t('explore.publisher', { count: hovered.publishers }) })}</span>
           ) : (
             <span>{t('explore.map.no_data')}</span>

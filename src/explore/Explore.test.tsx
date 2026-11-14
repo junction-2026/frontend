@@ -51,20 +51,6 @@ const cards = () => screen.queryAllByRole('listitem').filter((li) => li.classLis
 const whole = (t: string | RegExp) => (_: string, el: Element | null) => (typeof t === 'string' ? el?.textContent === t : t.test(el?.textContent ?? ''))
 const status = (t: string | RegExp) => screen.findByText(whole(t), { selector: '[role="status"]' })
 
-describe('Explore without a job', () => {
-  it('shows disabled filters, an empty map, a History link and makes no API call', () => {
-    window.history.replaceState(null, '', '/explore')
-    render(<App />)
-    expect(screen.getByText('Open Explore coverage from a completed analysis to see where its stories were published.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Open History →' })).toHaveAttribute('href', '/history')
-    for (const b of screen.getAllByRole('button', { name: /No data/ })) expect(b).toBeDisabled()
-    expect(screen.getByLabelText('Search topic text')).toBeDisabled()
-    expect(fetchMock.mock.calls.map((c) => String(c[0])).filter((u) => u.includes('/jobs'))).toEqual([])
-    expect(document.querySelector('.view [data-mock]')).toBeNull()
-    expect(path('FI')).toHaveAttribute('fill', '#E9EDF2')
-  })
-})
-
 describe('Explore job loading', () => {
   it('reads ?job= (URL-decoded), loads that job once and creates nothing', async () => {
     serve({ ...full(), id: 'a b' })
@@ -80,7 +66,7 @@ describe('Explore job loading', () => {
   it('treats a malformed escape as no job', () => {
     window.history.replaceState(null, '', '/explore?job=%E0%A4%A')
     render(<App />)
-    expect(screen.getByText(/Open Explore coverage from a completed analysis/)).toBeInTheDocument()
+    expect(screen.getByText(/Analyses with detected propaganda, by outlet country/)).toBeInTheDocument()
   })
 
   it('shows "Job not found" for a 404', async () => {
