@@ -50,7 +50,7 @@ A dependency-free History-API router SHALL map `/` to Home, `/jobs/:id/live` to 
 - **THEN** the URL is unchanged and Home is rendered
 
 ### Requirement: Shell and navigation
-The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History (no count), the functional language selector (not wrapped in `Mock`), "+ New Analysis" to `/` and an account button to `/settings`, with texts from the active locale ("VEIL" is not translated). The active nav item is Analyze for `/`, `/jobs/*`, `/ask`, `/states`; Explore for `/explore*`; History for `/history`, with `aria-current="page"`.
+The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History (no count), the functional language selector (not wrapped in `Mock`), "+ New Analysis" to `/` and an account button to `/settings`, with texts from the active locale. The active nav item is Analyze for `/`, `/jobs/*`, `/ask`, `/states`; Explore for `/explore*`; History for `/history`, with `aria-current="page"`.
 
 #### Scenario: Active state
 - **WHEN** the path is `/explore/region`
@@ -95,3 +95,10 @@ Each of `src/views/{Home,Analyzing,Results,Detail,History,Explore,Region,Ask,Sta
 #### Scenario: Language selector not listed
 - **WHEN** a reader opens `docs/mock-areas.md`
 - **THEN** it has no row for the top-bar language selector or the Home language chip
+
+### Requirement: Product brand
+The document `<title>` SHALL be "Stiriri / Intelligence". The top-bar brand link SHALL read "Stiriri" followed by the translated brand subtitle ("Intelligence" in `en`) and point to `/`. The brand name "Stiriri" SHALL NOT be translated in any locale.
+
+#### Scenario: Brand in en
+- **WHEN** the app is shown in `en`
+- **THEN** the document title is "Stiriri / Intelligence" and the banner brand link reads "Stiriri / Intelligence" and points to `/`

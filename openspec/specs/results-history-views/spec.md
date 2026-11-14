@@ -87,21 +87,6 @@ The detailed analysis region SHALL contain a section showing `coverage` as `succ
 - **WHEN** two runs are `skipped` with `not_selected` and `disabled`
 - **THEN** they are listed only inside a "Not run" disclosure
 
-### Requirement: Mock-only parts of Results
-In the detailed analysis region the "Polarity / Intensity" signal row, "High rhetorical bias factor" and the Share button SHALL be wrapped in `Mock`. Copy SHALL copy the page URL to the clipboard without `Mock`. "Explore coverage" SHALL link to `/explore?job=<encoded job id>` and "Open detailed analysis page" to `/jobs/:id/detail`. The Ask VEIL call-to-action card SHALL NOT be shown on Results; the compact "Ask VEIL" link carries no data and SHALL NOT be wrapped in `Mock`.
-
-#### Scenario: Copy
-- **WHEN** the user presses Copy
-- **THEN** `navigator.clipboard.writeText` receives the page URL and Copy has no `Mock` ancestor
-
-#### Scenario: Ask VEIL link
-- **WHEN** the Results screen is shown
-- **THEN** the "Ask VEIL" link points to `/ask`, has no `Mock` ancestor and no "Have questions about this verdict" card is shown
-
-#### Scenario: Explore coverage link
-- **WHEN** Results renders for job `j 1`
-- **THEN** the link "Explore coverage" has `href` `/explore?job=j%201` and no "Cross-source coverage" link exists
-
 ### Requirement: Detail metrics
 The Detail screen (`/jobs/:id/detail`) SHALL show a metrics bar with Patterns, the number of detected techniques of the `succeeded` `techniques` run (otherwise "—"), and Claims, the number of `claims` of a `succeeded` `topic_extraction` run (otherwise "—"). Confidence SHALL NOT be shown; Risk and Latency SHALL be wrapped in `Mock`. Technique entries SHALL show `Detection.name` as ID badge and no match percentage.
 
@@ -183,7 +168,7 @@ Each verdict state SHALL use its own background token, heading and body text as 
 
 #### Scenario: Detected
 - **WHEN** the verdict is `detected`
-- **THEN** the background is `--verdict-detected-bg` (#E4F3E8), the heading "Yes, propaganda detected." and the text "VEIL identified signs of manipulative messaging in this content."
+- **THEN** the background is `--verdict-detected-bg` (#E4F3E8), the heading "Yes, propaganda detected." and the text "Stiriri identified signs of manipulative messaging in this content."
 
 #### Scenario: Uncertain
 - **WHEN** the verdict is `uncertain` or unknown
@@ -191,7 +176,7 @@ Each verdict state SHALL use its own background token, heading and body text as 
 
 #### Scenario: Not detected
 - **WHEN** the verdict is `not_detected`
-- **THEN** the background is `--verdict-not-detected-bg` (#E6F0FF), the heading "No clear signs of propaganda." and the text "VEIL did not identify strong indicators of propaganda in this content."
+- **THEN** the background is `--verdict-not-detected-bg` (#E6F0FF), the heading "No clear signs of propaganda." and the text "Stiriri did not identify strong indicators of propaganda in this content."
 
 ### Requirement: Non-verdict states
 Job and finalization states without a completed result SHALL render as a neutral or error card using the existing pill tones, never a verdict background, heading or confidence. "View detailed analysis" SHALL stay available in all of them so analyzer results remain reachable, including those of a `cancelled` job.
@@ -212,7 +197,7 @@ The verdict component SHALL show `${Math.round(c * 100)}% confidence` when `resu
 - **THEN** "Confidence unavailable" is shown and no `%`
 
 ### Requirement: Confidence tooltip
-Next to the confidence line a button with `aria-label` "What does confidence mean?" SHALL show an element with `role="tooltip"` on hover and focus and hide it on blur, mouse leave and Escape; the button SHALL reference it with `aria-describedby`. The tooltip text SHALL be "How confident VEIL's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda."
+Next to the confidence line a button with `aria-label` "What does confidence mean?" SHALL show an element with `role="tooltip"` on hover and focus and hide it on blur, mouse leave and Escape; the button SHALL reference it with `aria-describedby`. The tooltip text SHALL be "How confident Stiriri's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda."
 
 #### Scenario: Focus
 - **WHEN** the button receives keyboard focus
@@ -230,7 +215,7 @@ Next to the confidence line a button with `aria-label` "What does confidence mea
 - **THEN** 280 code points and "…" are shown and pressing "Show full explanation" sets `aria-expanded` to true and shows all 300
 
 ### Requirement: Initial actions
-Below the verdict the Results screen SHALL show a primary `<button>` "View detailed analysis" (class `btn-primary`) and a secondary link "Ask VEIL" (class `btn-secondary`, `href` `/ask`). Apart from the meta row (job id, duration, "Watch live progress" while not done) and, for non-verdict states, the state card, nothing else SHALL be shown in the initial view.
+Below the verdict the Results screen SHALL show a primary `<button>` "View detailed analysis" (class `btn-primary`) and a secondary link "Ask Stiriri" (class `btn-secondary`, `href` `/ask`). Apart from the meta row (job id, duration, "Watch live progress" while not done) and, for non-verdict states, the state card, nothing else SHALL be shown in the initial view.
 
 #### Scenario: Initial view
 - **WHEN** a completed job with techniques and analyzers is shown
@@ -335,3 +320,21 @@ All fixed text of the History screen (title, filter chips, group counts, status 
 #### Scenario: No physical direction
 - **WHEN** `history.css` is inspected
 - **THEN** it contains no `left`/`right` text alignment, margin, padding, border or offset
+
+### Requirement: Mock-only parts of the Results screen
+In the detailed analysis region the "Polarity / Intensity" signal row, "High rhetorical bias factor" and the Share button SHALL be wrapped in `Mock`. Copy SHALL copy the page URL to the clipboard without `Mock`. "Explore coverage" SHALL link to `/explore?job=<encoded job id>` and "Open detailed analysis page" to `/jobs/:id/detail`.
+
+#### Scenario: Copy
+- **WHEN** the user presses Copy
+- **THEN** `navigator.clipboard.writeText` receives the page URL and Copy has no `Mock` ancestor
+
+#### Scenario: Explore coverage link
+- **WHEN** Results renders for job `j 1`
+- **THEN** the link "Explore coverage" has `href` `/explore?job=j%201` and no "Cross-source coverage" link exists
+
+### Requirement: Ask Stiriri link on Results
+The Ask Stiriri call-to-action card SHALL NOT be shown on Results; the compact "Ask Stiriri" link carries no data and SHALL NOT be wrapped in `Mock`.
+
+#### Scenario: Ask Stiriri link
+- **WHEN** the Results screen is shown
+- **THEN** the "Ask Stiriri" link points to `/ask`, has no `Mock` ancestor and no "Have questions about this verdict" card is shown
