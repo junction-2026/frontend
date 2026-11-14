@@ -1,24 +1,14 @@
 import { useId, useState } from 'react'
-import { verdictOf, type Job, type Verdict as VerdictState } from '../api/types'
+import { verdictOf, type Job } from '../api/types'
+import { useFormat, useT } from '../i18n'
 import { timedOut } from './read'
+import { percent } from './text'
 
 type Card = { tone: 'orange' | 'gray' | 'blue'; pill: string; headline: string; sub?: string }
 
-// Results has its own verdict copy; History keeps VERDICT_UI.
-const COPY: Record<VerdictState, { heading: string; body: string }> = {
-  detected: { heading: 'Yes, propaganda detected.', body: 'VEIL identified signs of manipulative messaging in this content.' },
-  uncertain: { heading: "We're not sure yet.", body: 'The available evidence is insufficient or conflicting.' },
-  not_detected: { heading: 'No clear signs of propaganda.', body: 'VEIL did not identify strong indicators of propaganda in this content.' },
-}
-const TOOLTIP =
-  "How confident VEIL's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda."
 const SHORT = 280
 
-const SKIPPED: Record<string, string> = {
-  not_configured: 'No final assessment configured',
-  disabled_by_request: 'Final assessment turned off for this job',
-  cancelled: 'Final assessment cancelled',
-}
+const SKIPPED = ['not_configured', 'disabled_by_request', 'cancelled']
 const text = (v: unknown) => (typeof v === 'string' ? v : '')
 
 // The completed assessment of a job, or null while the Results screen shows a state card instead.
@@ -27,29 +17,32 @@ export function resultOf(job: Job) {
   return job.status !== 'failed' && job.status !== 'cancelled' && f?.status === 'completed' && f.result ? f.result : null
 }
 
-// What the neutral state card says: job states first, then the finalization state.
-function cardOf(job: Job): Card {
+type T = ReturnType<typeof useT>
+
+// What the neutral state card says: job states first, then the finalization state. API messages and codes are shown as they come.
+function cardOf(job: Job, t: T): Card {
   if (job.status === 'failed') {
     const err = job.scrape?.status === 'failed' ? (job.scrape.error as { code?: unknown; message?: unknown } | null) : null
-    if (err) return { tone: 'orange', pill: 'Scrape failed', headline: text(err.message), sub: `Error code: ${text(err.code)}` }
-    return { tone: 'orange', pill: 'Analysis failed', headline: 'The analysis stopped because of an internal error.' }
+    if (err) return { tone: 'orange', pill: t('results.card.scrape_failed'), headline: text(err.message), sub: t('results.card.error_code', { code: text(err.code) }) }
+    return { tone: 'orange', pill: t('results.card.analysis_failed'), headline: t('results.card.internal_error') }
   }
-  if (job.status === 'cancelled')
-    return { tone: 'gray', pill: 'Cancelled', headline: 'The analysis was cancelled. Results of analyzers that finished are kept below.' }
+  if (job.status === 'cancelled') return { tone: 'gray', pill: t('results.card.cancelled'), headline: t('results.card.cancelled_headline') }
   const f = job.finalization
-  if (f?.status === 'skipped')
-    return { tone: 'gray', pill: 'Final assessment skipped', headline: SKIPPED[text(f.reason)] ?? 'No final assessment was made.' }
+  if (f?.status === 'skipped') {
+    const reason = text(f.reason)
+    return { tone: 'gray', pill: t('results.card.skipped'), headline: SKIPPED.includes(reason) ? t(`results.card.skipped.${reason}`) : t('results.card.skipped_other') }
+  }
   if (f?.status === 'failed')
-    return { tone: 'orange', pill: 'Final assessment failed', headline: timedOut(f.error) ? 'Timed out' : text(f.error?.code) || 'Unknown error' }
-  if (job.done)
-    return { tone: 'gray', pill: 'No final assessment', headline: 'No final assessment is available for this job.' }
-  return { tone: 'blue', pill: 'Final assessment in progress', headline: 'The analyzers are still working. This page updates automatically.' }
+    return { tone: 'orange', pill: t('results.card.final_failed'), headline: timedOut(f.error) ? t('results.card.timed_out') : text(f.error?.code) || t('results.card.unknown_error') }
+  if (job.done) return { tone: 'gray', pill: t('results.card.none'), headline: t('results.card.none_headline') }
+  return { tone: 'blue', pill: t('results.card.in_progress'), headline: t('results.card.in_progress_headline') }
 }
 
-const confidenceText = (c: unknown) =>
-  typeof c === 'number' && Number.isFinite(c) && c >= 0 && c <= 1 ? `${Math.round(c * 100)}% confidence` : 'Confidence unavailable'
+const confidenceText = (c: unknown, t: T, fmt: ReturnType<typeof useFormat>['formatNumber']) =>
+  typeof c === 'number' && Number.isFinite(c) && c >= 0 && c <= 1 ? t('results.confidence', { pct: percent(fmt, c) }) : t('results.confidence_unavailable')
 
 function ConfidenceInfo() {
+  const t = useT()
   const id = useId()
   const [open, setOpen] = useState(false)
   return (
@@ -57,7 +50,7 @@ function ConfidenceInfo() {
       <button
         type="button"
         className="info-btn"
-        aria-label="What does confidence mean?"
+        aria-label={t('results.confidence_help')}
         aria-describedby={open ? id : undefined}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
@@ -67,12 +60,13 @@ function ConfidenceInfo() {
       >
         <span aria-hidden="true">i</span>
       </button>
-      {open && <span role="tooltip" id={id} className="confidence-tip">{TOOLTIP}</span>}
+      {open && <span role="tooltip" id={id} className="confidence-tip">{t('results.confidence_tip')}</span>}
     </span>
   )
 }
 
 function Explanation({ value }: { value: string }) {
+  const t = useT()
   const [full, setFull] = useState(false)
   const chars = Array.from(value) // code points: a surrogate pair is never split
   const long = chars.length > SHORT
@@ -80,16 +74,18 @@ function Explanation({ value }: { value: string }) {
     <div className="verdict-explanation">
       <p className="verdict-user-text">{long && !full ? `${chars.slice(0, SHORT).join('')}…` : value}</p>
       {long && (
-        <button type="button" className="btn-link" aria-expanded={full} onClick={() => setFull(!full)}>Show full explanation</button>
+        <button type="button" className="btn-link" aria-expanded={full} onClick={() => setFull(!full)}>{t('results.show_full')}</button>
       )}
     </div>
   )
 }
 
 export function Verdict({ job }: { job: Job }) {
+  const t = useT()
+  const { formatNumber } = useFormat()
   const r = resultOf(job)
   if (!r) {
-    const card = cardOf(job)
+    const card = cardOf(job, t)
     return (
       <article className="card verdict-card">
         <span className={`status-pill ${card.tone}`}>
@@ -105,15 +101,15 @@ export function Verdict({ job }: { job: Job }) {
   const partial = job.coverage?.failed > 0 || job.analyzers?.some((a) => a.status === 'failed')
   return (
     <section className="verdict" data-verdict={verdict}>
-      {verdict === 'uncertain' && r.produced_by === 'orchestrator' && <span className="tag gray">Insufficient evidence</span>}
-      <h2>{COPY[verdict].heading}</h2>
-      <p className="verdict-lead">{COPY[verdict].body}</p>
+      {verdict === 'uncertain' && r.produced_by === 'orchestrator' && <span className="tag gray">{t('results.insufficient')}</span>}
+      <h2>{t(`results.verdict.${verdict}.heading`)}</h2>
+      <p className="verdict-lead">{t(`results.verdict.${verdict}.body`)}</p>
       <p className="verdict-confidence">
-        <span>{confidenceText(r.confidence)}</span>
+        <span>{confidenceText(r.confidence, t, formatNumber)}</span>
         <ConfidenceInfo />
       </p>
       <Explanation value={text(r.user_text)} />
-      {partial && <p role="note" className="verdict-partial">Some analyzers did not finish, so this result is based on partial evidence.</p>}
+      {partial && <p role="note" className="verdict-partial">{t('results.partial')}</p>}
     </section>
   )
 }

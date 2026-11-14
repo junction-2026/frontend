@@ -1,5 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ReactElement } from 'react'
+import { I18nProvider } from '../i18n'
 import { assessment, finalization, job, json } from '../job/fixtures'
 import DetailView from './DetailView'
 
@@ -9,7 +11,16 @@ afterEach(() => {
   cleanup()
   fetchMock.mockReset()
   vi.unstubAllGlobals()
+  localStorage.clear()
+  document.documentElement.lang = 'en'
+  document.documentElement.dir = 'ltr'
 })
+
+// Renders under the real provider in a given locale (the choice is read from storage like on a reload).
+const inLocale = (lng: string, ui: ReactElement) => {
+  localStorage.setItem('veil.locale', lng)
+  return render(<I18nProvider>{ui}</I18nProvider>)
+}
 
 const show = async (j: unknown) => {
   fetchMock.mockResolvedValue(json(j))
@@ -43,5 +54,24 @@ describe('Detail: final assessment', () => {
   ])('omits the section when finalization is %s', async (_n, f) => {
     await show(job({ finalization: f }))
     expect(screen.queryByRole('heading', { name: 'Final assessment' })).toBeNull()
+  })
+})
+
+describe('Detail in another locale', () => {
+  it('renders German chrome with the translated verdict label, and the API text unchanged', async () => {
+    fetchMock.mockResolvedValue(json(withResult({ verdict: 'detected', user_text: '<b>fake</b> {count}' })))
+    inLocale('de', <DetailView id="j1" />)
+    expect(await screen.findByText('Muster')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Detaillierte Analyse' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Zurück zur Zusammenfassung/ })).toHaveAttribute('href', '/jobs/j1')
+    expect(screen.getByRole('heading', { name: 'Abschließende Bewertung' }).closest('section')).toHaveTextContent('Manipulation erkannt')
+    expect(screen.getByText('<b>fake</b> {count}')).toBeInTheDocument()
+    expect(screen.getByText(/keine Technikanalyse|Keine Technikanalyse/i)).toBeInTheDocument()
+  })
+
+  it('shows the not-found alert in the active locale', async () => {
+    fetchMock.mockResolvedValue(json({ error: { code: 'not_found', message: 'nope' } }, 404))
+    inLocale('de', <DetailView id="j1" />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Auftrag nicht gefunden')
   })
 })
