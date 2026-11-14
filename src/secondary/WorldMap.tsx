@@ -156,10 +156,7 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
         <div className="map-tooltip" role="tooltip" style={{ left: tipLeft!, top: tipTop!, width: TIP.w }}>
           <strong>{countryName(hover.code, coverage)}</strong>
           {hovered ? (
-            <>
-              <span>{plural(hovered.articles, 'article')}</span>
-              <span>{plural(hovered.publishers, 'publisher')}</span>
-            </>
+            <span>{plural(hovered.articles, 'article')} · {plural(hovered.publishers, 'publisher')}</span>
           ) : (
             <span>No verified publisher data</span>
           )}

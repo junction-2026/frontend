@@ -1,11 +1,16 @@
+import { useState } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ExploreView, { Explore } from '../views/ExploreView'
 import { WorldMap } from './WorldMap'
-import { EXPLORE_MOCK_COVERAGE, coverageSummary } from './exploreMockCoverage'
+import { EXPLORE_MOCK_COVERAGE } from './exploreMockCoverage'
 import { ALPHA2_BY_NUMERIC } from './countryCodes'
 import { COUNTRIES, SELECTABLE } from './worldMapData'
 
+// Map with the mock coverage and local selection state (Explore itself is tested in src/explore).
+const ExploreView = ({ coverage = EXPLORE_MOCK_COVERAGE }: { coverage?: typeof EXPLORE_MOCK_COVERAGE }) => {
+  const [sel, setSel] = useState<string | null>(null)
+  return <WorldMap coverage={coverage} selected={sel} onSelect={setSel} />
+}
 const paths = () => [...document.querySelectorAll<SVGPathElement>('path.country')]
 const finland = () => document.querySelector<SVGPathElement>('path[data-code="FI"]')!
 const view = () => document.querySelector<SVGGElement>('.map-view')!
@@ -24,13 +29,9 @@ describe('world data', () => {
     expect(new Set(Object.values(ALPHA2_BY_NUMERIC)).size).toBe(Object.keys(ALPHA2_BY_NUMERIC).length)
     expect(SELECTABLE.map((c) => c.name)).toEqual([...SELECTABLE.map((c) => c.name)].sort((a, b) => a.localeCompare(b)))
   })
-  it('computes the header summary from the dataset', () => {
-    expect(coverageSummary(EXPLORE_MOCK_COVERAGE)).toBe('28 verified publishers across 17 countries')
-    expect(coverageSummary({})).toBe('No verified publisher-country data yet')
-  })
 })
 
-describe('Explore map', () => {
+describe('World map', () => {
   it('renders country paths and a tooltip on hover without any propaganda statistic', () => {
     render(<ExploreView />)
     expect(paths().length).toBeGreaterThan(150)
@@ -39,8 +40,7 @@ describe('Explore map', () => {
     fireEvent.pointerEnter(finland(), { clientX: 100, clientY: 100 })
     const tip = screen.getByRole('tooltip')
     expect(tip).toHaveTextContent('Finland')
-    expect(tip).toHaveTextContent('12 articles')
-    expect(tip).toHaveTextContent('4 publishers')
+    expect(tip).toHaveTextContent('12 articles · 4 publishers')
     expect(document.body).not.toHaveTextContent(/propaganda/i)
     expect(finland()).toHaveAttribute('fill', '#A7C9F0')
     fireEvent.pointerLeave(finland())
@@ -51,42 +51,18 @@ describe('Explore map', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent('No verified publisher data')
   })
 
-  it('selects and clears a country without touching the topic', () => {
+  it('selects on click, keeps the selected colour while hovered, and clears on a second click or Escape', () => {
     render(<ExploreView />)
-    const topic = (screen.getByLabelText('Topic') as HTMLInputElement).value
     fireEvent.click(finland())
     expect(finland()).toHaveAttribute('data-selected', 'true')
     expect(finland()).toHaveAttribute('fill', '#7FADE5')
     fireEvent.pointerEnter(finland())
     expect(finland()).toHaveAttribute('fill', '#7FADE5') // stays selected while hovered
-    expect(screen.getByLabelText('Country')).toHaveValue('FI')
-    expect(screen.getByText(/12 articles · 4 publishers/)).toBeInTheDocument()
-    expect(screen.getByLabelText('Topic')).toHaveValue(topic)
-    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }))
-    expect(finland()).not.toHaveAttribute('data-selected')
-    expect(screen.getByLabelText('Country')).toHaveValue('')
-    fireEvent.click(finland())
-    fireEvent.click(screen.getByRole('button', { name: 'Clear country' }))
-    expect(screen.getByLabelText('Country')).toHaveValue('')
-    fireEvent.click(finland())
     fireEvent.click(finland()) // clicking the selection again clears it
     expect(finland()).not.toHaveAttribute('data-selected')
     fireEvent.click(finland())
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(finland()).not.toHaveAttribute('data-selected')
-    expect(screen.getByLabelText('Topic')).toHaveValue(topic)
-  })
-
-  it('selects from the Country select and explains uncovered countries', () => {
-    render(<ExploreView />)
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'FI' } })
-    expect(finland()).toHaveAttribute('data-selected', 'true')
-    expect(screen.getByRole('link', { name: 'Inspect wire feeds →' })).toHaveAttribute('href', '/explore/region')
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'AQ' } })
-    expect(screen.getByText('No verified publisher data for Antarctica')).toBeInTheDocument()
-    expect(screen.queryByText(/articles ·/)).toBeNull()
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: '' } })
-    expect(document.querySelector('[data-selected]')).toBeNull()
   })
 
   it('does not select id-less features', () => {
@@ -136,13 +112,7 @@ describe('Explore map', () => {
     expect(finland()).not.toHaveAttribute('data-selected')
   })
 
-  it('pluralises the panel like the tooltip', () => {
-    render(<ExploreView />)
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'SE' } })
-    expect(screen.getByText('4 articles · 1 publisher')).toBeInTheDocument()
-  })
-
-  it('pinch zooms without selecting, and Escape in a field keeps the selection', () => {
+  it('pinch zooms without selecting', () => {
     render(<ExploreView />)
     const svg = screen.getByRole('img', { name: 'World coverage map' })
     Object.assign(svg, { getBoundingClientRect: () => ({ left: 0, top: 0, width: 960, height: 500, right: 960, bottom: 500, x: 0, y: 0, toJSON() {} }) })
@@ -154,15 +124,10 @@ describe('Explore map', () => {
     fireEvent.pointerUp(svg, { pointerId: 1 })
     fireEvent.click(finland())
     expect(finland()).not.toHaveAttribute('data-selected')
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'FI' } })
-    fireEvent.keyDown(screen.getByLabelText('Country'), { key: 'Escape' })
-    fireEvent.keyDown(screen.getByLabelText('Topic'), { key: 'Escape' })
-    expect(finland()).toHaveAttribute('data-selected', 'true')
   })
 
   it('renders with an empty dataset', () => {
-    render(<Explore coverage={{}} />)
-    expect(screen.getByText('No verified publisher-country data yet')).toBeInTheDocument()
+    render(<ExploreView coverage={{}} />)
     expect(finland()).toHaveAttribute('fill', '#E9EDF2')
     fireEvent.pointerEnter(finland())
     expect(screen.getByRole('tooltip')).toHaveTextContent('No verified publisher data')

@@ -23,16 +23,12 @@ afterEach(() => {
 })
 
 describe('Explore and Region', () => {
-  it('marks the filters, map, stats and region details as mock and navigates between them', () => {
+  it('keeps Explore unmarked and Region marked as mock, and Clear selection leads back to Explore', () => {
     open('/explore')
     expect(screen.getByRole('heading', { level: 1, name: 'Explore the world.' })).toBeInTheDocument()
-    for (const t of [screen.getByLabelText('Topic'), screen.getByLabelText('Country'), screen.getByText('Geographic Coverage & Publisher Distribution'), screen.getByRole('img', { name: 'World coverage map' })])
-      expect(mocked(t)).not.toBeNull()
-    fireEvent.click(document.querySelector('path[data-code="FI"]')!)
-    expect(window.location.pathname).toBe('/explore') // selecting does not navigate
-    expect(mocked(screen.getByText('Inspect wire feeds →'))).not.toBeNull()
-    fireEvent.click(screen.getByRole('link', { name: 'Inspect wire feeds →' }))
-    expect(window.location.pathname).toBe('/explore/region')
+    expect(screen.getByRole('img', { name: 'World coverage map' }).closest('.view')!.querySelector('[data-mock]')).toBeNull()
+    cleanup()
+    open('/explore/region')
     expect(mocked(screen.getByText('99.1%'))).not.toBeNull()
     expect(mocked(screen.getByText('Helsingin Sanomat'))).not.toBeNull()
     expect(mocked(screen.getByText(/Finland Selected/))).not.toBeNull()

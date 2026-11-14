@@ -351,7 +351,7 @@ describe('Results: page chrome, mock parts and polling', () => {
     await show(job())
     toggle()
     expect(screen.getByRole('link', { name: 'Open detailed analysis page' })).toHaveAttribute('href', '/jobs/j1/detail')
-    expect(screen.getByRole('link', { name: /Cross-source coverage/ })).toHaveAttribute('href', '/explore')
+    expect(screen.getByRole('link', { name: 'Explore coverage' })).toHaveAttribute('href', '/explore?job=j1')
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
     expect(writeText).toHaveBeenCalledWith(window.location.href)
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument()

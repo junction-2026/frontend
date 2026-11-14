@@ -40,6 +40,17 @@ describe('matchRoute', () => {
   ])('%s', (path, route) => expect(matchRoute(path)).toEqual(route))
 })
 
+describe('matchRoute /explore job parameter', () => {
+  it.each([
+    ['?job=abc', 'abc'],
+    ['?x=1&job=a%20b', 'a b'],
+    ['?job=%E0%A4%A', undefined], // malformed escape counts as absent
+    ['?job=', undefined],
+    ['', undefined],
+  ])('%s', (search, id) => expect(matchRoute('/explore', search)).toEqual({ name: 'explore', id }))
+  it('ignores job on other routes', () => expect(matchRoute('/history', '?job=abc')).toEqual({ name: 'history' }))
+})
+
 describe('routes render their stub view in the shell', () => {
   it.each<[string, string | RegExp, number?]>([
     ['/', 'See beyond the narrative.'],
