@@ -59,14 +59,14 @@ describe('routes render their stub view in the shell', () => {
     ['/history', 'Analysis History'],
     ['/explore', 'Explore the world.'],
     ['/explore/region', 'Explore the world.'],
-    ['/ask', /^Ask Stiriri/],
+    ['/ask', /^Ask VEIL/],
     ['/settings', 'Settings & Methodology'],
     ['/states', 'Edge Cases & System States'],
     ['/unknown', 'See beyond the narrative.'],
   ])('%s', (path, heading, level = 1) => {
     open(path)
     expect(screen.getByRole('heading', { level, name: heading })).toBeInTheDocument()
-    expect(screen.getByRole('banner')).toHaveTextContent('Stiriri / Intelligence')
+    expect(screen.getByRole('banner')).toHaveTextContent('VEIL / Intelligence')
   })
 
   it('/jobs/:id shows the job result view for that id', () => {
@@ -110,7 +110,7 @@ describe('navigation', () => {
     expect(nav('History')).toHaveAttribute('href', '/history')
     expect(nav('+ New Analysis')).toHaveAttribute('href', '/')
     expect(nav('Account')).toHaveAttribute('href', '/settings')
-    expect(screen.getByRole('link', { name: /Stiriri/ })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: /VEIL/ })).toHaveAttribute('href', '/')
   })
 
   it('client-navigates on click, scrolls to the top and follows back/forward', () => {

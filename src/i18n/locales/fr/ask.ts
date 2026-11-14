@@ -1,10 +1,10 @@
 export default {
-  'mock_label': 'Pas de backend pour Ask Stiriri',
+  'mock_label': 'Pas de backend pour Ask VEIL',
   'context.status': '● Manipulation détectée ({confidence} de confiance)',
   'context.source': 'Élément source : « Tout le monde sait que ces gens détruisent notre avenir... »',
   'context.summary': 'Ce texte emploie un langage chargé d’émotion, un exogroupe non précis...',
   'back': '← Retour au résumé',
-  'title': 'Ask Stiriri',
+  'title': 'Ask VEIL',
   'badge': 'Intelligence interactive',
   'grounded': 'Fondé sur le texte soumis, les dépêches et les vérifications de faits',
   'prompt': 'Une question sur cette source, les indicateurs rhétoriques ou des reportages corroborants ?',
