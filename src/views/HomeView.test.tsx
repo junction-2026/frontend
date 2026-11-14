@@ -106,7 +106,6 @@ describe('HomeView advanced options', () => {
     expect(screen.getByLabelText(/Translation/)).toBeChecked()
     expect(screen.getByLabelText(/Techniques/)).toBeChecked()
     expect(screen.getByText('disabled')).toBeInTheDocument()
-    expect(screen.getByLabelText('Final assessment')).toBeChecked()
     type('hello')
     analyze()
     await waitFor(() => expect(posts()).toHaveLength(1))
@@ -124,15 +123,28 @@ describe('HomeView advanced options', () => {
     expect(body()).toEqual({ input: { content: 'hello' }, analyzers: ['translation'] })
   })
 
-  it('sends options.finalize=false when Final assessment is off', async () => {
+  it('offers no Final assessment control and never sends options', async () => {
     route()
     render(<HomeView />)
     await openAdvanced()
-    fireEvent.click(screen.getByLabelText('Final assessment'))
+    expect(screen.queryByLabelText('Final assessment')).not.toBeInTheDocument()
+    expect(screen.queryByText('Final assessment')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText(/Techniques/))
     type('hello')
     analyze()
     await waitFor(() => expect(posts()).toHaveLength(1))
-    expect(body()).toEqual({ input: { content: 'hello' }, options: { finalize: false } })
+    expect(body()).not.toHaveProperty('options')
+    expect(body()).toHaveProperty('analyzers')
+  })
+
+  it('omits options in link mode', async () => {
+    route()
+    render(<HomeView />)
+    fireEvent.click(screen.getByRole('tab', { name: 'Social Link' }))
+    type('https://x.org/a')
+    analyze()
+    await waitFor(() => expect(posts()).toHaveLength(1))
+    expect(body()).toEqual({ scrape: { url: 'https://x.org/a' } })
   })
 
   it('shows the error when the analyzers request fails and sends the job without analyzers', async () => {

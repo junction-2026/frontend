@@ -36,30 +36,15 @@ In Social Link mode the value SHALL parse as an absolute http(s) URL of at most 
 - **THEN** an inline error is shown and no request is made
 
 ### Requirement: Advanced options panel
-The `Advanced options ▾` control SHALL expand a panel listing the items of `GET /api/v1/analyzers` with `selectable: true` as checkboxes (name, category, and a `disabled` hint when `enabled` is false), all checked by default, plus a `Final assessment` toggle (`options.finalize`, default on). If the analyzers request fails, the panel SHALL show the error.
+The `Advanced options ▾` control SHALL expand a panel listing the items of `GET /api/v1/analyzers` with `selectable: true` as checkboxes (name, category, and a `disabled` hint when `enabled` is false), all checked by default. The panel SHALL NOT offer a control to turn off the final assessment. If the analyzers request fails, the panel SHALL show the error.
 
 #### Scenario: Panel content
 - **WHEN** the panel opens and the server lists a selectable, a disabled and a non-selectable analyzer
 - **THEN** the first two are listed checked (the disabled one with the hint) and the non-selectable one is not listed
 
-### Requirement: Advanced options in the request
-When every selectable analyzer is checked the request SHALL omit `analyzers`, otherwise it SHALL carry the checked ids. `options.finalize` SHALL be sent as `false` when the toggle is off. If the analyzers request failed, the job SHALL be sent without `analyzers`.
-
-#### Scenario: All analyzers checked
-- **WHEN** nothing was unchecked
-- **THEN** the body has no `analyzers` member
-
-#### Scenario: Subset
-- **WHEN** one of three analyzers is unchecked
-- **THEN** the body has `analyzers` with the two checked ids
-
-#### Scenario: Finalize off
-- **WHEN** the Final assessment toggle is switched off
-- **THEN** the body has `options: {"finalize": false}`
-
-#### Scenario: Analyzers list fails
-- **WHEN** `GET /api/v1/analyzers` fails
-- **THEN** the panel shows the error and the next submission has no `analyzers` member
+#### Scenario: No final assessment toggle
+- **WHEN** the panel opens
+- **THEN** no Final assessment control is shown
 
 ### Requirement: Submission errors
 A non-201 response SHALL render an element with `role=alert` using the foundation's message mapping. For `validation_failed` each `details.fields` entry SHALL be listed; for `unknown_analyzer` the ids SHALL be listed. The entered content SHALL be kept.
@@ -227,3 +212,22 @@ The Analyzing screen SHALL remain usable with `dir=rtl` (Arabic): the arrows ins
 #### Scenario: Arabic
 - **WHEN** the locale is `ar`
 - **THEN** the document direction is `rtl` and the headings and controls are Arabic
+
+### Requirement: Advanced options request body
+When every selectable analyzer is checked the request SHALL omit `analyzers`, otherwise it SHALL carry the checked ids. The request SHALL omit `options`, so the server default (`finalize` true) applies, and SHALL NOT send `options.finalize: false` in any mode. If the analyzers request failed, the job SHALL be sent without `analyzers`.
+
+#### Scenario: All analyzers checked
+- **WHEN** nothing was unchecked
+- **THEN** the body has no `analyzers` member
+
+#### Scenario: Subset
+- **WHEN** one of three analyzers is unchecked
+- **THEN** the body has `analyzers` with the two checked ids
+
+#### Scenario: Final assessment always requested
+- **WHEN** a job is submitted in text or link mode, with or without an analyzer subset
+- **THEN** the body has no `options` member
+
+#### Scenario: Analyzers list fails
+- **WHEN** `GET /api/v1/analyzers` fails
+- **THEN** the panel shows the error and the next submission has no `analyzers` member
