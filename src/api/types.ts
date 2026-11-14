@@ -101,6 +101,25 @@ export type JobLocalization = {
   [k: string]: unknown
 }
 
+// Result of the `wikipedia` analyzer (shared wikipedia-lookup-result, incl. change wikipedia-cross-language). Every member
+// is read tolerantly: unknown `status`, `coverage` and `cross_language` values and absent members must not break rendering.
+export type WikiLookup = {
+  language: string; query: string; status: string; cached: boolean
+  title: string | null; url: string | null; passage: string | null
+  coverage?: string | null; evidence_sentence?: string | null
+  [k: string]: unknown
+}
+// `text` is the verbatim substring of that wiki's passage, `value` the normalized value; both untrusted.
+export type CompareValue = { kind: string; value: string; text: string; [k: string]: unknown }
+export type CrossLanguageDifference = { language: string; url: string | null; values: CompareValue[]; [k: string]: unknown }
+export type ClaimLookup = {
+  claim: string; check_worthiness: number; search_mode: string; wikis: WikiLookup[]
+  cross_language?: string | null // agree | discrepancy | gap | null; missing or unknown reads as null
+  cross_language_differences?: CrossLanguageDifference[] | null
+  [k: string]: unknown
+}
+export type WikipediaLookup = { languages: string[]; claims: ClaimLookup[]; requests_used: number; cached: number; [k: string]: unknown }
+
 export type CreateJobBody =
   | { input: Input; analyzers?: string[]; options?: { finalize?: boolean } }
   | { scrape: { url: string; max_posts?: number; max_comments?: number }; analyzers?: string[]; options?: { finalize?: boolean } }
