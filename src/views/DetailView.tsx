@@ -1,14 +1,11 @@
 import { verdictOf, type Job } from '../api/types'
-import JobView from '../job/JobView'
-import { claimCount, readTechniques, VERDICT_UI } from '../job/read'
+import { DetailedAnalysis } from '../job/DetailedAnalysis'
+import { VERDICT_UI } from '../job/read'
 import { WithJob } from '../job/WithJob'
 import { Link } from '../router'
-import { Mock } from '../ui/MockBadge'
 import '../job/results.css'
 
 function Detail({ job }: { job: Job }) {
-  const patterns = readTechniques(job)?.detected.length
-  const claims = claimCount(job)
   const f = job.finalization
   const result = f?.status === 'completed' ? f.result : null
   return (
@@ -21,23 +18,7 @@ function Detail({ job }: { job: Job }) {
           <p>{result.user_text}</p>
         </section>
       )}
-      <div className="metrics-bar">
-        <div><span>Patterns</span><strong>{patterns === undefined ? '—' : `${patterns} detected`}</strong></div>
-        <div><span>Claims</span><strong>{claims === null ? '—' : `${claims} extracted`}</strong></div>
-        <div>
-          <span>Risk</span>
-          <div className="metrics-mock">
-            <Mock label="Risk"><span className="tag orange">High Risk</span></Mock>
-          </div>
-        </div>
-        <div>
-          <span>Latency</span>
-          <div className="metrics-mock">
-            <Mock label="Latency"><span className="metrics-latency">412ms</span></Mock>
-          </div>
-        </div>
-      </div>
-      <JobView job={job} />
+      <DetailedAnalysis job={job} />
     </>
   )
 }

@@ -328,6 +328,7 @@ describe('Explore entry points', () => {
     serve(job({ id: 'j 1' }))
     window.history.replaceState(null, '', '/jobs/j%201')
     render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: 'View detailed analysis' })) // the link lives in the detailed region
     expect(await screen.findByRole('link', { name: 'Explore coverage' })).toHaveAttribute('href', '/explore?job=j%201')
     expect(screen.queryByText(/Cross-source coverage/)).toBeNull()
   })
