@@ -19,7 +19,8 @@ const show = (r: unknown, lng = 'en') => {
 const section = () => document.querySelector('.risk') as HTMLElement
 const chip = () => section().querySelector('.risk-chip') as HTMLElement
 const unavailable = (extra: Record<string, unknown> = {}) =>
-  risk({ status: 'unavailable', reason: 'no_content_signals', score: null, raw_score: null, band: null, drivers: [], techniques: [], ...extra })
+  risk({ status: 'unavailable', reason: 'no_content_signals', score: null, raw_score: null, band: null, drivers: [], techniques: [], ...extra,
+    dimensions: { intensity: { available: false, score: null, reason: 'analyzer_unavailable' }, confirmation: { available: false, score: null, reason: 'analyzer_unavailable' }, amplification: { available: false, score: null, reason: 'no_author_context' } } })
 
 describe('RiskScore: scored', () => {
   it('shows percent, band chip, summary, info button, three bars, techniques, drivers and caveats', () => {
@@ -79,6 +80,12 @@ describe('RiskScore: degraded', () => {
   it('explains unavailable intensity and shows no technique rows', () => {
     show(risk({ dimensions: { ...risk().dimensions, intensity: { available: false, score: null, reason: 'analyzer_unavailable' } }, techniques: [] }))
     expect(section()).toHaveTextContent('Intensity: this check was not available for this job.')
+    expect(section()).not.toHaveTextContent('No manipulative techniques were detected.')
+    expect(section()).not.toHaveTextContent('Detected techniques')
+  })
+
+  it('says none were detected only when intensity is available', () => {
+    show(risk({ techniques: [] }))
     expect(section()).toHaveTextContent('No manipulative techniques were detected.')
   })
 
@@ -101,6 +108,7 @@ describe('RiskScore: degraded', () => {
     expect(section()).toHaveTextContent('No risk score could be given. There were not enough signals in the content to rate it.')
     expect(screen.getByRole('button', { name: 'What does the risk score mean?' })).toBeInTheDocument()
     expect(screen.getByText('This rating describes the content, not whether a reader will be manipulated.')).toBeInTheDocument()
+    expect(section()).not.toHaveTextContent('No manipulative techniques were detected.')
   })
 
   it.each([
@@ -151,9 +159,10 @@ describe('RiskScore: unknown ids and plain text', () => {
 
   it('always lists content_not_reader, also when the server omits it', () => {
     show(risk({ caveats: [{ id: 'bot_not_intent', text: 'x' }] }))
-    const items = section().querySelectorAll('.risk-list[role=region] li')
+    const items = section().querySelectorAll('.risk-block [role=region] li')
     expect(items[0]).toHaveTextContent('describes the content')
     expect(items).toHaveLength(2)
+    expect(section().querySelector('ul[role]')).toBeNull()
   })
 })
 

@@ -47,11 +47,13 @@ function Caveats({ risk }: { risk: RiskView }) {
         <span aria-hidden="true" className="risk-chevron">{open ? '▾' : '▸'}</span>
       </button>
       {open && (
-        <ul id={id} role="region" aria-label={t('results.risk.caveats')} className="risk-list">
-          {risk.caveats.map((c) => (
-            <li key={c.id}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}</li>
-          ))}
-        </ul>
+        <div id={id} role="region" aria-label={t('results.risk.caveats')}>
+          <ul className="risk-list">
+            {risk.caveats.map((c) => (
+              <li key={c.id}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}</li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )
@@ -122,6 +124,8 @@ export function RiskSection({ risk }: { risk: RiskView }) {
         </ul>
       </div>
 
+      {/* With intensity unavailable the list is empty because the check did not run, not because nothing was found: show nothing (the dimension note explains it). */}
+      {(risk.techniques.length > 0 || risk.dimensions[0].available) && (
       <div className="risk-block">
         <h3 className="risk-subtitle">{t('results.risk.techniques')}</h3>
         {risk.techniques.length === 0 ? (
@@ -138,6 +142,7 @@ export function RiskSection({ risk }: { risk: RiskView }) {
           </ul>
         )}
       </div>
+      )}
 
       {risk.scored && (
         <div className="risk-block">
