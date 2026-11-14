@@ -138,6 +138,39 @@ describe('History', () => {
     expect(await screen.findByText('“j9”')).toBeInTheDocument()
   })
 
+  describe('queued excerpts', () => {
+    // Ten items, so four requests are in flight and six wait; `release` settles the in-flight ones.
+    const setup = () => {
+      const release: (() => void)[] = []
+      route(
+        (url) => page(Array.from({ length: url.includes('status=failed') ? 2 : 10 }, (_, i) => summary(`${url.includes('status=failed') ? 'f' : 'j'}${i}`))),
+        (id) => new Promise<Response>((resolve) => release.push(() => resolve(json(job({ id, input: { content: id } }))))),
+      )
+      return release
+    }
+    const detailUrls = () => fetchMock.mock.calls.map((c) => c[0] as string).filter((u) => !u.includes('?'))
+
+    it('stops fetching queued excerpts after unmount', async () => {
+      const release = setup()
+      const { unmount } = render(<HistoryView />)
+      await waitFor(() => expect(release).toHaveLength(4))
+      unmount()
+      await act(async () => release.forEach((r) => r()))
+      expect(detailUrls()).toHaveLength(4)
+    })
+
+    it('drops queued excerpts of a previous filter so the new items load first', async () => {
+      const release = setup()
+      render(<HistoryView />)
+      await waitFor(() => expect(release).toHaveLength(4))
+      fireEvent.click(screen.getByRole('button', { name: 'Failed' }))
+      await waitFor(() => expect(listUrls()).toHaveLength(2))
+      await act(async () => release.slice(0, 4).forEach((r) => r()))
+      await waitFor(() => expect(detailUrls()).toHaveLength(6))
+      expect(detailUrls().slice(4)).toEqual(['/api/v1/jobs/f0', '/api/v1/jobs/f1'])
+    })
+  })
+
   it('shows the empty state with a link to start an analysis', async () => {
     route(() => page([]))
     render(<HistoryView />)

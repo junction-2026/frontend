@@ -16,12 +16,15 @@ export function useExcerpts(items: JobSummary[]): Record<string, string | null> 
 
   useEffect(() => {
     alive.current = true
-    return () => { alive.current = false }
+    return () => {
+      alive.current = false
+      waiting.current = [] // nobody will see these excerpts
+    }
   }, [])
 
   useEffect(() => {
     const pump = () => {
-      while (active.current < MAX_IN_FLIGHT && waiting.current.length > 0) {
+      while (alive.current && active.current < MAX_IN_FLIGHT && waiting.current.length > 0) {
         const id = waiting.current.shift() as string
         active.current++
         void getJob(id).then((r) => {
@@ -34,6 +37,10 @@ export function useExcerpts(items: JobSummary[]): Record<string, string | null> 
         })
       }
     }
+    // Ids of a previous filter or page set are dropped (and may be queued again later) so the visible items go first.
+    const current = new Set(items.map((i) => i.id))
+    for (const id of waiting.current) if (!current.has(id)) queued.current.delete(id)
+    waiting.current = waiting.current.filter((id) => current.has(id))
     for (const { id } of items) if (!queued.current.has(id)) { queued.current.add(id); waiting.current.push(id) }
     pump()
   }, [items])
