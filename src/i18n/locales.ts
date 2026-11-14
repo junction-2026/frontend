@@ -5,6 +5,7 @@ export const LOCALES = [
   { code: 'ar', label: 'العربية', dir: 'rtl' },
   { code: 'de', label: 'Deutsch', dir: 'ltr' },
   { code: 'fi', label: 'Suomi', dir: 'ltr' },
+  { code: 'ru', label: 'Русский', dir: 'ltr' },
 ] as const
 
 export type Locale = (typeof LOCALES)[number]['code']

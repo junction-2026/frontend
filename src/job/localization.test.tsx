@@ -212,6 +212,14 @@ describe('language switch', () => {
     expect(locRequests()).toEqual([])
   })
 
+  it('requests language=ru when the UI is Russian', async () => {
+    serve(analysis())
+    mount('ru')
+    await open()
+    await userText('[ru] user text')
+    expect(locRequests()).toEqual(['/api/v1/jobs/j1/localization?language=ru'])
+  })
+
   it('keeps the original reachable behind a toggle', async () => {
     serve(analysis())
     mount('ar')
