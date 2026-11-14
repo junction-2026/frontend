@@ -29,11 +29,18 @@ The generic card SHALL have og:type `website`, og:site_name `VEIL`, og:title `VE
 - **THEN** the generic card is returned with status 200
 
 ### Requirement: Tag set
-Every card SHALL emit `<meta name="description">`, og:type, og:site_name, og:title, og:description, og:url, og:image, og:image:width `1200`, og:image:height `630`, og:image:type `image/png`, og:image:alt, twitter:card `summary_large_image`, twitter:title, twitter:description, twitter:image and twitter:image:alt, and SHALL replace `<title>` with the card title. Job cards SHALL use og:type `article`. The card block SHALL be delimited by `<!-- og:start -->` and `<!-- og:end -->` and replace the default block of `index.html` instead of duplicating it; when the markers are missing it SHALL be inserted before `</head>`.
+Every card SHALL emit `<meta name="description">`, og:type, og:site_name, og:title, og:description, og:url, og:image, og:image:width `1200`, og:image:height `630`, og:image:type `image/png`, og:image:alt, twitter:card `summary_large_image`, twitter:title, twitter:description, twitter:image and twitter:image:alt, and SHALL replace `<title>` with the card title. Job cards SHALL use og:type `article`.
 
 #### Scenario: Full tag set
 - **WHEN** any card is rendered
-- **THEN** all listed tags are present exactly once and the markers occur once
+- **THEN** all listed tags are present exactly once
+
+### Requirement: Card block markers
+The card block SHALL be delimited by `<!-- og:start -->` and `<!-- og:end -->` and SHALL replace the default block of `index.html` instead of duplicating it; when the markers are missing it SHALL be inserted before `</head>`.
+
+#### Scenario: Replacement
+- **WHEN** a card is injected into an `index.html` that has the markers
+- **THEN** the markers occur once and the default tags are gone
 
 ### Requirement: Job card routes
 `/jobs/{id}`, `/jobs/{id}/detail` and `/jobs/{id}/live`, where `{id}` matches `^[A-Za-z0-9_-]{1,64}$`, SHALL get a job card whose og:url is `<PUBLIC_ORIGIN>/jobs/{id}`. A malformed id SHALL get the generic card without a backend call.
@@ -47,7 +54,14 @@ Every card SHALL emit `<meta name="description">`, og:type, og:site_name, og:tit
 - **THEN** the generic card is returned and the backend receives no request
 
 ### Requirement: Verdict card
-For a job with `done` true, finalization status `completed` and a result, og:title SHALL be `VEIL verdict: <label>` with label `Manipulation detected`, `No manipulation indicators` or `Uncertain` for verdict `detected`, `not_detected` or `uncertain`; any other verdict value SHALL map to `uncertain`. The description SHALL be the verdict heading (`Yes, propaganda detected.`, `No clear signs of propaganda.` or `We're not sure yet.`) followed by a space and `user_text` with whitespace collapsed, truncated to at most 200 characters on a code-point boundary and ending with `…` when truncated. og:image SHALL be `<PUBLIC_ORIGIN>/og/verdict-<detected|not_detected|uncertain>.png` and the image alt SHALL name the verdict label.
+For a job with `done` true, finalization status `completed` and a result, og:title SHALL be `VEIL verdict: <label>` with label `Manipulation detected`, `No manipulation indicators` or `Uncertain` for verdict `detected`, `not_detected` or `uncertain`; any other verdict value SHALL map to `uncertain`. og:image SHALL be `<PUBLIC_ORIGIN>/og/verdict-<detected|not_detected|uncertain>.png` and the image alt SHALL name the verdict label.
+
+#### Scenario: Image
+- **WHEN** the verdict is `not_detected`
+- **THEN** og:image ends with `/og/verdict-not_detected.png` and the image alt contains `No manipulation indicators`
+
+### Requirement: Verdict card description
+The verdict card description SHALL be the verdict heading (`Yes, propaganda detected.`, `No clear signs of propaganda.` or `We're not sure yet.`) followed by a space and `user_text` with whitespace collapsed, truncated to at most 200 characters on a code-point boundary and ending with `…` when truncated.
 
 #### Scenario: Detected
 - **WHEN** the job's verdict is `detected` and `user_text` is `Because.`
@@ -61,12 +75,15 @@ For a job with `done` true, finalization status `completed` and a result, og:tit
 - **WHEN** a 4-byte character straddles the 200 character limit
 - **THEN** the description has at most 200 code points, ends with `…` and contains no lone surrogate
 
-### Requirement: Neutral cards
-A job that is not done, or done with finalization status `pending` or `running`, SHALL get title `VEIL analysis in progress`, description `The analysis of this content is still running. Open the link to follow it live.` and image `/og/pending.png`. A done job with status `failed` or `cancelled`, or finalization `failed` or `skipped`, or a null result SHALL get title `VEIL analysis unavailable`, description `No final assessment is available for this analysis.` and image `/og/unavailable.png`. Neither card SHALL state or imply a verdict.
+### Requirement: In-progress card
+A job that is not done, or done with finalization status `pending` or `running`, SHALL get title `VEIL analysis in progress`, description `The analysis of this content is still running. Open the link to follow it live.` and image `/og/pending.png`.
 
 #### Scenario: Running job
 - **WHEN** the job has `done` false
 - **THEN** the in-progress card is returned
+
+### Requirement: Unavailable card
+A done job with status `failed` or `cancelled`, or finalization `failed` or `skipped`, or a null result SHALL get title `VEIL analysis unavailable`, description `No final assessment is available for this analysis.` and image `/og/unavailable.png`. Neither neutral card SHALL state or imply a verdict.
 
 #### Scenario: Cancelled or skipped
 - **WHEN** the job is done with status `cancelled`, or with finalization `skipped`
