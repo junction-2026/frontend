@@ -15,7 +15,6 @@ export default {
   'analyze': 'Analysieren',
   'analyzers_loading': 'Analyzer werden geladen…',
   'analyzer_disabled': 'deaktiviert',
-  'final_assessment': 'Abschlussbewertung',
   'try': 'Probieren Sie:',
   'sample.energy.label': 'Viraler Social-Media-Beitrag zum Stromnetz',
   'sample.energy.text': 'Jeder weiß, dass diese Leute unsere Zukunft zerstören. Wir müssen handeln, bevor es zu spät ist!',
