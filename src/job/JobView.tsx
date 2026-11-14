@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Job } from '../api/types'
+import { useFormat, useT } from '../i18n'
 import { plain, readLlm, readTechniques, str, techniqueName, type Detection } from './read'
 import { segment, validSpans, type Span } from './segments'
 import './job.css'
@@ -8,6 +9,8 @@ type Active = { key: string; whys: string[] }
 
 // The Detail body: highlighted text, technique list and the AI-assessed group of a loaded job.
 export default function JobView({ job }: { job: Job }) {
+  const t = useT()
+  const { formatNumber: fmt } = useFormat()
   const [selected, setSelected] = useState<string | null>(null)
   const [active, setActive] = useState<Active | null>(null)
   const content = typeof job.input?.content === 'string' ? job.input.content : ''
@@ -25,7 +28,7 @@ export default function JobView({ job }: { job: Job }) {
     (llm?.findings ?? [])
       .filter((f) => f.span.field === field)
       .flatMap((f) => {
-        names.set(`llm:${f.label}`, `AI-assessed: ${f.name}`)
+        names.set(`llm:${f.label}`, `${t('results.jobview.ai_prefix')} ${f.name}`)
         return validSpans(text, [{ ...f.span, technique: `llm:${f.label}` }]).map((s) => ({ ...s, why: f.explanation }))
       })
   const contentSpans = [...spans, ...llmSpans('content', content)]
@@ -66,8 +69,8 @@ export default function JobView({ job }: { job: Job }) {
     <>
       <div className="soft-card excerpt-box">
         <div className="label">
-          <span>Analyzed corpus excerpt</span>
-          <span>Target Payload</span>
+          <span>{t('results.jobview.corpus')}</span>
+          <span>{t('results.jobview.payload')}</span>
         </div>
         {title !== '' && (
           <p className="job-text job-title" data-testid="job-title">
@@ -79,7 +82,7 @@ export default function JobView({ job }: { job: Job }) {
         </div>
       </div>
       {active && active.whys.length > 0 && (
-        <div id="job-why" role="region" aria-label="Why this phrase is highlighted" className="job-why">
+        <div id="job-why" role="region" aria-label={t('results.jobview.why_region')} className="job-why">
           <ul>
             {active.whys.map((w, i) => (
               <li key={i}>{w}</li>
@@ -90,18 +93,15 @@ export default function JobView({ job }: { job: Job }) {
       <div className="card tech-list">
         <div className="tech-list-head">
           <div>
-            <h3>Propaganda Techniques Detected</h3>
+            <h3>{t('results.jobview.techniques')}</h3>
             {techniques && (
-              <p>
-                {techniques.detected.length} {techniques.detected.length === 1 ? 'technique' : 'techniques'} detected. Detections are
-                indicators of a rhetorical technique, not proof that a text is propaganda.
-              </p>
+              <p>{t('results.jobview.techniques_count', { count: techniques.detected.length, n: fmt(techniques.detected.length) })}</p>
             )}
           </div>
         </div>
-        {!techniques && <p className="tech-note">No technique analysis available.</p>}
-        {unavailable && <p role="note" className="tech-note">Highlighting unavailable: exact phrases could not be located.</p>}
-        {techniques && techniques.detected.length === 0 && <p className="tech-note">No technique detected.</p>}
+        {!techniques && <p className="tech-note">{t('results.jobview.no_analysis')}</p>}
+        {unavailable && <p role="note" className="tech-note">{t('results.jobview.highlight_unavailable')}</p>}
+        {techniques && techniques.detected.length === 0 && <p className="tech-note">{t('results.jobview.none')}</p>}
         {techniques && (
           <ul className="job-techniques">
             {techniques.detected.map((d) => {
@@ -117,13 +117,13 @@ export default function JobView({ job }: { job: Job }) {
                   >
                     <span className="tech-item-top">
                       <strong className="job-technique-name">{names.get(d.name)}</strong>
-                      <span className="badge-soft">ID: {d.name}</span>
+                      <span className="badge-soft">{t('results.jobview.id')} {d.name}</span>
                     </span>
                     <span className="job-technique-definition">{pl.definition ?? String(d.explanation ?? '')}</span>{' '}
-                    <span className="job-technique-count">({n > 0 ? `${n} ${n === 1 ? 'phrase' : 'phrases'}` : 'no exact phrase found'})</span>
+                    <span className="job-technique-count">{n > 0 ? t('results.jobview.phrases', { count: n, n: fmt(n) }) : t('results.jobview.no_phrase')}</span>
                   </button>
                   {n === 0 && pl.why && <p className="job-technique-why">{pl.why}</p>}
-                  {anchor && <div className="anchor">Excerpt anchor: “{anchor.text}”</div>}
+                  {anchor && <div className="anchor">{t('results.jobview.anchor')} “{anchor.text}”</div>}
                 </li>
               )
             })}
@@ -132,11 +132,11 @@ export default function JobView({ job }: { job: Job }) {
       </div>
       {llm && (llm.unavailable || llm.findings.length > 0) && (
         <section className="card tech-list job-llm-group">
-          <h3>Other possible issues (AI-assessed, less reliable)</h3>
-          {llm.unavailable && <p role="note" className="tech-note">AI-assessed check not available</p>}
+          <h3>{t('results.jobview.llm_title')}</h3>
+          {llm.unavailable && <p role="note" className="tech-note">{t('results.jobview.llm_unavailable')}</p>}
           {llm.findings.length > 0 && (
             <>
-              <p className="tech-note">These findings come from a language model and are less reliable than the techniques above.</p>
+              <p className="tech-note">{t('results.jobview.llm_note')}</p>
               <ul className="job-llm">
                 {llm.findings.map((f, i) => (
                   <li key={i} className="tech-item">

@@ -1,87 +1,91 @@
+import { useFormat, useT } from '../i18n'
+import { percent } from '../job/text'
 import { Link } from '../router'
 import { Mock } from '../ui/MockBadge'
 import '../secondary/secondary.css'
 
 // Static showcase of the four edge cases; the real states render on the results, analyzing and history views.
 export default function StatesView() {
+  const t = useT()
+  const { formatNumber } = useFormat()
   return (
     <section className="view">
-      <Mock block label="Example states">
+      <Mock block label={t('results.states.mock')}>
         <div className="page-head">
-          <div className="meta-row"><span>● System integrity &amp; resilience</span></div>
-          <h1>Edge Cases &amp; System States</h1>
-          <p>Calm, graceful degradation patterns for input errors, partial scraping timeouts, and epistemic uncertainty.</p>
+          <div className="meta-row"><span>{t('results.states.eyebrow')}</span></div>
+          <h1>{t('results.states.title')}</h1>
+          <p>{t('results.states.lede')}</p>
         </div>
 
         <div className="edge-grid">
           <article className="card edge-card">
             <div className="edge-card-top">
               <div className="edge-icon warn" aria-hidden="true">⛓</div>
-              <span className="status-pill orange">Input Fault · 403</span>
+              <span className="status-pill orange">{t('results.states.fault.pill', { code: formatNumber(403, { useGrouping: false }) })}</span>
             </div>
-            <h3>Unable to retrieve social post</h3>
-            <p>The scraper could not access the linked timeline. The target may be protected, deleted, or region-blocked.</p>
+            <h3>{t('results.states.fault.title')}</h3>
+            <p>{t('results.states.fault.text')}</p>
             <div className="fault-box">
-              <div>x.com/status/1849201…</div>
-              <div className="err">⚠ Protected tweet timeline or deleted target</div>
+              <div>{t('results.states.fault.url')}</div>
+              <div className="err">{t('results.states.fault.error')}</div>
             </div>
             <div className="remedy-box">
-              <strong>Suggested Remedy</strong>
-              <div style={{ marginTop: '0.35rem', color: 'var(--muted)' }}>Paste the post text manually, or switch input mode to Text.</div>
+              <strong>{t('results.states.remedy')}</strong>
+              <div style={{ marginBlockStart: '0.35rem', color: 'var(--muted)' }}>{t('results.states.remedy.text')}</div>
             </div>
             <div className="edge-actions">
-              <Link className="btn-link" href="/">Switch to Text Input →</Link>
-              <span className="edge-meta">Auto-cleared</span>
+              <Link className="btn-link" href="/">{t('results.states.fault.switch')}</Link>
+              <span className="edge-meta">{t('results.states.auto_cleared')}</span>
             </div>
           </article>
 
           <article className="card edge-card">
             <div className="edge-card-top">
-              <span className="status-pill orange">● Partial Results Preserved · 6 of 8 Analyzers Succeeded</span>
-              <span className="edge-note">Latency 3042ms</span>
+              <span className="status-pill orange">{t('results.states.partial.pill', { ok: formatNumber(6), total: formatNumber(8) })}</span>
+              <span className="edge-note">{t('results.states.partial.latency', { value: t('results.metrics.latency_value', { v: formatNumber(3042, { useGrouping: false }) }) })}</span>
             </div>
-            <h3>Wire cross-referencing timed out</h3>
-            <p>Analysis Pipeline Integrity · 75% Available</p>
+            <h3>{t('results.states.partial.title')}</h3>
+            <p>{t('results.states.partial.integrity', { pct: percent(formatNumber, 0.75) })}</p>
             <div className="bar" style={{ maxWidth: 'none', margin: '0 0 0.7rem' }}><span style={{ width: '75%' }} /></div>
             <div className="pipeline-grid">
-              <div>✓ Linguistic Syntax</div>
-              <div>✓ Persuasion Vectors</div>
-              <div>✓ Claim Extraction</div>
-              <div className="skip">⊘ AP / Reuters Wire (Timeout)</div>
+              <div>{t('results.states.partial.linguistic')}</div>
+              <div>{t('results.states.partial.persuasion')}</div>
+              <div>{t('results.states.partial.claims')}</div>
+              <div className="skip">{t('results.states.partial.wire')}</div>
             </div>
-            <div className="info-box">Verdict is available. Wire evidence was skipped for this run and can be retried independently.</div>
+            <div className="info-box">{t('results.states.partial.info')}</div>
             <div className="edge-actions">
-              <Link className="btn-primary" href="/history">View Available Verdict →</Link>
-              <Mock label="Retry is not available">
-                <button type="button" className="btn-secondary" disabled>↻ Retry Wire Retrieval</button>
+              <Link className="btn-primary" href="/history">{t('results.states.partial.view')}</Link>
+              <Mock label={t('results.states.partial.retry_label')}>
+                <button type="button" className="btn-secondary" disabled>{t('results.states.partial.retry')}</button>
               </Mock>
             </div>
           </article>
 
           <article className="card edge-card">
             <div className="edge-card-top">
-              <span className="status-pill purple">● Uncertain / Insufficient Context</span>
-              <span className="edge-note">Model Entropy: 0.88</span>
+              <span className="status-pill purple">{t('results.states.uncertain.pill')}</span>
+              <span className="edge-note">{t('results.states.uncertain.entropy', { value: formatNumber(0.88, { minimumFractionDigits: 2 }) })}</span>
             </div>
-            <h3>No definitive manipulation markers detected</h3>
-            <p>Signal strength is below decision threshold. The text may be incomplete, ironic, or too short for stable classification.</p>
-            <div className="info-box">Ask VEIL can still help unpack ambiguity, or you can submit a longer excerpt.</div>
+            <h3>{t('results.states.uncertain.title')}</h3>
+            <p>{t('results.states.uncertain.text')}</p>
+            <div className="info-box">{t('results.states.uncertain.info')}</div>
             <div className="edge-actions">
-              <Link className="btn-secondary" href="/ask">Open Ask VEIL</Link>
-              <Link className="btn-link" href="/">Submit more context →</Link>
+              <Link className="btn-secondary" href="/ask">{t('results.states.uncertain.ask')}</Link>
+              <Link className="btn-link" href="/">{t('results.states.uncertain.more')}</Link>
             </div>
           </article>
 
           <article className="card edge-card">
             <div className="edge-card-top">
               <div className="edge-icon ok" aria-hidden="true">☰</div>
-              <span className="status-pill green">Session Fresh</span>
+              <span className="status-pill green">{t('results.states.fresh.pill')}</span>
             </div>
-            <h3>No previous analyses yet</h3>
-            <p>Your local ledger is empty. Completed jobs will appear under History with reopen and export controls.</p>
+            <h3>{t('results.states.fresh.title')}</h3>
+            <p>{t('results.states.fresh.text')}</p>
             <div className="edge-actions">
-              <Link className="btn-primary" href="/">Start first analysis</Link>
-              <Link className="btn-link" href="/history">Open History →</Link>
+              <Link className="btn-primary" href="/">{t('results.states.fresh.start')}</Link>
+              <Link className="btn-link" href="/history">{t('results.states.fresh.history')}</Link>
             </div>
           </article>
         </div>

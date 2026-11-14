@@ -294,7 +294,7 @@
 }
 .confidence-tip {
   position: absolute;
-  left: 50%;
+  inset-inline-start: 50%;
   top: calc(100% + 0.4rem);
   transform: translateX(-50%);
   z-index: 5;
@@ -306,6 +306,9 @@
   font-size: 0.82rem;
   font-weight: 400;
   line-height: 1.4;
+}
+[dir='rtl'] .confidence-tip {
+  transform: translateX(50%); /* inset-inline-start is the right edge in rtl, so the centering shift flips */
 }
 .verdict-explanation {
   max-width: 44rem;

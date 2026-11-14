@@ -1,5 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ReactElement } from 'react'
+import { I18nProvider, useLocale, type Locale } from '../i18n'
 import { assessment, coverage, finalization, job, json, run } from '../job/fixtures'
 import ResultsView from './ResultsView'
 
@@ -10,7 +12,20 @@ afterEach(() => {
   fetchMock.mockReset()
   vi.unstubAllGlobals()
   vi.useRealTimers()
+  localStorage.clear()
+  document.documentElement.lang = 'en'
+  document.documentElement.dir = 'ltr'
 })
+
+// Renders under the real provider in a given locale (the choice is read from storage like on a reload).
+const inLocale = (lng: string, ui: ReactElement) => {
+  localStorage.setItem('veil.locale', lng)
+  return render(<I18nProvider>{ui}</I18nProvider>)
+}
+const Switch = ({ to }: { to: Locale }) => {
+  const { setLocale } = useLocale()
+  return <button onClick={() => setLocale(to)}>switch</button>
+}
 
 const show = async (j: unknown) => {
   fetchMock.mockResolvedValue(json(j))
@@ -389,5 +404,55 @@ describe('Results: page chrome, mock parts and polling', () => {
     fetchMock.mockResolvedValue(json({ error: { code: 'internal_error', message: 'boom' } }, 500))
     render(<ResultsView id="j1" />)
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong on the server')
+  })
+})
+
+describe('Results in another locale', () => {
+  const full = (extra: Record<string, unknown> = {}) =>
+    job({
+      analyzers: [run('claims', 'failed', { error: { code: 'adapter_error', message: 'x' } }), run('odd', 'weird_status'), run('t', 'succeeded', { availability: 'partial' })],
+      finalization: finalization('completed', { result: assessment({ verdict: 'detected', confidence: 0.86, user_text: 'Der Text <b>drängt</b> {count}', ...extra }) }),
+    })
+
+  it('renders German chrome and keeps API content and raw unknown values unchanged', async () => {
+    fetchMock.mockResolvedValue(json(full()))
+    inLocale('de', <ResultsView id="j1" />)
+    expect(await screen.findByRole('heading', { level: 2, name: 'Ja, Propaganda erkannt.' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Ergebnisse', hidden: true })).toBeInTheDocument()
+    expect(verdictEl()).toHaveTextContent(/86\s?% Konfidenz/)
+    expect(screen.getByText('Der Text <b>drängt</b> {count}')).toBeInTheDocument()
+    expect(document.querySelector('.meta-row')).toHaveTextContent('Auftrag j1')
+    expect(document.querySelector('.meta-row')).toHaveTextContent('Dauer 3,2 s')
+    fireEvent.click(screen.getByRole('button', { name: 'Detaillierte Analyse anzeigen' }))
+    expect(screen.getByRole('region', { name: 'Detaillierte Analyse' })).toBeInTheDocument()
+    expect(screen.getByText('Analysatorabdeckung', { selector: 'h3' })).toBeInTheDocument()
+    expect(screen.getByText('weird_status')).toBeInTheDocument() // unknown status: raw
+    expect(screen.getByText('adapter_error')).toBeInTheDocument()
+    expect(screen.getByText('Fehlgeschlagen')).toBeInTheDocument()
+  })
+
+  it('formats a percentage per locale: fr puts a non-breaking space before %', async () => {
+    fetchMock.mockResolvedValue(json(full()))
+    inLocale('fr', <ResultsView id="j1" />)
+    await screen.findByRole('heading', { level: 2 })
+    expect(verdictEl().textContent).toMatch(/86[\u00a0\u202f]%/)
+  })
+
+  it('re-renders without a reload when the language changes, and mirrors the page in Arabic', async () => {
+    fetchMock.mockResolvedValue(json(full()))
+    inLocale('en', <><Switch to="ar" /><ResultsView id="j1" /></>)
+    await screen.findByRole('heading', { level: 2, name: 'Yes, propaganda detected.' })
+    fireEvent.click(screen.getByRole('button', { name: 'switch' }))
+    expect(screen.getByRole('heading', { level: 2, name: 'نعم، تم اكتشاف دعاية.' })).toBeInTheDocument()
+    expect(screen.getByText('Der Text <b>drängt</b> {count}')).toBeInTheDocument()
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+  })
+
+  it('translates the state cards and keeps the API error message', async () => {
+    fetchMock.mockResolvedValue(json(job({ status: 'failed', finalization: null, scrape: { status: 'failed', error: { code: 'x_code', message: 'API says <i>no</i>' } } })))
+    inLocale('de', <ResultsView id="j1" />)
+    expect(await screen.findByText('Abruf fehlgeschlagen')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'API says <i>no</i>' })).toBeInTheDocument()
+    expect(screen.getByText('Fehlercode: x_code')).toBeInTheDocument()
   })
 })

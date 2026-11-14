@@ -40,7 +40,7 @@
   text-decoration: underline dashed;
 }
 .job-why {
-  border-left: 4px solid #495057;
+  border-inline-start: 4px solid #495057;
   padding: 0.25rem 0.75rem;
   margin: 0.5rem 0 0.9rem;
   background: var(--surface);
@@ -86,7 +86,7 @@
 .job-techniques button {
   display: block;
   width: 100%;
-  text-align: left;
+  text-align: start;
   color: var(--ink);
   padding: 0.5rem 0.6rem;
   margin: 0 0 0.5rem;
@@ -125,7 +125,7 @@
 }
 .job-llm blockquote {
   margin: 0.25rem 0 0.75rem;
-  padding-left: 0.75rem;
-  border-left: 4px solid #a5d8ff;
+  padding-inline-start: 0.75rem;
+  border-inline-start: 4px solid #a5d8ff;
   white-space: pre-wrap;
 }
