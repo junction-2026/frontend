@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cancelJob, createJob, getJob, listAnalyzers, listJobs } from './client'
+import { cancelJob, createJob, getJob, getJobLocalization, listAnalyzers, listJobs } from './client'
 import { errorMessage } from './errors'
 import { isDone, verdictOf } from './types'
 
@@ -19,6 +19,7 @@ const endpoints: [string, () => ReturnType<typeof getJob>, [string, string]][] =
   ['listJobs', () => listJobs({ limit: 5, cursor: 'c 1', status: 'running' }) as never, ['/api/v1/jobs?limit=5&cursor=c+1&status=running', 'GET']],
   ['getJob', () => getJob('a/b c'), ['/api/v1/jobs/a%2Fb%20c', 'GET']],
   ['cancelJob', () => cancelJob('a/b c'), ['/api/v1/jobs/a%2Fb%20c/cancel', 'POST']],
+  ['getJobLocalization', () => getJobLocalization('a/b c', 'ar') as never, ['/api/v1/jobs/a%2Fb%20c/localization?language=ar', 'GET']],
   ['listAnalyzers', () => listAnalyzers() as never, ['/api/v1/analyzers', 'GET']],
 ]
 

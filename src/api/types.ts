@@ -91,6 +91,16 @@ export type AnalyzerInfo = {
   [k: string]: unknown
 }
 
+// GET /jobs/{id}/localization (shared job-text-localization). `status` is read tolerantly: anything but original/translated is unavailable.
+export type LocalizedText = { status: string; text: string | null; source_language: string | null; [k: string]: unknown }
+export type JobLocalization = {
+  job_id: string
+  language: string
+  final_assessment: { user_text: LocalizedText; [k: string]: unknown } | null
+  llm_findings: { index: number; label: string; explanation: LocalizedText; [k: string]: unknown }[]
+  [k: string]: unknown
+}
+
 export type CreateJobBody =
   | { input: Input; analyzers?: string[]; options?: { finalize?: boolean } }
   | { scrape: { url: string; max_posts?: number; max_comments?: number }; analyzers?: string[]; options?: { finalize?: boolean } }
