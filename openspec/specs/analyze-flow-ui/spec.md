@@ -62,11 +62,15 @@ A non-201 response SHALL render an element with `role=alert` using the foundatio
 - **THEN** the alert lists `nope`
 
 ### Requirement: Home copy and mock marking
-The support note SHALL read "Supports Bluesky, Mastodon and web pages" in English; all Home copy SHALL come from the `home` catalog in the active locale. Home SHALL NOT render a language chip ("Auto-detect (EN, FR, AR, DE, FI)"). The two feature cards ("Unbiased Dissection", "Provenance & Signals") SHALL be wrapped in `Mock`. Home SHALL NOT render a "Private by Architecture" card. The `Try:` sample buttons SHALL fill the textarea and SHALL NOT be marked.
+The English support note SHALL read "Supports Bluesky, Mastodon and web pages"; all Home copy SHALL come from the active locale's `home` catalog. Home SHALL NOT render a language chip, a "Private by Architecture" card, the feature cards "Unbiased Dissection" or "Provenance & Signals" (or their translations), or a feature-card grid container. The `Try:` sample buttons SHALL fill the textarea and SHALL NOT be marked.
 
 #### Scenario: Marked and unmarked elements
 - **WHEN** Home renders
-- **THEN** each feature card is inside `[data-mock]`, the sample buttons, count and support note are not, the Auto-detect chip is absent, and no "Private by Architecture" text is present
+- **THEN** neither feature-card title is present, no `.feature-grid` element exists, the sample buttons, count and support note are not inside `[data-mock]`, the Auto-detect chip is absent, and no "Private by Architecture" text is present
+
+#### Scenario: No feature-card remnants
+- **WHEN** the `home` catalogs and analyze.css are inspected
+- **THEN** no locale defines `feature_card`, `feature.dissection.*` or `feature.provenance.*`, and analyze.css has no `.feature-grid`, `.feature` or `.feature-icon` rule
 
 ### Requirement: Live view state
 The live view at `/jobs/:id/live` SHALL subscribe to job events, build state from `job.snapshot` and later events, and unsubscribe on unmount. The quote banner SHALL show `input.content` (or the scrape URL while `input` is null) as plain text, the job id and the elapsed time computed client-side from `created_at` to `finished_at` or now. The banner SHALL NOT show a cluster label or data-retention claim in any locale and SHALL render its footer row only when it has content.
