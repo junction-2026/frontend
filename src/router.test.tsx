@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { matchRoute } from './router'
 
-beforeEach(() => vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))))
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+  vi.stubGlobal('WebSocket', class { close() {} }) // the live view opens an event stream
+})
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -38,9 +41,9 @@ describe('matchRoute', () => {
 })
 
 describe('routes render their stub view in the shell', () => {
-  it.each([
-    ['/', 'Home'],
-    ['/jobs/j1/live', 'Analyzing'],
+  it.each<[string, string, number?]>([
+    ['/', 'See beyond the narrative.'],
+    ['/jobs/j1/live', 'Analyzing your content...', 2],
     ['/jobs/j1/detail', 'Detailed analysis'],
     ['/history', 'Analysis History'],
     ['/explore', 'Explore'],
@@ -48,10 +51,10 @@ describe('routes render their stub view in the shell', () => {
     ['/ask', 'Ask'],
     ['/settings', 'Settings'],
     ['/states', 'States'],
-    ['/unknown', 'Home'],
-  ])('%s', (path, heading) => {
+    ['/unknown', 'See beyond the narrative.'],
+  ])('%s', (path, heading, level = 1) => {
     open(path)
-    expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level, name: heading })).toBeInTheDocument()
     expect(screen.getByRole('banner')).toHaveTextContent('VEIL / Intelligence')
   })
 
@@ -71,7 +74,7 @@ describe('legacy ?job link', () => {
   it('keeps Home for an empty id', () => {
     open('/?job=')
     expect(window.location.search).toBe('?job=')
-    expect(screen.getByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'See beyond the narrative.' })).toBeInTheDocument()
   })
 })
 
