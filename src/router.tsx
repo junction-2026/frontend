@@ -18,11 +18,23 @@ const ROUTES: [RegExp, RouteName][] = [
   [/^\/states$/, 'states'],
 ]
 
-export function matchRoute(pathname: string): Route {
+// `?job=<id>` of /explore: URL-decoded; a malformed escape or an empty value counts as absent.
+function exploreJob(search: string): string | undefined {
+  const raw = /[?&]job=([^&]*)/.exec(search)?.[1]
+  if (!raw) return undefined
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return undefined
+  }
+}
+
+export function matchRoute(pathname: string, search = ''): Route {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
   for (const [re, name] of ROUTES) {
     const m = re.exec(path)
     if (!m) continue
+    if (name === 'explore') return { name, id: exploreJob(search) }
     if (m[1] === undefined) return { name }
     try {
       return { name, id: decodeURIComponent(m[1]) }
@@ -68,8 +80,9 @@ export function navigate(to: string) {
 }
 
 export function useRoute(): Route {
-  const pathname = useSyncExternalStore(subscribe, () => window.location.pathname)
-  return matchRoute(pathname)
+  const url = useSyncExternalStore(subscribe, () => window.location.pathname + window.location.search)
+  const q = url.indexOf('?')
+  return q < 0 ? matchRoute(url) : matchRoute(url.slice(0, q), url.slice(q))
 }
 
 // Runs once before the first render (see App).

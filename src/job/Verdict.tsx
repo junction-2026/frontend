@@ -90,7 +90,7 @@ export function Verdict({ job }: { job: Job }) {
         )}
         <div className="verdict-actions">
           <Link className="btn-primary" href={`/jobs/${encodeURIComponent(job.id)}/detail`}>Explore full analysis ↓</Link>
-          <Link className="btn-link" href="/explore">Cross-source coverage →</Link>
+          <Link className="btn-link" href={`/explore?job=${encodeURIComponent(job.id)}`}>Explore coverage</Link>
           <span className="spacer" />
           <button type="button" className="icon-btn" aria-label={copied ? 'Copied' : 'Copy'} title="Copy link to this page" onClick={() => void copy()}>
             {copied ? '✓' : '⧉'}

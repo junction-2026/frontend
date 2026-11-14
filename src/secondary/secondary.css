@@ -732,3 +732,19 @@
 .suggestions a.accent { padding: 0.45rem 0.8rem; border-radius: var(--radius-pill); background: var(--purple-soft); color: #5a4582; font-size: 0.82rem; font-weight: 560; }
 .ref-card { color: inherit; }
 .context-bar .btn-secondary { align-self: flex-start; }
+
+/* Explore: real coverage */
+.explore-note { margin: 0 0 0.9rem; padding: 0.7rem 0.9rem; border-radius: 12px; background: var(--bg-soft); color: var(--ink-2); font-size: 0.88rem; }
+.explore-topics { font-size: 0.88rem; }
+.explore-topics a, .explore-note a { color: var(--blue); font-weight: 650; }
+.country-headlines { margin: 0; padding-left: 1.1rem; flex-basis: 100%; font-size: 0.84rem; }
+.verified-chip input { margin-right: 0.3rem; }
+.field:disabled, .field input:disabled, .field select:disabled { opacity: 0.55; cursor: not-allowed; }
+.multi { position: relative; display: block; cursor: pointer; }
+.multi-list { position: absolute; z-index: 5; left: 0; top: 100%; min-width: 100%; max-height: 16rem; overflow: auto; display: grid; gap: 0.35rem; padding: 0.6rem; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.related { margin-top: 1rem; padding: 1.1rem; }
+.related-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+.related-card { padding: 0.8rem 0.9rem; border-radius: 12px; background: var(--bg-soft); overflow-wrap: anywhere; }
+.related-card a { color: var(--blue); font-weight: 650; }
+.related-card p { margin: 0.3rem 0 0; font-size: 0.86rem; color: var(--ink-2); }
+.related-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; margin-top: 0.25rem; font-size: 0.8rem; color: var(--muted); }
