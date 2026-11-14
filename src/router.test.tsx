@@ -43,11 +43,11 @@ describe('routes render their stub view in the shell', () => {
     ['/jobs/j1/live', 'Analyzing'],
     ['/jobs/j1/detail', 'Detail'],
     ['/history', 'History'],
-    ['/explore', 'Explore'],
-    ['/explore/region', 'Region'],
-    ['/ask', 'Ask'],
-    ['/settings', 'Settings'],
-    ['/states', 'States'],
+    ['/explore', 'Explore the world.'],
+    ['/explore/region', 'Explore the world.'],
+    ['/ask', /^Ask VEIL/],
+    ['/settings', 'Settings & Methodology'],
+    ['/states', 'Edge Cases & System States'],
     ['/unknown', 'Home'],
   ])('%s', (path, heading) => {
     open(path)
