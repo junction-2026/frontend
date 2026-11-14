@@ -70,7 +70,6 @@
   gap: 0.65rem;
 }
 
-.lang-btn,
 .ghost-btn,
 .chip,
 .pill {
@@ -80,10 +79,17 @@
   border-radius: var(--radius-pill);
 }
 
-.lang-btn {
+.lang-select {
   padding: 0.4rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.lang-select:focus-visible {
+  outline: 2px solid var(--blue);
 }
 
 .btn-primary {
@@ -242,7 +248,7 @@
 }
 
 .avatar,
-.lang-btn {
+.lang-select {
   cursor: pointer;
 }
 
@@ -292,7 +298,7 @@
 .mock-badge {
   position: absolute;
   top: -0.7rem;
-  right: 0;
+  inset-inline-end: 0;
   padding: 0.05rem 0.4rem;
   border-radius: var(--radius-pill);
   background: var(--mock);

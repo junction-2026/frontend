@@ -184,7 +184,7 @@ describe('HomeView copy and mock marking', () => {
     render(<HomeView />)
     const marked = (el: HTMLElement) => el.closest('[data-mock]') !== null
     expect(screen.getByText('Supports Bluesky, Mastodon and web pages')).toBeInTheDocument()
-    expect(marked(screen.getByText('Auto-detect (EN, FR, AR, DE, FI)'))).toBe(true)
+    expect(screen.queryByText(/Auto-detect/)).toBeNull()
     for (const title of ['Unbiased Dissection', 'Provenance & Signals']) expect(marked(screen.getByText(title))).toBe(true)
     expect(screen.queryByText('Private by Architecture')).toBeNull()
     expect(marked(screen.getByText('Supports Bluesky, Mastodon and web pages'))).toBe(false)

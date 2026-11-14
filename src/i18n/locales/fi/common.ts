@@ -1,0 +1,17 @@
+export default {
+  'mock.badge': 'MALLI',
+  'mock.title': 'Esimerkkidataa – ei yhdistetty taustajärjestelmään',
+  'mock.title_labeled': 'Esimerkkidataa – ei yhdistetty taustajärjestelmään ({label})',
+  'errors.invalid_request': 'Pyyntö ei ollut kelvollinen. Tarkista syöte ja yritä uudelleen.',
+  'errors.validation_failed': 'Jotkin kentät eivät ole kelvollisia.',
+  'errors.validation_failed_fields': 'Jotkin kentät eivät ole kelvollisia: {fields}',
+  'errors.not_found': 'Ei löytynyt. Analyysi on voitu poistaa.',
+  'errors.method_not_allowed': 'Tätä toimintoa ei tueta.',
+  'errors.payload_too_large': 'Sisältö on suurempi kuin 1 MiB',
+  'errors.internal_error': 'Palvelimella tapahtui virhe. Yritä myöhemmin uudelleen.',
+  'errors.unknown_analyzer': 'Tuntematon analysaattori: {ids}.',
+  'errors.unknown_value': 'tuntematon',
+  'errors.analyzer_not_selectable': 'Tätä analysaattoria ei voi valita.',
+  'errors.job_finished': 'Tämä analyysi on jo valmis.',
+  'errors.network_error': 'Taustajärjestelmään ei saatu yhteyttä. Tarkista yhteytesi ja yritä uudelleen.',
+}

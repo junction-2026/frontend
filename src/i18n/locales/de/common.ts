@@ -1,0 +1,17 @@
+export default {
+  'mock.badge': 'MOCK',
+  'mock.title': 'Beispieldaten – nicht mit dem Backend verbunden',
+  'mock.title_labeled': 'Beispieldaten – nicht mit dem Backend verbunden ({label})',
+  'errors.invalid_request': 'Die Anfrage war ungültig. Prüfen Sie die Eingabe und versuchen Sie es erneut.',
+  'errors.validation_failed': 'Einige Felder sind ungültig.',
+  'errors.validation_failed_fields': 'Einige Felder sind ungültig: {fields}',
+  'errors.not_found': 'Nicht gefunden. Die Analyse wurde möglicherweise entfernt.',
+  'errors.method_not_allowed': 'Diese Aktion wird nicht unterstützt.',
+  'errors.payload_too_large': 'Der Inhalt ist größer als 1 MiB',
+  'errors.internal_error': 'Auf dem Server ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.',
+  'errors.unknown_analyzer': 'Unbekannter Analyzer: {ids}.',
+  'errors.unknown_value': 'unbekannt',
+  'errors.analyzer_not_selectable': 'Dieser Analyzer kann nicht ausgewählt werden.',
+  'errors.job_finished': 'Diese Analyse ist bereits abgeschlossen.',
+  'errors.network_error': 'Das Backend ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
+}

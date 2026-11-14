@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useT } from '../i18n'
 import { checkHealth, type HealthResult } from '../health'
 
 export function HealthIndicator() {
+  const t = useT()
   const [result, setResult] = useState<HealthResult | null>(null)
 
   useEffect(() => {
@@ -17,18 +19,18 @@ export function HealthIndicator() {
   if (!result)
     return (
       <span className="health" role="status">
-        <span className="dot" /> Checking backend…
+        <span className="dot" /> {t('shell.health.checking')}
       </span>
     )
   if (!result.ok)
     return (
       <span className="health offline" role="alert" title={result.message}>
-        <span className="dot" /> Backend offline
+        <span className="dot" /> {t('shell.health.offline')}
       </span>
     )
   return (
     <span className="health online">
-      <span className="dot" /> Backend online
+      <span className="dot" /> {t('shell.health.online')}
     </span>
   )
 }
