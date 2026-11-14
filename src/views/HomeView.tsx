@@ -4,15 +4,9 @@ import { errorMessage } from '../api/errors'
 import type { AnalyzerInfo, ApiError, CreateJobBody } from '../api/types'
 import { useT } from '../i18n'
 import { navigate } from '../router'
-import { Mock } from '../ui/MockBadge'
 import '../styles/analyze.css'
 
 const SAMPLES = ['energy', 'breaking', 'editorial']
-
-const FEATURES: [string, string][] = [
-  ['dissection', 'M12 3v18M5 8h4l2 8h2l2-8h4'],
-  ['provenance', 'M8 10.8 10.3 7.7M13.7 7.7 16 10.8M6 12h.01M12 6h.01M18 12h.01'],
-]
 
 const MAX_URL = 2048
 type UrlProblem = 'home.url_too_long' | 'home.url_invalid'
@@ -176,19 +170,6 @@ export default function HomeView() {
         </p>
       </div>
 
-      <div className="feature-grid">
-        {FEATURES.map(([id, path]) => (
-          <Mock key={id} block label={t('home.feature_card', { title: t(`home.feature.${id}.title`) })}>
-            <article className="card feature">
-              <div className="feature-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d={path} /></svg>
-              </div>
-              <h3>{t(`home.feature.${id}.title`)}</h3>
-              <p>{t(`home.feature.${id}.text`)}</p>
-            </article>
-          </Mock>
-        ))}
-      </div>
     </section>
   )
 }

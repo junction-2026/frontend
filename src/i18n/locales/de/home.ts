@@ -22,11 +22,6 @@ export default {
   'sample.breaking.text': 'Eilmeldung: Behörden geraten in Bedrängnis, während sich die Krise verschärft – Quellen zufolge wurde die Öffentlichkeit monatelang im Dunkeln gelassen.',
   'sample.editorial.label': 'Vergleich redaktioneller Rahmung',
   'sample.editorial.text': 'Während Kritiker die Reform für dringend halten, erzählt ein genauerer Blick auf die Zahlen eine leisere Geschichte über Anreize und Rahmung.',
-  'feature_card': 'Funktionskarte: {title}',
-  'feature.dissection.title': 'Unvoreingenommene Zerlegung',
-  'feature.dissection.text': 'Trennt geprüfte Tatsachenprämissen von manipulativer Rhetorik, tonaler Vorprägung und selektivem Weglassen.',
-  'feature.provenance.title': 'Herkunft & Signale',
-  'feature.provenance.text': 'Prüft zirkuläre Zitate, Zeitverläufe der Herkunftszuordnung und Muster automatisierter koordinierter Verstärkung.',
   'url_too_long': 'Der Link ist länger als {max} Zeichen.',
   'url_invalid': 'Geben Sie einen vollständigen Link ein, der mit http:// oder https:// beginnt.',
 }

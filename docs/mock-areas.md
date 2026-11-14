@@ -6,7 +6,6 @@ backend". Real data is never wrapped in it. Each screen task appends its rows he
 
 | Route | Element | Why it is mock |
 | --- | --- | --- |
-| `/` (Home) | Feature cards "Unbiased Dissection", "Provenance & Signals" | Marketing copy, not data |
 | `/jobs/:id/live` | Ledger caption "Synchronous consensus pool" | No backend counterpart |
 | /jobs/:id (detailed analysis section) | "Polarity / Intensity" signal row | The analysis API has no polarity or intensity |
 | /jobs/:id (detailed analysis section) | "High rhetorical bias factor" | No such rating exists in the final assessment |
