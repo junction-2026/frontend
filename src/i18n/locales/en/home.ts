@@ -22,11 +22,6 @@ export default {
   'sample.breaking.text': 'Breaking: officials scramble as crisis deepens — sources say the public has been kept in the dark for months.',
   'sample.editorial.label': 'Editorial framing comparison',
   'sample.editorial.text': 'While critics claim reform is urgent, a closer look at the numbers tells a quieter story about incentives and framing.',
-  'feature_card': 'Feature card: {title}',
-  'feature.dissection.title': 'Unbiased Dissection',
-  'feature.dissection.text': 'Separates verified factual premises from manipulative rhetoric, tonal priming, and selective omission.',
-  'feature.provenance.title': 'Provenance & Signals',
-  'feature.provenance.text': 'Audits circular citations, origin attribution timelines, and automated coordination amplification patterns.',
   'url_too_long': 'The link is longer than {max} characters.',
   'url_invalid': 'Enter a full link starting with http:// or https://.',
 }
