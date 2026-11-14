@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { cancelJob } from '../api/client'
 import { errorMessage } from '../api/errors'
 import type { ApiError } from '../api/types'
-import { ledgerRows } from '../analyze/state'
+import { ledgerRows, type State } from '../analyze/state'
 import { useJobStream } from '../analyze/useJobStream'
-import { useFormat, useT } from '../i18n'
+import { useFormat, useLocale, useT } from '../i18n'
+import { activityDetail, activityLine, activityTitle, analyzerName, availabilityNote } from '../job/activity'
 import { enumLabel, seconds } from '../job/text'
 import { Link } from '../router'
 import { Mock } from '../ui/MockBadge'
@@ -28,6 +29,23 @@ function elapsed(from: string, to: number, t: T, fmt: Fmt) {
   return `${t('analysis.time.m', { v: fmt(Math.floor(s / 60)) })} ${t('analysis.time.s', { v: fmt(Math.round(s % 60), two) })}`
 }
 
+// Ledger rows with the catalog's wording: titles and details come from the Activity key and params, notes from the
+// run's availability and reason; text of an unknown key stays the API's.
+function localRows(state: State, t: T, locale: ReturnType<typeof useLocale>['locale']) {
+  return ledgerRows(state).map((r, i) => {
+    const entry = state.plan?.[i]
+    const act = state.activities[r.id]
+    const run = state.runs[r.id]
+    const title = act ? activityTitle(t, act.key, act.text) : entry ? analyzerName(t, entry) : r.title
+    const raw = r.detail
+    const detail =
+      raw && run && (raw === run.note || raw === run.reason) ? (availabilityNote(t, run) ?? raw)
+      : raw && act && raw === act.detail ? (activityDetail(t, locale, act) ?? raw)
+      : raw
+    return { ...r, title, detail }
+  })
+}
+
 const GLYPH = { green: '✓', blue: '…', orange: '!', gray: '–' } as const
 
 // The error stays raw and is turned into text at render, so a language switch re-translates it.
@@ -35,6 +53,7 @@ type Cancel = { phase: 'idle' | 'cancelling' | 'finished'; error?: ApiError }
 
 function Live({ id }: { id: string }) {
   const t = useT()
+  const { locale } = useLocale()
   const { formatNumber: fmt } = useFormat()
   const { state, missing } = useJobStream(id)
   const [hidden, setHidden] = useState(false)
@@ -67,7 +86,7 @@ function Live({ id }: { id: string }) {
 
   const scrape = job?.scrape
   const scrapeFailure = scrape?.status === 'failed' && scrape.error && terminal !== 'cancelled' ? (scrape.error as { code?: string; message?: string }) : null
-  const rows = scrapeFailure ? [] : ledgerRows(state)
+  const rows = scrapeFailure ? [] : localRows(state, t, locale)
   const p = state.progress
   const total = p?.total ?? 0
   const done = p?.done ?? 0
@@ -76,8 +95,8 @@ function Live({ id }: { id: string }) {
   const time = job ? elapsed(job.created_at, job.finished_at ? Date.parse(job.finished_at) : now, t, fmt) : null
   const running = (p?.running ?? []).map((r) => state.activities[r]).filter(Boolean)
   const phase = state.plan
-    ? running.length ? running.map((a) => [a.text, a.detail].filter(Boolean).join(' ')).join(' · ') : t('analysis.phase.selected')
-    : [state.scrapeActivity?.text ?? (scrape ? t('analysis.phase.retrieving') : t('analysis.phase.starting')), state.scrapeActivity?.detail].filter(Boolean).join(' ')
+    ? running.length ? running.map((a) => activityLine(t, locale, a)).join(' · ') : t('analysis.phase.selected')
+    : state.scrapeActivity ? activityLine(t, locale, state.scrapeActivity) : scrape ? t('analysis.phase.retrieving') : t('analysis.phase.starting')
   const heading = terminal === 'cancelled' ? t('analysis.heading.cancelled') : terminal === 'failed' ? t('analysis.heading.failed') : t('analysis.heading.running')
 
   return (
@@ -87,7 +106,7 @@ function Live({ id }: { id: string }) {
           <span>{t('analysis.submitted', { id })}</span>
           {job && <span className="status-pill blue">● {enumLabel(t, 'analysis.job_status', state.status)}</span>}
         </div>
-        <p className="quote-text">{content ? `“${content}”` : '…'}</p>
+        <p className="quote-text">{content ? <>“<bdi dir="auto">{content}</bdi>”</> : '…'}</p>
         <div className="quote-foot">
           {time && <span>{t('analysis.elapsed', { time })}</span>}
           <Mock label={t('analysis.mock.cluster')}><span>{t('analysis.cluster')}</span></Mock>

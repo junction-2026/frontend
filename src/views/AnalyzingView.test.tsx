@@ -90,7 +90,7 @@ describe('AnalyzingView stream', () => {
   it('shows the banner as plain text with id and client-side elapsed time, Mock only on the fake parts', () => {
     mounted()
     snapshot()
-    expect(screen.getByText('“Everyone knows <b>this</b>”')).toBeInTheDocument()
+    expect(screen.getByText('Everyone knows <b>this</b>', { selector: 'bdi' })).toBeInTheDocument()
     expect(document.querySelector('.quote-text b')).toBeNull()
     expect(screen.getByText(/Job j1/)).toBeInTheDocument()
     expect(screen.getByText(/Elapsed: 0[34]\.\ds/)).toBeInTheDocument()
@@ -129,7 +129,7 @@ describe('AnalyzingView stream', () => {
     // The run object carries the note; the event member alone is not enough, so the row falls back to the reason.
     expect(within(rowOf('Fact check')).getByText('Skipped')).toBeInTheDocument()
     ws().emit('analyzer.skipped', 9, { analyzer: run('fact_check', { status: 'skipped', reason: 'not_applicable', note: 'Not run: no claims' }), progress: { done: 3, running: [], total: 4 } })
-    expect(rowOf('Fact check')).toHaveTextContent('Not run: no claims')
+    expect(rowOf('Fact check')).toHaveTextContent('Not run: this analyzer does not apply to this kind of input.') // by reason, not the API note
 
     ws().emit('analysis.finalizing', 10, { finalization: { status: 'running', error: null, duration_ms: null, reason: null }, activity: act1('finalizer', 'Writing the verdict'), progress: { done: 3, running: ['final_synthesis'], total: 4 } })
     expect(within(rowOf('Writing the verdict')).getByText('Running')).toBeInTheDocument()
@@ -164,8 +164,8 @@ describe('AnalyzingView scrape jobs', () => {
     mounted()
     ws().emit('job.snapshot', 1, { job: scrapeJob({}), plan: null, progress: null, previews: {}, activities: {} })
     ws().emit('scrape.started', 2, { scrape: { status: 'running', url: 'https://x.org/a' }, activity: act1('scrape', 'Reading the post', 'from x.org') })
-    expect(screen.getByText('“https://x.org/a”')).toBeInTheDocument()
-    expect(screen.getByText('Reading the post from x.org')).toBeInTheDocument()
+    expect(screen.getByText('https://x.org/a', { selector: 'bdi' })).toBeInTheDocument()
+    expect(screen.getByText('Fetching the content from x.org')).toBeInTheDocument() // title by key, detail from the API when params are empty
     expect(screen.getByText('Waiting for the plan')).toBeInTheDocument()
   })
 
@@ -295,17 +295,17 @@ describe('AnalyzingView cancel', () => {
 describe('AnalyzingView in another locale', () => {
   it('renders German chrome, keeps API content unchanged, and re-renders on a language switch', () => {
     inLocale('de', <><Switch to="fr" /><AnalyzingView id="j1" /></>)
-    snapshot({ status: 'weird_status' }, { activities: { translation: act1('translation', 'Translating the text <i>now</i>') }, progress: { done: 1, running: [], total: 4 } })
+    snapshot({ status: 'weird_status' }, { activities: { translation: act1('translation', 'Translating the text') }, progress: { done: 1, running: [], total: 4 } })
     expect(screen.getByRole('heading', { name: 'Ihr Inhalt wird analysiert...' })).toBeInTheDocument()
     expect(screen.getByText(/Auftrag j1/)).toBeInTheDocument()
     expect(screen.getByText('Schritt 1 von 4 abgeschlossen')).toBeInTheDocument()
-    expect(screen.getByText('“Everyone knows <b>this</b>”')).toBeInTheDocument()
-    expect(screen.getByText('Translating the text <i>now</i>')).toBeInTheDocument() // activity text comes from the API
-    expect(within(rowOf('News search')).getByText('Ausstehend')).toBeInTheDocument()
+    expect(screen.getByText('Everyone knows <b>this</b>', { selector: 'bdi' })).toBeInTheDocument()
+    expect(screen.getByText('Text wird übersetzt')).toBeInTheDocument() // known key: catalog wording
+    expect(within(rowOf('Suche nach Medienberichten')).getByText('Ausstehend')).toBeInTheDocument()
     expect(screen.getByText(/weird_status/)).toBeInTheDocument() // unknown enum value: raw
     fireEvent.click(screen.getByRole('button', { name: 'switch' }))
     expect(screen.getByRole('heading', { name: 'Analyse de votre contenu...' })).toBeInTheDocument()
-    expect(screen.getByText('“Everyone knows <b>this</b>”')).toBeInTheDocument()
+    expect(screen.getByText('Everyone knows <b>this</b>', { selector: 'bdi' })).toBeInTheDocument()
   })
 
   it('maps a known job status to the catalog and formats counts and durations per locale', () => {
@@ -313,8 +313,8 @@ describe('AnalyzingView in another locale', () => {
     snapshot({ status: 'finalizing' })
     expect(screen.getByText(/wird abgeschlossen/)).toBeInTheDocument()
     ws().emit('analyzer.succeeded', 5, { analyzer: run('translation', { status: 'succeeded', duration_ms: 1234 }), preview: { source_language: 'en', translated: true }, progress: { done: 1, running: [], total: 4 } })
-    expect(rowOf('Translation')).toHaveTextContent('übersetzt aus en')
-    expect(rowOf('Translation')).toHaveTextContent('1,2 s')
+    expect(rowOf('Übersetzung')).toHaveTextContent('übersetzt aus en')
+    expect(rowOf('Übersetzung')).toHaveTextContent('1,2 s')
   })
 
   it('translates a cancel error at render, so a language switch re-translates it', async () => {

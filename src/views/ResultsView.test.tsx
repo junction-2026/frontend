@@ -195,7 +195,7 @@ describe('Results: progressive disclosure', () => {
   it('cuts the analyzed excerpt at 400 characters', async () => {
     await show(job({ input: { content: long(500) } }))
     toggle()
-    expect(screen.getByText(`“${long(400)}…”`)).toBeInTheDocument()
+    expect(screen.getByText(`${long(400)}…`, { selector: 'bdi' })).toBeInTheDocument()
   })
 
   it('shows no technique tags for a failed techniques run', async () => {
@@ -213,7 +213,7 @@ describe('Results: finalization and job states', () => {
     expect(screen.getByText('Final assessment in progress')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Watch live progress' })).toBeInTheDocument()
     toggle()
-    expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
+    expect(screen.getByText('Technique detection')).toBeInTheDocument()
     expect(verdictEl()).toBeNull()
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('The analyzers are still working.')
   })
@@ -226,7 +226,7 @@ describe('Results: finalization and job states', () => {
     await show(job({ finalization: finalization('skipped', { reason }), analyzers }))
     expect(screen.getByText(text)).toBeInTheDocument()
     toggle()
-    expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
+    expect(screen.getByText('Technique detection')).toBeInTheDocument()
     expect(screen.queryByText('Analysis failed')).toBeNull()
     expect(verdictEl()).toBeNull()
     expect(screen.queryByText(/confidence/i)).toBeNull()
@@ -278,7 +278,7 @@ describe('Results: finalization and job states', () => {
     expect(screen.getByText('Cancelled')).toBeInTheDocument()
     expect(verdictEl()).toBeNull()
     toggle()
-    expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
+    expect(screen.getByText('Technique detection')).toBeInTheDocument()
     expect(screen.getByText('claims analyzer')).toBeInTheDocument()
   })
 
@@ -310,7 +310,7 @@ describe('Results: coverage and analyzer outcomes', () => {
     expect(screen.getByText('1 succeeded · 1 failed · 1 skipped of 3 applicable')).toBeInTheDocument()
     expect(screen.getByRole('progressbar').firstElementChild).toHaveStyle({ width: '50%' })
     expect(within(screen.getByText('claims analyzer').closest('li') as HTMLElement).getByText('Timed out')).toBeInTheDocument()
-    expect(screen.getByText('The analyzer did not answer in time.')).toBeInTheDocument()
+    expect(screen.getByText('Unavailable: the analyzer failed or is not set up, so its result is missing.')).toBeInTheDocument()
     expect(screen.getByText('Not run: this analyzer does not apply to this kind of input.')).toBeInTheDocument()
     expect(screen.queryByText('Analysis failed')).toBeNull() // analyzer failure never fails the job
   })

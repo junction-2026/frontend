@@ -5,7 +5,7 @@ export default {
   'mode.label': 'نوع الإدخال',
   'mode.text': 'نص',
   'mode.link': 'رابط اجتماعي',
-  'support_note': 'يدعم Bluesky وMastodon وصفحات الويب',
+  'support_note': 'يدعم بلو سكاي وماستودون وصفحات الويب',
   'input_label': 'المحتوى المراد تحليله',
   'placeholder_text': 'الصق نصًا أو رابطًا للتحليل...',
   'placeholder_link': 'الصق رابط منشور أو صفحة ويب...',

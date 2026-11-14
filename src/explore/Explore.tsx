@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Job } from '../api/types'
-import { useLocale, useT } from '../i18n'
+import { rich, useLocale, useT } from '../i18n'
 import { ErrorAlert, Skeleton } from '../job/WithJob'
 import { useJob } from '../job/useJob'
 import { Link } from '../router'
@@ -23,7 +23,7 @@ function Head({ id, topics }: { id?: string; topics?: string[] }) {
       <p>{t('explore.lede')}</p>
       {id && (
         <p className="explore-topics">
-          {topics?.length ? <>{t('explore.searched_topics', { topics: topics.join(' · ') })} · </> : null}
+          {topics?.length ? <>{rich(t('explore.searched_topics'), { topics: <bdi>{topics.join(' · ')}</bdi> })} · </> : null}
           <Link href={`/jobs/${encodeURIComponent(id)}`}>{t('explore.back_to_analysis')}</Link>
         </p>
       )}
@@ -54,7 +54,7 @@ export function ExploreEmpty() {
     <section className="view">
       <Head />
       <div className="filters" aria-label={t('explore.filters')}>
-        <label className="field"><span aria-hidden="true">⌕</span><input aria-label={t('explore.search_aria')} disabled placeholder={t('explore.search_placeholder')} /></label>
+        <label className="field"><span aria-hidden="true" className="mirror-rtl">⌕</span><input aria-label={t('explore.search_aria')} disabled placeholder={t('explore.search_placeholder')} /></label>
         {['topic', 'country', 'languages', 'publishers'].map((n) => <button key={n} type="button" className="field" disabled>{t('explore.filter.no_data', { label: t(`explore.filter.${n}`) })}</button>)}
         <span className="verified-chip">{t('explore.verified_only')}</span>
       </div>
@@ -96,8 +96,8 @@ function newsNotice(s: RunState, job: Job, data: ExploreData, t: T): ReactNode {
   if (s.status === 'missing') return t('explore.news.missing')
   if (s.status === 'pending' || s.status === 'running') return job.done ? t('explore.news.unfinished') : t('explore.news.searching')
   // The reason and the error code come from the API: a known reason is translated, any other is shown as sent.
-  if (s.status === 'skipped') return s.reason ? t('explore.news.skipped_reason', { reason: s.reason === 'no_searchable_topics' ? t('explore.news.skip.no_searchable_topics') : s.reason }) : t('explore.news.skipped')
-  if (s.status === 'failed') return s.error ? t('explore.news.failed_code', { code: s.error }) : t('explore.news.failed')
+  if (s.status === 'skipped') return s.reason ? rich(t('explore.news.skipped_reason'), { reason: s.reason === 'no_searchable_topics' ? t('explore.news.skip.no_searchable_topics') : <bdi>{s.reason}</bdi> }) : t('explore.news.skipped')
+  if (s.status === 'failed') return s.error ? rich(t('explore.news.failed_code'), { code: <bdi>{s.error}</bdi> }) : t('explore.news.failed')
   return data.items.some((i) => i.kind === 'article') ? null : t('explore.news.no_articles')
 }
 
@@ -113,7 +113,7 @@ function Multi({ label, opts, value, onChange }: { label: string; opts: ReturnTy
   if (!opts.length) return <button type="button" className="field" disabled>{t('explore.filter.no_data', { label })}</button>
   return (
     <details className="field multi">
-      <summary>{t('explore.filter.value', { label, value: value.length ? value.length : t('explore.filter.all') })} ▾</summary>
+      <summary>{t('explore.filter.value', { label, value: value.length ? value.length : t('explore.filter.all') })} <span aria-hidden="true">▾</span></summary>
       <div className="multi-list">
         {opts.map((o) => (
           <label key={o.value}>
@@ -122,7 +122,7 @@ function Multi({ label, opts, value, onChange }: { label: string; opts: ReturnTy
               checked={value.includes(o.value)}
               onChange={(e) => onChange(e.target.checked ? [...value, o.value] : value.filter((v) => v !== o.value))}
             />
-            {o.label} ({o.count})
+            <bdi>{o.label}</bdi> ({o.count})
           </label>
         ))}
       </div>
@@ -163,13 +163,13 @@ function ExploreBody({ job }: { job: Job }) {
 
       <div className="filters" aria-label={t('explore.filters')}>
         <label className="field">
-          <span aria-hidden="true">⌕</span>
+          <span aria-hidden="true" className="mirror-rtl">⌕</span>
           <input aria-label={t('explore.search_aria')} placeholder={t('explore.search_placeholder')} value={filters.text} disabled={none} onChange={(e) => set({ text: e.target.value })} />
         </label>
         <span className="field">
-          <select aria-label={t('explore.filter.topic')} value={filters.topic ?? ''} disabled={!topics.length} onChange={(e) => set({ topic: e.target.value || null })}>
+          <select dir="auto" aria-label={t('explore.filter.topic')} value={filters.topic ?? ''} disabled={!topics.length} onChange={(e) => set({ topic: e.target.value || null })}>
             <option value="">{topics.length ? t('explore.all_topics') : t('explore.no_data')}</option>
-            {topics.map((t) => <option key={t} value={t}>{t}</option>)}
+            {topics.map((topic) => <option key={topic} value={topic}>{topic}</option>)}
           </select>
         </span>
         <span className="field">
@@ -218,9 +218,9 @@ function CountryPanel({ code, stats, items, onClear }: { code: string; stats: Co
       {info ? (
         <>
           <span>{t('explore.map.tooltip_counts', { articles: t('explore.article', { count: info.articles }), publishers: t('explore.publisher', { count: info.publishers }) })}</span>
-          <span>{t('explore.panel.languages', { languages: info.languages?.length ? info.languages.map((l) => l.toUpperCase()).join(', ') : t('explore.panel.languages_unknown') })}</span>
+          <span>{info.languages?.length ? rich(t('explore.panel.languages'), { languages: <bdi>{info.languages.map((l) => l.toUpperCase()).join(', ')}</bdi> }) : t('explore.panel.languages', { languages: t('explore.panel.languages_unknown') })}</span>
           <ul className="country-headlines">
-            {items.slice(0, 5).map((i) => <li key={i.id}>{i.title}{' — '}{[i.publisher, i.date].filter(Boolean).join(' · ')}</li>)}
+            {items.slice(0, 5).map((i) => <li key={i.id}><bdi>{i.title}</bdi>{' — '}<bdi>{[i.publisher, i.date].filter(Boolean).join(' · ')}</bdi></li>)}
           </ul>
         </>
       ) : (
@@ -250,16 +250,16 @@ function Related({ items, verified, coverage }: { items: ExploreItem[]; verified
         <ul className="related-list">
           {items.map((i) => (
             <li key={`${i.kind}:${i.id}`} className="related-card">
-              <a href={i.url} target="_blank" rel="noopener noreferrer">{i.title}</a>
+              <a href={i.url} target="_blank" rel="noopener noreferrer" dir="auto">{i.title}</a>
               <div className="related-meta">
-                {i.publisher && <span>{i.publisher}</span>}
-                {i.date && <span>{i.date}</span>}
-                {i.language && <span>{i.language.toUpperCase()}</span>}
-                {i.rating && <span className="tag orange">{i.rating}</span>}
+                {i.publisher && <span><bdi>{i.publisher}</bdi></span>}
+                {i.date && <span><bdi>{i.date}</bdi></span>}
+                {i.language && <span><bdi>{i.language.toUpperCase()}</bdi></span>}
+                {i.rating && <span className="tag orange"><bdi>{i.rating}</bdi></span>}
                 {i.kind === 'article' && (i.countryCode ? <span className="tag green">{countryName(i.countryCode, coverage, locale)}</span> : <span className="tag gray">{t('explore.related.country_unknown')}</span>)}
               </div>
               {i.kind === 'fact_check' && <ClaimLines item={i} />}
-              {i.snippet && <p>{i.snippet}</p>}
+              {i.snippet && <p dir="auto">{i.snippet}</p>}
             </li>
           ))}
         </ul>
@@ -272,11 +272,11 @@ function Related({ items, verified, coverage }: { items: ExploreItem[]; verified
 function ClaimLines({ item: { forClaim, checkedClaim } }: { item: ExploreItem }) {
   const t = useT()
   const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
-  if (forClaim && checkedClaim && same(forClaim, checkedClaim)) return <p>{t('explore.claim.same', { claim: forClaim })}</p>
+  if (forClaim && checkedClaim && same(forClaim, checkedClaim)) return <p>{rich(t('explore.claim.same'), { claim: <bdi>{forClaim}</bdi> })}</p>
   return (
     <>
-      {checkedClaim && <p>{t('explore.claim.similar', { claim: checkedClaim })}</p>}
-      {forClaim && <p>{t('explore.claim.found_for', { claim: forClaim })}</p>}
+      {checkedClaim && <p>{rich(t('explore.claim.similar'), { claim: <bdi>{checkedClaim}</bdi> })}</p>}
+      {forClaim && <p>{rich(t('explore.claim.found_for'), { claim: <bdi>{forClaim}</bdi> })}</p>}
     </>
   )
 }

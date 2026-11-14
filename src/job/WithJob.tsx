@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { errorMessage } from '../api/errors'
 import type { ApiError, Job } from '../api/types'
 import { useT } from '../i18n'
+import { LocalizationProvider } from './localize'
 import { useJob } from './useJob'
 
 export function Skeleton() {
@@ -27,5 +28,5 @@ export function WithJob({ id, children }: { id: string; children: (job: Job) => 
   const result = useJob(id)
   if (!result) return <Skeleton />
   if (!result.ok) return <ErrorAlert error={result.error} notFound={t('results.job_not_found')} />
-  return <>{children(result.data)}</>
+  return <LocalizationProvider job={result.data}>{children(result.data)}</LocalizationProvider>
 }

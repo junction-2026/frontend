@@ -49,7 +49,7 @@ describe('Ask', () => {
     const before = urls() // the top-bar health check only
     expect(screen.getByRole('heading', { level: 1, name: /^Ask VEIL/ })).toBeInTheDocument()
     const label = 'Mock data – not connected to the backend (No backend for Ask VEIL)'
-    for (const t of [screen.getByText('Why was this flagged as Appeal to Fear?'), screen.getByText(/96% pattern match/), screen.getByText('What other techniques were detected?'), screen.getByLabelText('Message')])
+    for (const t of [screen.getByText('Why was this flagged as Appeal to Fear?'), screen.getByText('96%'), screen.getByText('What other techniques were detected?'), screen.getByLabelText('Message')])
       expect(mocked(t)).toHaveAttribute('title', label)
     fireEvent.click(screen.getByText('What other techniques were detected?'))
     expect(screen.getByLabelText('Message')).toHaveValue('What other techniques were detected?')
