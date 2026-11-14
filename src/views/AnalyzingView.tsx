@@ -107,11 +107,7 @@ function Live({ id }: { id: string }) {
           {job && <span className="status-pill blue">● {enumLabel(t, 'analysis.job_status', state.status)}</span>}
         </div>
         <p className="quote-text">{content ? <>“<bdi dir="auto">{content}</bdi>”</> : '…'}</p>
-        <div className="quote-foot">
-          {time && <span>{t('analysis.elapsed', { time })}</span>}
-          <Mock label={t('analysis.mock.cluster')}><span>{t('analysis.cluster')}</span></Mock>
-          <Mock label={t('analysis.mock.retention')}><span>{t('analysis.retention')}</span></Mock>
-        </div>
+        {time && <div className="quote-foot"><span>{t('analysis.elapsed', { time })}</span></div>}
       </div>
 
       {scrapeFailure ? (
