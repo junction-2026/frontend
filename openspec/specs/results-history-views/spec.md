@@ -227,11 +227,11 @@ When the trimmed `result.user_text` differs from the summary, the card SHALL sho
 - **THEN** `aria-expanded` is true and the complete text is shown in place
 
 ### Requirement: Initial actions
-Below the verdict card the Results screen SHALL show a primary `<button class="btn-primary">` "View detailed analysis" and a secondary link "Ask VEIL" (class `btn-secondary`, `href` `/ask`). Before the detailed region is opened only the meta row, the verdict card (or state card) and these actions SHALL be shown; the one technique name on the Top technique card is the only technique shown. Non-verdict state cards keep their content and tones.
+Below the verdict card the Results screen SHALL show a primary `<button class="btn-primary">` "View detailed analysis" and a secondary link "Ask VEIL" (class `btn-secondary`, `href` `/jobs/{id}/ask` with the id URL-encoded). Before the detailed region is opened only the meta row, the verdict card (or state card) and these actions SHALL be shown; the one technique name on the Top technique card is the only technique shown. Non-verdict state cards keep their content and tones.
 
 #### Scenario: Initial view
-- **WHEN** a completed job with techniques and analyzers is shown
-- **THEN** no technique tag, coverage, analyzer row, highlighted text, claim, metrics bar, Polarity/Intensity, bias-factor or excerpt is shown
+- **WHEN** a completed job `j1` is shown
+- **THEN** the "Ask VEIL" link has `href` `/jobs/j1/ask`
 
 ### Requirement: Progressive disclosure
 "View detailed analysis" SHALL carry `aria-expanded` and `aria-controls` pointing to the detailed region (`role="region"`, `aria-label` "Detailed analysis"). It SHALL be collapsed on every load and collapsed content SHALL NOT be rendered. Expanding SHALL mount the region with a fade and slide of at most 300ms (none under `prefers-reduced-motion`) and change the button label to "Hide detailed analysis"; collapsing SHALL unmount it; focus SHALL stay on the button.
@@ -345,11 +345,11 @@ In the detailed analysis region the "Polarity / Intensity" signal row, "High rhe
 - **THEN** the link "Explore coverage" has `href` `/explore?job=j%201` and no "Cross-source coverage" link exists
 
 ### Requirement: Ask VEIL link on Results
-The Ask VEIL call-to-action card SHALL NOT be shown on Results; the compact "Ask VEIL" link carries no data and SHALL NOT be wrapped in `Mock`.
+The Ask VEIL call-to-action card SHALL NOT be shown on Results; the compact "Ask VEIL" link carries no data and SHALL NOT be wrapped in `Mock`. The static `/states` showcase has no job, so its "Ask VEIL" link keeps `/ask` (the "Choose an analysis" state).
 
 #### Scenario: Ask VEIL link
-- **WHEN** the Results screen is shown
-- **THEN** the "Ask VEIL" link points to `/ask`, has no `Mock` ancestor and no "Have questions about this verdict" card is shown
+- **WHEN** the Results screen of job `j 1` is shown
+- **THEN** the "Ask VEIL" link points to `/jobs/j%201/ask`, has no `Mock` ancestor and no "Have questions about this verdict" card is shown
 
 ### Requirement: History view fully localized
 Every static string of the History view (title, lede, mock labels, search placeholder and aria-label, filter group and buttons, status labels, empty and error states, load-more, relative times and day headings) SHALL come from the catalogs in en, fr, ar, de and fi. Job ids and the quoted excerpt SHALL be wrapped in `<bdi>`. Dates, relative times and counts SHALL use Intl in the active locale. Changing the locale SHALL keep the selected status filter and the loaded list.

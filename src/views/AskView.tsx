@@ -1,91 +1,74 @@
-import { useState, type FormEvent } from 'react'
-import { rich, useFormat, useT } from '../i18n'
+import { verdictOf, type Job } from '../api/types'
+import { Chat } from '../ask/Chat'
+import { useT } from '../i18n'
+import { resultOf } from '../job/Verdict'
+import { Skeleton, ErrorAlert } from '../job/WithJob'
+import { useJob } from '../job/useJob'
 import { Link } from '../router'
-import { Mock } from '../ui/MockBadge'
 import '../secondary/secondary.css'
 
-const CORPUS_ID = '#CAT-FEAR-449' // mock identifier, not translated
+const TITLE_LEN = 120
+const TONE = { detected: 'orange', not_detected: 'green', uncertain: 'purple' } as const
 
-// Mock: the thread is canned and sending only appends a local bubble; nothing is sent to the backend.
-export default function AskView() {
+function ChatHead() {
   const t = useT()
-  const { formatNumber } = useFormat()
-  const label = t('ask.mock_label')
-  const percent = (v: number) => formatNumber(v, { style: 'percent' })
-  const suggestions = [t('ask.suggestion.1'), t('ask.suggestion.2')]
-  const [draft, setDraft] = useState('')
-  const [sent, setSent] = useState<string[]>([])
+  return (
+    <div className="chat-head">
+      <h1>{t('ask.title')} <span className="badge-blue">{t('ask.badge')}</span></h1>
+      <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{t('ask.grounded')}</span>
+    </div>
+  )
+}
 
-  const send = (e: FormEvent) => {
-    e.preventDefault()
-    const text = draft.trim()
-    if (!text) return
-    setSent((s) => [...s, text])
-    setDraft('')
-  }
+// The job under discussion: verdict label, source title or shortened input, link back to the result.
+function ContextBar({ job }: { job: Job }) {
+  const t = useT()
+  const r = resultOf(job)
+  const verdict = r && verdictOf(r.verdict)
+  const content = job.input?.content ?? ''
+  const title = job.input?.source?.title || (content.length > TITLE_LEN ? `${content.slice(0, TITLE_LEN).trimEnd()}…` : content) || t('ask.context.job', { id: job.id })
+  return (
+    <div className="context-bar">
+      <div className="left">
+        {verdict && <span className={`status-pill ${TONE[verdict]}`}>{t(`results.verdict.label.${verdict}`)}</span>}
+        <h3 dir="auto">{title}</h3>
+      </div>
+      <Link className="btn-secondary" href={`/jobs/${encodeURIComponent(job.id)}`}>{t('ask.back')}</Link>
+    </div>
+  )
+}
 
+function JobChat({ id }: { id: string }) {
+  const t = useT()
+  const result = useJob(id)
+  return (
+    <>
+      {result?.ok && <ContextBar job={result.data} />}
+      <div className="card chat-card">
+        <ChatHead />
+        {!result && <Skeleton />}
+        {result && !result.ok && <ErrorAlert error={result.error} notFound={t('results.job_not_found')} />}
+        {result?.ok && <Chat id={id} status={result.data.status} done={result.data.done === true} />}
+      </div>
+    </>
+  )
+}
+
+// /jobs/:id/ask chats about that job; plain /ask asks for an analysis first.
+export default function AskView({ id }: { id: string }) {
+  const t = useT()
   return (
     <section className="view">
-      <Mock block label={label}>
-        <div className="context-bar">
-          <div className="left">
-            <span className="status-pill orange">{rich(t('ask.context.status'), { confidence: <bdi>{percent(0.94)}</bdi> })}</span>
-            <h3>{t('ask.context.source')}</h3>
-            <p>{t('ask.context.summary')}</p>
-          </div>
-          <Link className="btn-secondary" href="/history">{t('ask.back')}</Link>
+      {id ? (
+        <JobChat key={id} id={id} />
+      ) : (
+        <div className="card chat-card">
+          <ChatHead />
+          <h2>{t('ask.pick.title')}</h2>
+          <p className="chat-prompt">{t('ask.pick.text')}</p>
+          <Link className="btn-secondary" href="/history">{t('ask.pick.link')}</Link>
         </div>
-      </Mock>
-
-      <div className="card chat-card">
-        <div className="chat-head">
-          <h1>{t('ask.title')} <span className="badge-blue">{t('ask.badge')}</span></h1>
-          <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{t('ask.grounded')}</span>
-        </div>
-        <p className="chat-prompt">{t('ask.prompt')}</p>
-
-        <Mock block label={label}>
-          <div className="chat-thread" role="log" aria-label={t('ask.thread')}>
-            <div className="bubble-user">{t('ask.q1')}</div>
-            <div className="bubble-ai">
-              <div className="avatar-sm" aria-hidden="true">V</div>
-              <div className="content">
-                <p>{t('ask.a1_pre')}<strong>{rich(t('ask.a1_match'), { percent: <bdi>{percent(0.96)}</bdi> })}</strong>{t('ask.a1_post')}</p>
-                <div className="meta-chips">
-                  <span>{'{ }'} {rich(t('ask.chip.corpus'), { id: <bdi>{CORPUS_ID}</bdi> })}</span>
-                  <span>{t('ask.chip.weight')}</span>
-                </div>
-              </div>
-            </div>
-            <div className="bubble-user">{t('ask.q2')}</div>
-            <div className="bubble-ai">
-              <div className="avatar-sm" aria-hidden="true">V</div>
-              <div className="content">
-                <p><strong>{t('ask.src.ft')}</strong>{t('ask.a2_and')}<strong>{t('ask.src.reuters')}</strong>{t('ask.a2_rest')}</p>
-                <div className="ref-cards">
-                  <Link className="ref-card" href="/explore">{t('ask.ref.related', { n: formatNumber(6) })} <span aria-hidden="true" className="mirror-rtl">↗</span></Link>
-                  <button type="button" className="ref-card">{t('ask.ref.factcheck')} <span aria-hidden="true" className="mirror-rtl">↗</span></button>
-                </div>
-              </div>
-            </div>
-            {sent.map((text, i) => <div className="bubble-user" key={i} dir="auto">{text}</div>)}
-          </div>
-        </Mock>
-
-        <Mock block label={label}>
-          <div className="suggestions">
-            {suggestions.map((s) => <button type="button" key={s} onClick={() => setDraft(s)}>{s}</button>)}
-            <Link className="accent" href="/explore">{t('ask.suggestion.explore')}</Link>
-          </div>
-        </Mock>
-
-        <Mock block label={label}>
-          <form className="chat-input" onSubmit={send}>
-            <input aria-label={t('ask.input_aria')} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('ask.input_placeholder')} />
-            <button className="send-btn" type="submit" aria-label={t('ask.send')}>↑</button>
-          </form>
-        </Mock>
-      </div>
+      )}
     </section>
   )
 }

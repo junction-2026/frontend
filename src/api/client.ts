@@ -1,5 +1,5 @@
 import { readAnalyses, readCountries, type CountriesResponse, type MapAnalysesPage } from './mapTypes'
-import type { AnalyzerInfo, ApiResult, CreateJobBody, Job, JobLocalization, JobSummary, Page } from './types'
+import type { AnalyzerInfo, ApiResult, ChatReply, ChatRequest, CreateJobBody, Job, JobLocalization, JobSummary, Page } from './types'
 
 const BASE = '/api/v1'
 
@@ -48,6 +48,27 @@ export const cancelJob = (jobId: string) => request<Job>(`/jobs/${id(jobId)}/can
 export const listAnalyzers = () => request<{ items: AnalyzerInfo[] }>('/analyzers')
 export const getJobLocalization = (jobId: string, language: string) =>
   request<JobLocalization>(`/jobs/${id(jobId)}/localization?language=${encodeURIComponent(language)}`)
+
+// The server answers within 100 s (analysis-chat-api, Chat timeouts); clients wait at least 120 s.
+export const CHAT_TIMEOUT_MS = 125_000
+
+// A client-side timeout is reported as code `timeout`, not as a generic network error.
+export async function postJobChat(jobId: string, body: ChatRequest, timeoutMs = CHAT_TIMEOUT_MS): Promise<ApiResult<ChatReply>> {
+  const controller = new AbortController()
+  let timedOut = false
+  const timer = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, timeoutMs)
+  try {
+    const result = await request<ChatReply>(`/jobs/${id(jobId)}/chat`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal,
+    })
+    return timedOut && !result.ok ? { ok: false, error: { status: 0, code: 'timeout', message: 'The request timed out' } } : result
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 // Propaganda map (shared spec propaganda-map-api).
 async function readMap<T>(path: string, read: (raw: unknown) => T): Promise<ApiResult<T>> {

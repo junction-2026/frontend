@@ -36,6 +36,7 @@ afterEach(() => {
   fetchMock.mockReset()
   vi.unstubAllGlobals()
   localStorage.clear()
+  sessionStorage.clear()
   window.history.replaceState(null, '', '/')
   document.documentElement.lang = 'en'
   document.documentElement.dir = 'ltr'
@@ -61,7 +62,8 @@ const PAGES: Page[] = [
   { name: 'Home', path: '/', ready: async () => {}, h1: 'home.title' },
   { name: 'Explore', path: '/explore?job=j1', ready: () => screen.findByRole('list', {}, { timeout: 3000 }), h1: 'explore.title' },
   { name: 'History', path: '/history', ready: () => waitFor(() => expect(document.querySelector('.history-item')).not.toBeNull()), h1: 'history.title' },
-  { name: 'Ask', path: '/ask', ready: async () => {}, h1: 'ask.title' },
+  { name: 'Ask', path: '/jobs/job-ok/ask', ready: () => screen.findByRole('textbox'), h1: 'ask.title' },
+  { name: 'Ask without a job', path: '/ask', ready: async () => {}, h1: 'ask.title' },
   { name: 'Region', path: '/explore/region', ready: async () => {}, h1: 'explore.title' },
   { name: 'Settings', path: '/settings', ready: () => waitFor(() => expect(document.querySelector('.analyzer-row')).not.toBeNull()), h1: 'settings.title' },
 ]
@@ -104,10 +106,13 @@ describe('Arabic isolation', () => {
     for (const e of screen.getAllByText(/The excerpt of the job/)) expect(e.closest('bdi')).not.toBeNull()
   })
 
-  it('names the Ask mock outlets in Arabic script and mirrors the arrows', async () => {
-    open('/ask', 'ar')
-    expect(screen.getByText('رويترز')).toBeInTheDocument()
-    expect(document.querySelectorAll('.ref-card .mirror-rtl')).toHaveLength(2)
+  it('isolates Ask bubbles with dir=auto and keeps the brand verbatim', async () => {
+    sessionStorage.setItem('veil.ask.job-ok', JSON.stringify([{ role: 'user', content: 'Why?' }, { role: 'assistant', content: 'Because of reasons.' }]))
+    open('/jobs/job-ok/ask', 'ar')
+    await screen.findByRole('textbox')
+    expect(screen.getByText('Because of reasons.')).toHaveAttribute('dir', 'auto')
+    expect(screen.getByText('Why?')).toHaveAttribute('dir', 'auto')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('VEIL')
   })
 })
 

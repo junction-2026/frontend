@@ -23,21 +23,6 @@ The "Inspect wire feeds →" link in the Explore country panel SHALL navigate to
 - **WHEN** the user clicks Finland on Explore, then "Inspect wire feeds →", then "Clear selection ×" on Region
 - **THEN** the path stays `/explore` after the click, becomes `/explore/region`, and then `/explore`
 
-### Requirement: Ask screen
-`/ask` SHALL render the chat layout (context bar, thread, suggestions, composer) with an `<h1>` starting "Ask VEIL". The context bar, the thread (including canned answers), the suggestions and the composer SHALL each be wrapped in `Mock` labelled "No backend for Ask VEIL". Sending a non-blank message SHALL append a user bubble to the thread locally and clear the input; clicking a suggestion SHALL fill the input. The screen SHALL NOT send any network request.
-
-#### Scenario: Send appends a local bubble
-- **WHEN** the user types "my question" and submits
-- **THEN** a user bubble "my question" appears in the marked thread, the input is empty and no fetch call was made by the screen
-
-#### Scenario: Blank message
-- **WHEN** the user submits a blank input
-- **THEN** no bubble is added
-
-#### Scenario: Brand kept in every locale
-- **WHEN** the locale is `de`, `fr`, `fi` or `ar`
-- **THEN** the Ask `<h1>` and mock label contain "VEIL" verbatim (inflected only by grammar, e.g. fi "Ask VEIL:llä")
-
 ### Requirement: States screen
 `/states` SHALL render the four edge-case cards (input fault, partial results, uncertain result, empty history) as a static showcase with an `<h1>` "Edge Cases & System States". The whole page SHALL be wrapped in `Mock` labelled "Example states". Its links SHALL go only to `/`, `/history` and `/ask`. The "Retry Wire Retrieval" button SHALL be disabled and wrapped in its own `Mock`.
 
@@ -218,13 +203,9 @@ The Settings tabs SHALL keep their `Mock` wrapper in every locale; only their te
 - **WHEN** the locale is `ar`
 - **THEN** the document direction is rtl and the analyzer rows show Arabic labels
 
-### Requirement: Ask, Settings and Region without literals
-The Ask mock thread (questions, answers, outlet names, chips, suggestions, aria-labels, placeholder), the Settings screen and the Region mock (stat cards, wire sources, tags) SHALL take every static string, including proper-noun outlet names, from the catalogs in all five locales. Percentages and outlet names SHALL be isolated with `<bdi>`. Directional glyphs (↗, ⌕) SHALL mirror under `[dir=rtl]`.
+### Requirement: Settings and Region without literals
+The Settings screen and the Region mock (stat cards, wire sources, tags) SHALL take every static string, including proper-noun outlet names, from the catalogs in all five locales. Percentages and outlet names SHALL be isolated with `<bdi>`. Directional glyphs (↗, ⌕) SHALL mirror under `[dir=rtl]`.
 
 #### Scenario: Settings in Arabic
 - **WHEN** Settings is rendered in ar
 - **THEN** dir is rtl and no static Latin-script text other than the brand and analyzer ids from the API appears
-
-#### Scenario: Ask outlets in Arabic
-- **WHEN** Ask is rendered in ar
-- **THEN** the answer names the outlets in Arabic script
