@@ -24,3 +24,29 @@ export const job = (extra: Record<string, unknown> = {}) => ({
   input: { content: 'Everyone knows these people are destroying our future.' }, scrape: null, options: { finalize: true },
   analyzers: [], coverage: coverage(), finalization: finalization('completed', { result: assessment() }), ...extra,
 })
+
+// A RiskScore as in shared manipulation-risk-score (all three dimensions available, "All three dimensions" scenario).
+const dim = (extra: Record<string, unknown> = {}) => ({ available: true, score: 0.8, weight: 0.3, contribution: 0.24, confidence: 'normal', reason: null, source: 'x', ...extra })
+export const risk = (extra: Record<string, unknown> = {}) => ({
+  version: 1, status: 'scored', reason: null, score: 0.6796, raw_score: 0.6796, band: 'high', dampened: false,
+  summary: 'Server summary: high risk.',
+  dimensions: {
+    intensity: dim({ score: 0.424, weight: 0.4, contribution: 0.1696 }),
+    confirmation: dim({ score: 0.8 }),
+    amplification: dim({ score: 0.9, weight: 0.3, contribution: 0.27, basis: 'author', author_posts: 120 }),
+  },
+  techniques: [
+    { label: 'Appeal_to_fear-prejudice', display: 'Appeal to fear', probability: 0.9, impact: 'high', weight: 1, contribution: 0.9 },
+    { label: 'Loaded_Language', display: 'Loaded language', probability: 0.7, impact: 'high', weight: 1, contribution: 0.7 },
+    { label: 'Doubt', display: 'Doubt', probability: 0.35, impact: 'lower', weight: 0.4, contribution: 0.14 },
+  ],
+  drivers: [
+    { kind: 'amplification', dimension: 'amplification', technique: null, contribution: 0.27, text: 'Server driver A.' },
+    { kind: 'propaganda_pattern', dimension: 'confirmation', technique: null, contribution: 0.24, text: 'Server driver B.' },
+  ],
+  caveats: [
+    { id: 'content_not_reader', text: 'Server caveat 1.' },
+    { id: 'bot_not_intent', text: 'Server caveat 2.' },
+  ],
+  config: {}, ...extra,
+})
