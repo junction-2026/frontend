@@ -6,11 +6,11 @@ Defines how the frontend is run and shipped: the same-origin `/healthz` proxy in
 ## Requirements
 
 ### Requirement: Dev and preview proxy
-`vite.config.ts` SHALL set `server.proxy['/healthz'] = {target: process.env.BACKEND_URL ?? 'http://localhost:8080', changeOrigin: true}`, and the same proxy SHALL apply to `vite preview`.
+`vite.config.ts` SHALL set `server.proxy['/healthz']` and `server.proxy['/api']`, each `{target: process.env.BACKEND_URL ?? 'http://localhost:8080', changeOrigin: true}`, and the same proxy SHALL apply to `vite preview`.
 
 #### Scenario: Default target
-- **WHEN** BACKEND_URL is unset and the dev server runs
-- **THEN** `/healthz` is proxied to `http://localhost:8080`
+- **WHEN** `BACKEND_URL` is unset
+- **THEN** `/healthz` and `/api` are proxied to `http://localhost:8080`
 
 ### Requirement: Multi-stage Dockerfile
 The Dockerfile SHALL be multi-stage: `node:22-alpine` runs `npm ci && npm run build`; `nginx:alpine` copies `dist/` to `/usr/share/nginx/html` and `nginx/default.conf.template` to `/etc/nginx/templates/default.conf.template` so the stock entrypoint substitutes `${BACKEND_URL}`.
@@ -20,11 +20,11 @@ The Dockerfile SHALL be multi-stage: `node:22-alpine` runs `npm ci && npm run bu
 - **THEN** an nginx image containing the built bundle is produced
 
 ### Requirement: nginx behaviour
-nginx SHALL listen on port 80 (`EXPOSE 80`). `location = /healthz` SHALL proxy to `${BACKEND_URL}/healthz` with `proxy_connect_timeout` and `proxy_read_timeout` of 5s. `location /` SHALL serve static files with `try_files $uri /index.html`. The image SHALL set `ENV BACKEND_URL=http://host.docker.internal:8080` as its default.
+nginx SHALL listen on port 80 (`EXPOSE 80`). `location = /healthz` SHALL proxy to `${BACKEND_URL}/healthz` and `location /api/` SHALL proxy to `${BACKEND_URL}/api/`, each with `proxy_connect_timeout` and `proxy_read_timeout` of 5s. `location /` SHALL serve static files with `try_files $uri /index.html`. The image SHALL set `ENV BACKEND_URL=http://host.docker.internal:8080` as its default.
 
 #### Scenario: Proxy at runtime
 - **WHEN** the container runs with `-e BACKEND_URL=<backend>`
-- **THEN** `GET /healthz` on port 80 is forwarded to `<backend>/healthz`
+- **THEN** `GET /healthz` and `GET /api/v1/jobs/{id}` on port 80 are forwarded to the backend
 
 ### Requirement: Docker ignore
 `.dockerignore` SHALL exclude node_modules, dist, coverage, .git and .env.
