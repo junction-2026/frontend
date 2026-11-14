@@ -37,6 +37,8 @@ check /jobs/detected 'property="og:type" content="article"' 'property="og:title"
   'Yes, propaganda detected. Loaded &lt;b&gt;language&lt;/b&gt; &amp; &quot;fear&quot; appeals.' "property=\"og:image\" content=\"$ORIGIN/og/verdict-detected.png\"" "property=\"og:url\" content=\"$ORIGIN/jobs/detected\""
 check /jobs/detected/detail 'VEIL verdict: Manipulation detected'
 check /jobs/running 'property="og:title" content="VEIL analysis in progress"' "$ORIGIN/og/pending.png"
+check /jobs/big 'property="og:title" content="VEIL verdict: No manipulation indicators"' 'Big but fine.'   # 600 KB job: needs subrequest_output_buffer_size
+check /jobs/huge 'property="og:title" content="VEIL verdict: Manipulation detected"' 'Huge but fine.'   # 5 MB job
 check /jobs/failed 'property="og:title" content="VEIL analysis unavailable"' "$ORIGIN/og/unavailable.png"
 check /jobs/unknown "${generic[@]}"
 check '/jobs/bad%20id' "${generic[@]}"

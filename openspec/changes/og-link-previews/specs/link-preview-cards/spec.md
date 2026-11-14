@@ -90,11 +90,15 @@ A done job with status `failed` or `cancelled`, or finalization `failed` or `ski
 - **THEN** the unavailable card is returned
 
 ### Requirement: Fallbacks
-A backend 404 SHALL give the generic card. Any other non-200 status, invalid JSON, or a subrequest that does not answer within 2 s SHALL also give the generic card. The HTTP status of the HTML response SHALL always be 200.
+A backend 404 SHALL give the generic card. Any other non-200 status, invalid JSON, or a subrequest that does not answer within 2 s SHALL also give the generic card. The HTTP status of the HTML response SHALL always be 200. A job response of any size up to the nginx subrequest buffer (32 MiB; the API limits a request body to 1 MiB) SHALL produce its card, never an empty reply.
 
 #### Scenario: Backend failure
 - **WHEN** the backend answers 500, 404, invalid JSON or after 4 s
 - **THEN** the response is 200 with the generic card and the SPA shell
+
+#### Scenario: Large job
+- **WHEN** the job response is 5 MB
+- **THEN** the response is 200 with the SPA shell and the job's card
 
 ### Requirement: Content limits
 A card SHALL NOT include `input.content`, `input.source.*`, `scrape.url` or any analyzer result. It SHALL NOT include confidence in any form (analysis-jobs-api, Confidence semantics).

@@ -39,8 +39,12 @@ The image SHALL load `ngx_http_js_module.so` (shipped with nginx:alpine) in the 
 - **THEN** the response is `image/png` with `Cache-Control: public, max-age=86400`
 
 ### Requirement: Handler data sources
-The head-injection handler SHALL read `/usr/share/nginx/html/index.html` once per worker and cache it, and SHALL get a job via `r.subrequest('/api/v1/jobs/<id>')` through the `/api/` proxy, so no `resolver` is needed.
+The head-injection handler SHALL read `/usr/share/nginx/html/index.html` once per worker and cache it, and SHALL get a job via `r.subrequest('/api/v1/jobs/<id>')` through the `/api/` proxy, so no `resolver` is needed. The server block SHALL set `subrequest_output_buffer_size 32m` (the default, one memory page, is smaller than a real Get job; an oversized subrequest response is an nginx error that closes the request without an HTML body and that the handler cannot catch).
 
 #### Scenario: Job lookup
 - **WHEN** `GET /jobs/{id}` is requested
 - **THEN** the backend receives one `GET /api/v1/jobs/{id}` through the `/api/` location
+
+#### Scenario: Large job
+- **WHEN** the job response is larger than 64 KB (for example 5 MB with a long `input.content` and analyzer results)
+- **THEN** the response is 200 with the SPA shell and the job's verdict card

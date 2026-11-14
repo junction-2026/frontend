@@ -6,6 +6,9 @@ const job = (extra) => ({ id: 'x', status: 'completed', done: true, input: { con
 const FIXTURES = {
   detected: job({ finalization: fin('completed', { verdict: 'detected', confidence: 0.91, user_text: 'Loaded <b>language</b> & "fear" appeals.', produced_by: 'stub' }) }),
   running: job({ status: 'running', done: false, finalization: fin('pending', null) }),
+  // > 300 KB: far above nginx's default subrequest buffer (one page)
+  big: job({ input: { content: 'SECRET INPUT ' + 'x'.repeat(300_000) }, analyzers: [{ id: 'a', result: { blob: 'y'.repeat(300_000) } }], finalization: fin('completed', { verdict: 'not_detected', confidence: 0.4, user_text: 'Big but fine.', produced_by: 'stub' }) }),
+  huge: job({ input: { content: 'SECRET INPUT ' + 'x'.repeat(5_000_000) }, finalization: fin('completed', { verdict: 'detected', confidence: 0.4, user_text: 'Huge but fine.', produced_by: 'stub' }) }),
   failed: job({ status: 'failed', finalization: fin('skipped', null) }),
 }
 
