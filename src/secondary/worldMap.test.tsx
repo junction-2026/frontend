@@ -136,6 +136,30 @@ describe('Explore map', () => {
     expect(finland()).not.toHaveAttribute('data-selected')
   })
 
+  it('pluralises the panel like the tooltip', () => {
+    render(<ExploreView />)
+    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'SE' } })
+    expect(screen.getByText('4 articles · 1 publisher')).toBeInTheDocument()
+  })
+
+  it('pinch zooms without selecting, and Escape in a field keeps the selection', () => {
+    render(<ExploreView />)
+    const svg = screen.getByRole('img', { name: 'World coverage map' })
+    Object.assign(svg, { getBoundingClientRect: () => ({ left: 0, top: 0, width: 960, height: 500, right: 960, bottom: 500, x: 0, y: 0, toJSON() {} }) })
+    fireEvent.pointerDown(svg, { pointerId: 1, clientX: 400, clientY: 200 })
+    fireEvent.pointerDown(svg, { pointerId: 2, clientX: 500, clientY: 200 })
+    fireEvent.pointerMove(svg, { pointerId: 2, clientX: 700, clientY: 200 })
+    expect(scale()).toBeGreaterThan(1)
+    fireEvent.pointerUp(svg, { pointerId: 2 })
+    fireEvent.pointerUp(svg, { pointerId: 1 })
+    fireEvent.click(finland())
+    expect(finland()).not.toHaveAttribute('data-selected')
+    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'FI' } })
+    fireEvent.keyDown(screen.getByLabelText('Country'), { key: 'Escape' })
+    fireEvent.keyDown(screen.getByLabelText('Topic'), { key: 'Escape' })
+    expect(finland()).toHaveAttribute('data-selected', 'true')
+  })
+
   it('renders with an empty dataset', () => {
     render(<Explore coverage={{}} />)
     expect(screen.getByText('No verified publisher-country data yet')).toBeInTheDocument()

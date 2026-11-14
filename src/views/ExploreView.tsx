@@ -3,7 +3,7 @@ import { Mock } from '../ui/MockBadge'
 import { Link } from '../router'
 import { WorldMap } from '../secondary/WorldMap'
 import { EXPLORE_MOCK_COVERAGE, coverageSummary } from '../secondary/exploreMockCoverage'
-import { SELECTABLE, countryName, type Coverage } from '../secondary/worldMapData'
+import { SELECTABLE, countryName, plural, type Coverage } from '../secondary/worldMapData'
 import '../secondary/secondary.css'
 
 export default function ExploreView() {
@@ -55,7 +55,7 @@ export function Explore({ coverage }: { coverage: Coverage }) {
             <div className="country-panel">
               <strong>{countryName(country, coverage)}</strong>
               {info ? (
-                <span>{info.articles} articles · {info.publishers} publishers</span>
+                <span>{plural(info.articles, 'article')} · {plural(info.publishers, 'publisher')}</span>
               ) : (
                 <span>No verified publisher data for {countryName(country, coverage)}</span>
               )}

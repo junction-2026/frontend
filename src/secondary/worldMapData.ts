@@ -26,3 +26,4 @@ const NAMES = new Map(COUNTRIES.flatMap((c) => (c.code ? [[c.code, c.name] as co
 /** Every interactive country, for the Country select. */
 export const SELECTABLE = [...NAMES].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name))
 export const countryName = (code: string, coverage: Coverage) => coverage[code]?.name ?? NAMES.get(code) ?? code
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`

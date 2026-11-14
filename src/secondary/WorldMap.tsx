@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
-import { COUNTRIES, HEIGHT, WIDTH, countryName, type Coverage } from './worldMapData'
+import { COUNTRIES, HEIGHT, WIDTH, countryName, plural, type Coverage } from './worldMapData'
 
 const FILL = { none: '#E9EDF2', low: '#DCEBFA', medium: '#BFD9F4', high: '#9FC4ED' }
 const HOVER = '#A7C9F0'
@@ -21,7 +21,6 @@ function zoomAt(v: View, factor: number, cx: number, cy: number): View {
   const r = k / v.k
   return fit({ k, x: cx - (cx - v.x) * r, y: cy - (cy - v.y) * r })
 }
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 type Props = {
   coverage: Coverage
