@@ -80,3 +80,14 @@ When the connection closes without a terminal event (or the snapshot of a done j
 #### Scenario: Older result
 - **WHEN** a stored result has ClaimLookups without `cross_language` and `cross_language_differences`
 - **THEN** it is accepted by the types and rendered without a comparison
+
+### Requirement: Job visibility members
+`CreateJobBody` (both the `input` and the `scrape` variant) SHALL accept an optional `public?: boolean` member and `Job` SHALL describe an optional `public?: boolean` member. A reader of `Job` SHALL treat an absent `public` as `true`.
+
+#### Scenario: Non-public body
+- **WHEN** a `CreateJobBody` of either variant is built with `public: false`
+- **THEN** it type-checks and is sent as given
+
+#### Scenario: Job without public
+- **WHEN** a Job object has no `public` member
+- **THEN** it is treated as public

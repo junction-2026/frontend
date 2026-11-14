@@ -47,6 +47,7 @@ export default function HomeView() {
   const [open, setOpen] = useState(false)
   const [analyzers, setAnalyzers] = useState<AnalyzerInfo[] | null>(null)
   const [listError, setListError] = useState<ApiError | null>(null)
+  const [isPublic, setIsPublic] = useState(true)
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set())
 
   // The analyzers are fetched the first time the panel opens.
@@ -71,12 +72,15 @@ export default function HomeView() {
     }
     const body: CreateJobBody = mode === 'text' ? { input: { content: value } } : { scrape: { url: value.trim() } }
     if (analyzers && unchecked.size) body.analyzers = analyzers.filter((a) => !unchecked.has(a.id)).map((a) => a.id)
+    if (!isPublic) body.public = false
     setBusy(true)
     setProblem(null)
     const r = await createJob(body)
     setBusy(false)
-    if (r.ok) navigate(`/jobs/${encodeURIComponent(r.data.id)}/live`)
-    else setProblem({ error: r.error })
+    if (r.ok) {
+      setIsPublic(true)
+      navigate(`/jobs/${encodeURIComponent(r.data.id)}/live`)
+    } else setProblem({ error: r.error })
   }
 
   const toggle = (id: string) =>
@@ -129,6 +133,11 @@ export default function HomeView() {
               {shown.items.length > 0 && <ul>{shown.items.map((i) => <li key={i}><bdi>{i}</bdi></li>)}</ul>}
             </div>
           )}
+          <div className="visibility">
+            <button type="button" role="switch" id="visibility-switch" className="switch" aria-checked={isPublic} aria-describedby="visibility-hint" onClick={() => setIsPublic((v) => !v)} />
+            <label htmlFor="visibility-switch">{t('compose.visibility.label')}</label>
+            <p id="visibility-hint" className="hint">{t('compose.visibility.hint')}</p>
+          </div>
           <div className="composer-foot">
             <div className="composer-meta">
               <button type="button" className="btn-link" aria-expanded={open} aria-controls="advanced-options" onClick={() => setOpen((o) => !o)}>
