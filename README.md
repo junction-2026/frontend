@@ -1,6 +1,6 @@
 # frontend
 
-React + TypeScript + Vite app that ports the Figma design in `UI_DESIGN/` and talks to the analysis backend.
+React + TypeScript + Vite app that implements the Figma design and talks to the analysis backend.
 The top bar calls the backend `GET /healthz` once on load and shows **Backend online**, **Checking backend…** or
 **Backend offline** (the failure message is the tooltip).
 

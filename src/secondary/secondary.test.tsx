@@ -106,15 +106,18 @@ describe('Settings', () => {
     expect(within(row).getByText('Enabled')).toBeInTheDocument()
     expect(within(row).queryByText('Final assessment')).toBeNull()
     expect(row).toHaveTextContent('Category: linguistic')
+    expect(row).not.toHaveTextContent('Depends on')
+    expect(within(row).queryByText('Not selectable')).toBeNull()
     expect(mocked(row)).toBeNull()
     const claims = screen.getByText('Claims').closest('.analyzer-row') as HTMLElement
     expect(within(claims).getByText('Disabled')).toBeInTheDocument()
     expect(claims).toHaveTextContent('Depends on: rhetoric, x')
     const final = screen.getByText('Final synthesis').closest('.analyzer-row') as HTMLElement
     expect(within(final).getByText('Final assessment')).toBeInTheDocument()
+    expect(within(final).getByText('Not selectable')).toBeInTheDocument()
     expect(screen.getByText('● 2 of 3 analyzers enabled')).toBeInTheDocument()
     expect(screen.queryByText(/SECRET-UNKNOWN/)).toBeNull()
-    expect(fetchMock.mock.calls.map((c) => c[0])).toContain('/api/v1/analyzers')
+    expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/v1/analyzers')).toHaveLength(1)
   })
 
   it('shows an empty list', async () => {
