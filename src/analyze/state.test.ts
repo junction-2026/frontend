@@ -53,5 +53,15 @@ describe('previewSummary', () => {
     ['techniques', { detected_total: 3 }, '3 techniques detected'],
     ['translation', { translated: false }, 'not translated'],
     ['source_info', { summary: {} }, null],
+    ['propaganda_detection', { label: 'PROPAGANDA', score: 0.934 }, 'PROPAGANDA · 93% confidence'],
+    ['propaganda_detection', { label: 'NOT_PROPAGANDA', score: 0 }, 'NOT_PROPAGANDA · 0% confidence'],
+    ['propaganda_detection', { label: 'PROPAGANDA', score: 1 }, 'PROPAGANDA · 100% confidence'],
+    ['propaganda_detection', { label: 'PROPAGANDA', score: null }, 'PROPAGANDA'],
+    ['propaganda_detection', { label: 'PROPAGANDA' }, 'PROPAGANDA'],
+    ['propaganda_detection', { label: 'PROPAGANDA', score: 1.2 }, 'PROPAGANDA'],
+    ['propaganda_detection', { label: 'PROPAGANDA', score: NaN }, 'PROPAGANDA'],
+    ['propaganda_detection', { label: null, score: 0.9 }, null],
+    ['propaganda_detection', { score: 0.9 }, null],
+    ['propaganda_detection', {}, null],
   ])('%s', (key, preview, expected) => expect(previewSummary(key, preview)).toBe(expected))
 })
