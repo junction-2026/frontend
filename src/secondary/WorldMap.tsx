@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
-import { COUNTRIES, HEIGHT, WIDTH, countryName, plural, type Coverage } from './worldMapData'
+import { useLocale, useT } from '../i18n'
+import { COUNTRIES, HEIGHT, WIDTH, countryName, type Coverage } from './worldMapData'
 
 const FILL = { none: '#E9EDF2', low: '#DCEBFA', medium: '#BFD9F4', high: '#9FC4ED' }
 const HOVER = '#A7C9F0'
@@ -30,6 +31,8 @@ type Props = {
 }
 
 export function WorldMap({ coverage, selected, onSelect, interactive = true }: Props) {
+  const t = useT()
+  const { locale } = useLocale()
   const [view, setView] = useState(HOME)
   const [hover, setHover] = useState<Hover | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -113,7 +116,7 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
         className="world"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label="World coverage map"
+        aria-label={t('explore.map.aria')}
         onPointerDown={interactive ? down : undefined}
         onPointerMove={interactive ? move : undefined}
         onPointerUp={interactive ? up : undefined}
@@ -147,18 +150,18 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true }: P
       </svg>
       {interactive && (
         <div className="zoom-ops">
-          <button type="button" aria-label="Zoom in" disabled={view.k >= MAX_SCALE} onClick={() => zoomBy(STEP)}>+</button>
-          <button type="button" aria-label="Zoom out" disabled={view.k <= 1} onClick={() => zoomBy(1 / STEP)}>−</button>
-          <button type="button" aria-label="Reset" onClick={() => setView(HOME)}>↻</button>
+          <button type="button" aria-label={t('explore.map.zoom_in')} disabled={view.k >= MAX_SCALE} onClick={() => zoomBy(STEP)}>+</button>
+          <button type="button" aria-label={t('explore.map.zoom_out')} disabled={view.k <= 1} onClick={() => zoomBy(1 / STEP)}>−</button>
+          <button type="button" aria-label={t('explore.map.reset')} onClick={() => setView(HOME)}>↻</button>
         </div>
       )}
       {hover && (
         <div className="map-tooltip" role="tooltip" style={{ left: tipLeft!, top: tipTop!, width: TIP.w }}>
-          <strong>{countryName(hover.code, coverage)}</strong>
+          <strong>{countryName(hover.code, coverage, locale)}</strong>
           {hovered ? (
-            <span>{plural(hovered.articles, 'article')} · {plural(hovered.publishers, 'publisher')}</span>
+            <span>{t('explore.map.tooltip_counts', { articles: t('explore.article', { count: hovered.articles }), publishers: t('explore.publisher', { count: hovered.publishers }) })}</span>
           ) : (
-            <span>No verified publisher data</span>
+            <span>{t('explore.map.no_data')}</span>
           )}
         </div>
       )}

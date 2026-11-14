@@ -56,11 +56,12 @@
 }
 
 .bubble-user {
-  margin-left: auto;
+  margin-inline-start: auto;
   max-width: min(420px, 85%);
   padding: 0.75rem 0.95rem;
   background: var(--bg-soft);
-  border-radius: 16px 16px 4px 16px;
+  border-radius: 16px;
+  border-end-end-radius: 4px;
   margin-bottom: 0.85rem;
   font-size: 0.95rem;
 }
@@ -243,11 +244,11 @@
   display: grid;
   place-items: center;
   color: var(--muted);
-  border-right: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
 }
 
 .zoom-ops button:last-child {
-  border-right: none;
+  border-inline-end: none;
 }
 
 .map-stage {
@@ -292,7 +293,7 @@
 .map-stage .zoom-ops {
   position: absolute;
   top: 0.75rem;
-  right: 0.75rem;
+  inset-inline-end: 0.75rem;
   background: #fff;
 }
 
@@ -336,7 +337,7 @@
 .country-panel-actions {
   display: flex;
   gap: 1rem;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .field select {
@@ -718,17 +719,17 @@
 .btn-primary:disabled, .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 .analyzer-row .id-badge { font-family: ui-monospace, monospace; }
 .status-pill.gray { background: var(--bg-soft); color: var(--muted); }
-.settings-tabs .mock { margin-right: 0.3rem; }
+.settings-tabs .mock { margin-inline-end: 0.3rem; }
 .chat-input .chat-field { flex: 1; }
 .pipeline-grid .skip { color: var(--orange); }
 .edge-note { color: var(--muted); font-size: 0.8rem; }
 .edge-meta { color: var(--faint); font-size: 0.8rem; }
-.field { border: none; text-align: left; }
+.field { border: none; text-align: start; }
 .region-link { cursor: pointer; }
 .country-panel a { color: var(--blue); font-size: 0.82rem; font-weight: 650; }
 .chat-head h1 { margin: 0; display: inline-flex; align-items: center; gap: 0.55rem; font-size: 1.2rem; }
 .region-panel-head a { color: var(--blue); font-size: 0.82rem; font-weight: 650; }
-.ref-card { background: none; text-align: left; }
+.ref-card { background: none; text-align: start; }
 .suggestions a.accent { padding: 0.45rem 0.8rem; border-radius: var(--radius-pill); background: var(--purple-soft); color: #5a4582; font-size: 0.82rem; font-weight: 560; }
 .ref-card { color: inherit; }
 .context-bar .btn-secondary { align-self: flex-start; }
@@ -737,11 +738,11 @@
 .explore-note { margin: 0 0 0.9rem; padding: 0.7rem 0.9rem; border-radius: 12px; background: var(--bg-soft); color: var(--ink-2); font-size: 0.88rem; }
 .explore-topics { font-size: 0.88rem; }
 .explore-topics a, .explore-note a { color: var(--blue); font-weight: 650; }
-.country-headlines { margin: 0; padding-left: 1.1rem; flex-basis: 100%; font-size: 0.84rem; }
-.verified-chip input { margin-right: 0.3rem; }
+.country-headlines { margin: 0; padding-inline-start: 1.1rem; flex-basis: 100%; font-size: 0.84rem; }
+.verified-chip input { margin-inline-end: 0.3rem; }
 .field:disabled, .field input:disabled, .field select:disabled { opacity: 0.55; cursor: not-allowed; }
 .multi { position: relative; display: block; cursor: pointer; }
-.multi-list { position: absolute; z-index: 5; left: 0; top: 100%; min-width: 100%; max-height: 16rem; overflow: auto; display: grid; gap: 0.35rem; padding: 0.6rem; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.multi-list { position: absolute; z-index: 5; inset-inline-start: 0; top: 100%; min-width: 100%; max-height: 16rem; overflow: auto; display: grid; gap: 0.35rem; padding: 0.6rem; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
 .related { margin-top: 1rem; padding: 1.1rem; }
 .related-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
 .related-card { padding: 0.8rem 0.9rem; border-radius: 12px; background: var(--bg-soft); overflow-wrap: anywhere; }
