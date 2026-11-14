@@ -82,7 +82,7 @@
   display: grid;
   place-items: center;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .bubble-ai .content p {
@@ -135,7 +135,7 @@
   background: var(--bg-soft);
   color: var(--ink-2);
   font-size: 0.82rem;
-  font-weight: 560;
+  font-weight: 500;
 }
 
 .suggestions button.accent {
@@ -202,7 +202,7 @@
   border-radius: 12px;
   background: var(--green-soft);
   color: var(--green);
-  font-weight: 650;
+  font-weight: 600;
   font-size: 0.84rem;
   white-space: nowrap;
 }
@@ -553,7 +553,7 @@
   margin-bottom: 0.85rem;
   color: var(--faint);
   font-size: 0.72rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -717,18 +717,18 @@
 .edge-meta { color: var(--faint); font-size: 0.8rem; }
 .field { border: none; text-align: start; }
 .region-link { cursor: pointer; }
-.country-panel a { color: var(--blue); font-size: 0.82rem; font-weight: 650; }
+.country-panel a { color: var(--blue); font-size: 0.82rem; font-weight: 600; }
 .chat-head h1 { margin: 0; display: inline-flex; align-items: center; gap: 0.55rem; font-size: 1.2rem; }
-.region-panel-head a { color: var(--blue); font-size: 0.82rem; font-weight: 650; }
+.region-panel-head a { color: var(--blue); font-size: 0.82rem; font-weight: 600; }
 .ref-card { background: none; text-align: start; }
-.suggestions a.accent { padding: 0.45rem 0.8rem; border-radius: var(--radius-pill); background: var(--purple-soft); color: #5a4582; font-size: 0.82rem; font-weight: 560; }
+.suggestions a.accent { padding: 0.45rem 0.8rem; border-radius: var(--radius-pill); background: var(--purple-soft); color: #5a4582; font-size: 0.82rem; font-weight: 500; }
 .ref-card { color: inherit; }
 .context-bar .btn-secondary { align-self: flex-start; }
 
 /* Explore: real coverage */
 .explore-note { margin: 0 0 0.9rem; padding: 0.7rem 0.9rem; border-radius: 12px; background: var(--bg-soft); color: var(--ink-2); font-size: 0.88rem; }
 .explore-topics { font-size: 0.88rem; }
-.explore-topics a, .explore-note a { color: var(--blue); font-weight: 650; }
+.explore-topics a, .explore-note a { color: var(--blue); font-weight: 600; }
 .country-headlines { margin: 0; padding-inline-start: 1.1rem; flex-basis: 100%; font-size: 0.84rem; }
 .verified-chip input { margin-inline-end: 0.3rem; }
 .field:disabled, .field input:disabled, .field select:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -737,6 +737,6 @@
 .related { margin-top: 1rem; padding: 1.1rem; }
 .related-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
 .related-card { padding: 0.8rem 0.9rem; border-radius: 12px; background: var(--bg-soft); overflow-wrap: anywhere; }
-.related-card a { color: var(--blue); font-weight: 650; }
+.related-card a { color: var(--blue); font-weight: 600; }
 .related-card p { margin: 0.3rem 0 0; font-size: 0.86rem; color: var(--ink-2); }
 .related-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; margin-top: 0.25rem; font-size: 0.8rem; color: var(--muted); }
