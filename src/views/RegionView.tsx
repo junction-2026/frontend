@@ -1,5 +1,6 @@
 import { Link } from '../router'
 import { WorldMap } from '../secondary/WorldMap'
+import { EXPLORE_MOCK_COVERAGE } from '../secondary/exploreMockCoverage'
 import { Mock } from '../ui/MockBadge'
 import '../secondary/secondary.css'
 
@@ -38,12 +39,10 @@ export default function RegionView() {
                   </label>
                 </div>
               </div>
-              <div className="map-stage" style={{ minHeight: 280 }}>
-                <WorldMap compact />
-              </div>
+              <WorldMap coverage={EXPLORE_MOCK_COVERAGE} selected="FI" interactive={false} />
               <div className="map-legend">
                 <div className="legend-swatches">
-                  <span className="swatch"><i className="c" /> Selected Zone</span>
+                  <span className="swatch"><i className="sel" /> Selected Zone</span>
                   <span className="swatch"><i className="a" /> Peripheral Scan</span>
                 </div>
                 <span>Mercator Scan 60.1699° N, 24.9384° E · Updated 8 min ago</span>

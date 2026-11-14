@@ -252,50 +252,109 @@
 
 .map-stage {
   position: relative;
-  min-height: 340px;
-  border-radius: 12px;
-  background:
-    linear-gradient(180deg, #eef3fb 0%, #e7eef8 100%);
+  border-radius: 24px;
+  border: 1px solid #e8e8e6;
+  background: #f5f9fe;
+  box-shadow: none;
   overflow: hidden;
 }
 
 .map-stage svg.world {
+  display: block;
   width: 100%;
-  height: 340px;
+  height: auto;
+  touch-action: none;
+}
+
+.map-stage .country {
+  transition: fill 200ms, stroke-width 200ms;
+}
+
+.map-stage .country.live {
+  cursor: pointer;
+}
+
+.map-stage .map-view {
+  transition: transform 250ms ease-out;
+}
+
+.map-stage.dragging .map-view {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-stage .country,
+  .map-stage .map-view {
+    transition: none;
+  }
+}
+
+.map-stage .zoom-ops {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #fff;
+}
+
+.zoom-ops button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .map-tooltip {
   position: absolute;
-  left: 58%;
-  top: 28%;
-  width: 230px;
-  padding: 0.85rem 0.9rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
   background: #fff;
   border-radius: 12px;
   box-shadow: var(--shadow);
-  border: 1px solid var(--line);
+  font-size: 0.84rem;
+  color: var(--muted);
+  pointer-events: none;
 }
 
 .map-tooltip strong {
-  display: block;
-  margin-bottom: 0.25rem;
+  color: var(--ink);
+  font-size: 0.9rem;
 }
 
-.map-tooltip p {
-  margin: 0 0 0.45rem;
+.country-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  font-size: 0.88rem;
+}
+
+.country-panel-actions {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.field select {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.filters > * { min-width: 0; }
+
+.field-clear {
   color: var(--muted);
-  font-size: 0.84rem;
-}
-
-.map-tooltip .ok {
-  color: var(--green);
-  font-weight: 650;
-}
-
-.map-tooltip button {
-  color: var(--blue);
-  font-size: 0.82rem;
-  font-weight: 650;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .map-legend {
@@ -310,6 +369,7 @@
 
 .legend-swatches {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
 }
@@ -327,15 +387,11 @@
   display: inline-block;
 }
 
-.swatch i.a {
-  background: #d7e2f2;
-}
-.swatch i.b {
-  background: #9eb8e8;
-}
-.swatch i.c {
-  background: #6f96d8;
-}
+.swatch i.a { background: #e9edf2; }
+.swatch i.b { background: #dcebfa; }
+.swatch i.c { background: #bfd9f4; }
+.swatch i.d { background: #9fc4ed; }
+.swatch i.sel { background: #7fade5; }
 
 .explore-split {
   display: grid;
@@ -669,7 +725,7 @@
 .edge-meta { color: var(--faint); font-size: 0.8rem; }
 .field { border: none; text-align: left; }
 .region-link { cursor: pointer; }
-.map-tooltip a { color: var(--blue); font-size: 0.82rem; font-weight: 650; }
+.country-panel a { color: var(--blue); font-size: 0.82rem; font-weight: 650; }
 .chat-head h1 { margin: 0; display: inline-flex; align-items: center; gap: 0.55rem; font-size: 1.2rem; }
 .region-panel-head a { color: var(--blue); font-size: 0.82rem; font-weight: 650; }
 .ref-card { background: none; text-align: left; }
