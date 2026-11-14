@@ -45,7 +45,7 @@ Lookup SHALL go active locale → `en` → the key itself; a missing key SHALL N
 - **THEN** no non-en catalog has a key or placeholder absent from en
 
 ### Requirement: Initial locale and persistence
-The initial locale SHALL be a valid `localStorage['stiriri.locale']`, else a valid legacy `localStorage['veil.locale']`, else the first `navigator.languages` entry whose primary subtag is supported, else `en`; an invalid stored value SHALL be ignored. A valid `stiriri.locale` SHALL win over the legacy key. `setLocale` SHALL store the locale under `stiriri.locale`; storage exceptions SHALL be caught and the locale kept in memory.
+The initial locale SHALL be a valid `localStorage['veil.locale']`, else a valid legacy `localStorage['stiriri.locale']`, else the first supported `navigator.languages` primary subtag, else `en`. Invalid stored values SHALL be ignored and a valid `veil.locale` SHALL win. `setLocale` SHALL store under `veil.locale`; storage exceptions SHALL be caught and the locale kept in memory.
 
 #### Scenario: Navigator detection
 - **WHEN** nothing is stored and `navigator.languages` is `['fi-FI']` (or `['ja']`)
@@ -53,14 +53,14 @@ The initial locale SHALL be a valid `localStorage['stiriri.locale']`, else a val
 
 #### Scenario: Reload keeps the choice
 - **WHEN** the user selects de and the app is mounted again
-- **THEN** the locale is de and `localStorage['stiriri.locale']` is `de`
+- **THEN** the locale is de and `localStorage['veil.locale']` is `de`
 
 #### Scenario: Legacy key adopted
-- **WHEN** only `localStorage['veil.locale']` is `de`
-- **THEN** the locale is `de`; the client SHOULD write `stiriri.locale` and MAY remove `veil.locale`
+- **WHEN** only `localStorage['stiriri.locale']` is `de`
+- **THEN** the locale is `de`; the client SHALL write `veil.locale` as `de` and remove `stiriri.locale`
 
 #### Scenario: New key wins
-- **WHEN** `veil.locale` is `de` and `stiriri.locale` is `fi`
+- **WHEN** `stiriri.locale` is `de` and `veil.locale` is `fi`
 - **THEN** the locale is `fi`
 
 ### Requirement: Document language and direction
@@ -85,8 +85,8 @@ The shell, base, components and analyze CSS SHALL use logical properties instead
 - **THEN** the top bar and Home render mirrored without overflow
 
 ### Requirement: Brand name in catalogs
-Every string in the en, de, fr, fi and ar catalogs that names the product SHALL use "Stiriri" unchanged (never translated or transliterated), grammatically inflected where the language requires it. The French common noun "veille" is not the brand and is unchanged.
+Every string in the en, de, fr, fi and ar catalogs that names the product SHALL use "VEIL" (all caps) unchanged (never translated or transliterated), grammatically inflected where the language requires it. The French common noun "veille" is not the brand and is unchanged.
 
 #### Scenario: Inflection
-- **WHEN** the fi catalog says "ask Stiriri" or "Stiriri's"
-- **THEN** the strings read "Kysy Stiririltä" and "Stiririn", and the de string reads "Stiriri fragen"
+- **WHEN** the fi catalog says "ask VEIL" or "VEIL's"
+- **THEN** the strings read "Kysy VEILiltä" and "VEILin", the fi mock label reads "Ask VEIL:llä ei ole taustajärjestelmää", the de string reads "VEIL fragen" and the fr string reads "Demander à VEIL"

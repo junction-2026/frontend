@@ -168,7 +168,7 @@ Each verdict state SHALL use its own background token, heading and body text as 
 
 #### Scenario: Detected
 - **WHEN** the verdict is `detected`
-- **THEN** the background is `--verdict-detected-bg` (#E4F3E8), the heading "Yes, propaganda detected." and the text "Stiriri identified signs of manipulative messaging in this content."
+- **THEN** the background is `--verdict-detected-bg` (#E4F3E8), the heading "Yes, propaganda detected." and the text "VEIL identified signs of manipulative messaging in this content."
 
 #### Scenario: Uncertain
 - **WHEN** the verdict is `uncertain` or unknown
@@ -176,7 +176,7 @@ Each verdict state SHALL use its own background token, heading and body text as 
 
 #### Scenario: Not detected
 - **WHEN** the verdict is `not_detected`
-- **THEN** the background is `--verdict-not-detected-bg` (#E6F0FF), the heading "No clear signs of propaganda." and the text "Stiriri did not identify strong indicators of propaganda in this content."
+- **THEN** the background is `--verdict-not-detected-bg` (#E6F0FF), the heading "No clear signs of propaganda." and the text "VEIL did not identify strong indicators of propaganda in this content."
 
 ### Requirement: Non-verdict states
 Job and finalization states without a completed result SHALL render as a neutral or error card using the existing pill tones, never a verdict background, heading or confidence. "View detailed analysis" SHALL stay available in all of them so analyzer results remain reachable, including those of a `cancelled` job.
@@ -197,7 +197,7 @@ The verdict component SHALL show `${Math.round(c * 100)}% confidence` when `resu
 - **THEN** "Confidence unavailable" is shown and no `%`
 
 ### Requirement: Confidence tooltip
-Next to the confidence line a button with `aria-label` "What does confidence mean?" SHALL show an element with `role="tooltip"` on hover and focus and hide it on blur, mouse leave and Escape; the button SHALL reference it with `aria-describedby`. The tooltip text SHALL be "How confident Stiriri's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda."
+Next to the confidence line a button with `aria-label` "What does confidence mean?" SHALL show an element with `role="tooltip"` on hover and focus and hide it on blur, mouse leave and Escape; the button SHALL reference it with `aria-describedby`. The tooltip text SHALL be "How confident VEIL's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda."
 
 #### Scenario: Focus
 - **WHEN** the button receives keyboard focus
@@ -215,7 +215,7 @@ Next to the confidence line a button with `aria-label` "What does confidence mea
 - **THEN** 280 code points and "…" are shown and pressing "Show full explanation" sets `aria-expanded` to true and shows all 300
 
 ### Requirement: Initial actions
-Below the verdict the Results screen SHALL show a primary `<button>` "View detailed analysis" (class `btn-primary`) and a secondary link "Ask Stiriri" (class `btn-secondary`, `href` `/ask`). Apart from the meta row (job id, duration, "Watch live progress" while not done) and, for non-verdict states, the state card, nothing else SHALL be shown in the initial view.
+Below the verdict the Results screen SHALL show a primary `<button>` "View detailed analysis" (class `btn-primary`) and a secondary link "Ask VEIL" (class `btn-secondary`, `href` `/ask`). Apart from the meta row (job id, duration, "Watch live progress" while not done) and, for non-verdict states, the state card, nothing else SHALL be shown in the initial view.
 
 #### Scenario: Initial view
 - **WHEN** a completed job with techniques and analyzers is shown
@@ -332,9 +332,9 @@ In the detailed analysis region the "Polarity / Intensity" signal row, "High rhe
 - **WHEN** Results renders for job `j 1`
 - **THEN** the link "Explore coverage" has `href` `/explore?job=j%201` and no "Cross-source coverage" link exists
 
-### Requirement: Ask Stiriri link on Results
-The Ask Stiriri call-to-action card SHALL NOT be shown on Results; the compact "Ask Stiriri" link carries no data and SHALL NOT be wrapped in `Mock`.
+### Requirement: Ask VEIL link on Results
+The Ask VEIL call-to-action card SHALL NOT be shown on Results; the compact "Ask VEIL" link carries no data and SHALL NOT be wrapped in `Mock`.
 
-#### Scenario: Ask Stiriri link
+#### Scenario: Ask VEIL link
 - **WHEN** the Results screen is shown
-- **THEN** the "Ask Stiriri" link points to `/ask`, has no `Mock` ancestor and no "Have questions about this verdict" card is shown
+- **THEN** the "Ask VEIL" link points to `/ask`, has no `Mock` ancestor and no "Have questions about this verdict" card is shown
