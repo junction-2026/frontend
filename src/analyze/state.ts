@@ -38,14 +38,18 @@ function planFromJob(job: Job): PlanEntry[] {
     .map((a) => ({ id: a.id, name: a.name, activity_key: a.id, depends_on: a.depends_on ?? [], phase: 1 }))
 }
 
-// Fills from a Job fetched over REST (polling fallback). A plan or progress already known from events is kept.
+// Fills from a Job fetched over REST (polling fallback). A plan already known from events is kept; progress is
+// always recomputed from the job, since no event carries it any more.
 export function applyJob(s: State, job: Job): State {
   const plan = s.plan ?? planFromJob(job)
-  const settled = plan.filter((p) => ['succeeded', 'failed', 'skipped'].includes(job.analyzers.find((a) => a.id === p.id)?.status ?? '')).length
-  return {
-    ...s, job, status: job.status, plan, runs: runsOf(job), finalization: job.finalization, terminal: terminalOf(job),
-    progress: s.plan ? s.progress : { done: settled, running: [], total: plan.length },
+  const statusOf = (p: PlanEntry) => (p.activity_key === 'finalizer' ? job.finalization?.status : job.analyzers.find((a) => a.id === p.id)?.status) ?? 'pending'
+  const statuses = plan.map(statusOf)
+  const progress = {
+    done: statuses.filter((x) => ['succeeded', 'completed', 'failed', 'skipped'].includes(x)).length,
+    running: plan.filter((_, i) => statuses[i] === 'running').map((p) => p.id),
+    total: plan.length,
   }
+  return { ...s, job, status: job.status, plan, runs: runsOf(job), finalization: job.finalization, terminal: terminalOf(job), progress }
 }
 
 // Applies one event. An event that is not newer than the last applied one is ignored, so a late Progress never moves

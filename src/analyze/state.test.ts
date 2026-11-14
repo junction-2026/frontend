@@ -27,6 +27,15 @@ describe('applyEvent', () => {
     expect(s.progress).toEqual({ done: 1, running: [], total: 1 })
     expect(applyJob({ ...s, plan: [] }, j).plan).toEqual([])
   })
+
+  it('recomputes progress from the polled job when a plan from events is kept', () => {
+    const plan = ['a', 'b', 'c', 'fin'].map((id) => ({ id, name: id, activity_key: id === 'fin' ? 'finalizer' : id, depends_on: [], phase: 1 }))
+    const snap = applyEvent(initialState, ev('job.snapshot', 4, { job, plan: { analyzers: plan }, progress: { done: 1, running: ['b'], total: 4 } }))
+    expect(snap.progress?.done).toBe(1)
+    const run = (id: string, status: string) => ({ id, name: id, status, depends_on: [] })
+    const polled = { ...(job as object), analyzers: [run('a', 'succeeded'), run('b', 'failed'), run('c', 'skipped')], finalization: { status: 'running' } } as never
+    expect(applyJob(snap, polled).progress).toEqual({ done: 3, running: ['fin'], total: 4 })
+  })
 })
 
 describe('ledgerRows', () => {
