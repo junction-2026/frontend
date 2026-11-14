@@ -198,3 +198,26 @@
   font-style: italic;
   font-weight: 400;
 }
+
+/* Term context: one card per term; the differing quotes carry a marker. Existing tokens only. */
+.term-card {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+}
+.term-quote {
+  align-self: stretch;
+  padding-inline-start: 0.7rem;
+  border-inline-start: 2px solid var(--line);
+}
+.term-quote[data-differs], .term-quote li[data-differs] {
+  border-inline-start: 4px solid var(--purple);
+}
+.term-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.term-quote .wiki-values > li {
+  margin-block: 0.4rem;
+  font-style: normal;
+}

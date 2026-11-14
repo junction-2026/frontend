@@ -10,6 +10,7 @@ export type Llm = { unavailable: boolean; findings: Finding[]; lang: string | un
 const LLM_LABELS = ['evidence_certainty_mismatch', 'misleading_headline', 'statistical_cherry_picking']
 export const str = (v: unknown) => (typeof v === 'string' && v !== '' ? v : undefined)
 
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 export const run = (job: Job, id: string) => job.analyzers?.find((a) => a.id === id)
 
 // null when the techniques run is missing, not succeeded or has no usable result.
@@ -38,6 +39,15 @@ export function readLlm(job: Job): Llm | null {
     return [{ index, label: o.label, name: o.name as string, definition: o.definition as string, explanation: o.explanation as string, span: span as Record<string, unknown> }]
   })
   return { unavailable: false, findings, lang: str(res.explanation_language) }
+}
+
+// null while the run is pending or running; undefined when it is missing, skipped, failed or has no usable `terms`.
+export function readTermContext(job: Job): Record<string, unknown>[] | undefined | null {
+  const r = run(job, 'term_context')
+  if (r?.status === 'pending' || r?.status === 'running') return null
+  const res = r?.result
+  if (r?.status !== 'succeeded' || !isObj(res) || !Array.isArray(res.terms)) return undefined
+  return res.terms.filter((c): c is Record<string, unknown> => isObj(c) && !!str(c.term))
 }
 
 export function plain(d: Detection) {
