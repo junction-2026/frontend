@@ -7,7 +7,8 @@ const HOVER = '#A7C9F0'
 const SELECTED = '#7FADE5'
 const MAX_SCALE = 8
 const STEP = 1.5
-const TIP = { w: 210, h: 84, gap: 14, pad: 8 }
+const TIP_COVERAGE = { w: 210, h: 84, gap: 14, pad: 8 }
+const TIP_CUSTOM = { ...TIP_COVERAGE, w: 280, h: 150 } // custom content has a count line and a technique list
 const DRAG_PX = 3
 
 type View = { k: number; x: number; y: number }
@@ -122,6 +123,7 @@ export function WorldMap({ coverage, selected, onSelect, interactive = true, fil
   }
 
   const hovered = hover && coverage[hover.code]
+  const TIP = renderTooltip ? TIP_CUSTOM : TIP_COVERAGE
   const tipLeft = hover && clamp(hover.x + TIP.gap, TIP.pad, Math.max(TIP.pad, hover.w - TIP.w - TIP.pad))
   const tipTop = hover && clamp(hover.y - TIP.h - TIP.gap > TIP.pad ? hover.y - TIP.h - TIP.gap : hover.y + TIP.gap, TIP.pad, Math.max(TIP.pad, hover.h - TIP.h - TIP.pad))
 
