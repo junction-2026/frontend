@@ -6,11 +6,15 @@ Defines the Explore, Region, Ask, States and Settings screens: their layout and 
 ## Requirements
 
 ### Requirement: Explore and Region screens
-`/explore` and `/explore/region` SHALL render an `<h1>` "Explore the world." and keep the filters, the map card, the statistics and the region details each wrapped in `Mock` (`data-mock="true"`). On `/explore` the map card, its info panel and legend are inside the "Coverage map" `Mock`. The map card statistics SHALL come only from the typed mock coverage dataset; no other statistic (such as a flagged-propaganda count) is shown.
+`/explore` and `/explore/region` SHALL render an `<h1>` "Explore the world.". On `/explore` nothing SHALL be wrapped in `Mock`: filters, map, tooltip, country panel and list are real (capability `explore-coverage`). On `/explore/region` the selected-region map, the statistics and the region details SHALL each stay wrapped in `Mock` (`data-mock="true"`) and use the typed mock coverage dataset; no other statistic (such as a flagged-propaganda count) is shown.
 
 #### Scenario: Blocks are marked
-- **WHEN** `/explore` or `/explore/region` is rendered
-- **THEN** the filters, map card, statistics and region details each sit inside a `[data-mock="true"]` element
+- **WHEN** `/explore/region` is rendered
+- **THEN** the map, statistics and region details each sit inside a `[data-mock="true"]` element
+
+#### Scenario: Explore is not marked
+- **WHEN** `/explore` is rendered
+- **THEN** its page content has no `[data-mock="true"]` element
 
 ### Requirement: Explore and Region navigation
 The "Inspect wire feeds →" link in the Explore country panel SHALL navigate to `/explore/region`, and "Clear selection ×" on Region SHALL navigate to `/explore`. Clicking a country on the Explore map SHALL select it and SHALL NOT navigate.
@@ -130,11 +134,11 @@ On pointer enter an interactive country SHALL be highlighted and on leave its ba
 - **THEN** the fill is `#A7C9F0` while hovered, `#9FC4ED` after leaving and `#7FADE5` while selected
 
 ### Requirement: Map tooltip
-On hover a tooltip SHALL appear near the pointer and hide on leave. It SHALL be white with a 12px radius, a subtle shadow, the app's sans font and comfortable padding, and its position SHALL be clamped inside the map container. It SHALL show the country name with "N articles" and "N publishers" for covered countries, or the name and "No verified publisher data" otherwise.
+On hover a tooltip SHALL appear near the pointer and hide on leave. It SHALL be white with a 12px radius, a subtle shadow, the app's sans font and comfortable padding, and its position SHALL be clamped inside the map container. It SHALL show the country name with "N articles · M publishers" for covered countries, or the name and "No verified publisher data" otherwise.
 
 #### Scenario: Finland tooltip
-- **WHEN** the pointer enters Finland on `/explore`
-- **THEN** the tooltip contains "Finland", "12 articles" and "4 publishers" and no text about propaganda
+- **WHEN** the pointer enters Finland and its coverage is 12 articles and 4 publishers
+- **THEN** the tooltip contains "Finland" and "12 articles · 4 publishers" and no text about propaganda
 
 #### Scenario: Uncovered country
 - **WHEN** the pointer enters a country without coverage
@@ -161,40 +165,12 @@ Dragging (mouse and touch pointer events) SHALL pan the map and a two-finger pin
 - **WHEN** the map is zoomed in and dragged far beyond its edge
 - **THEN** the translation stops at the map edge and the wheel event is default-prevented
 
-### Requirement: Explore filters and state
-`ExploreView` SHALL hold controlled state for the topic (initial value the existing mock topic text), the country (alpha-2 or null) and the unchanged mock Languages and Publishers controls. Selecting or clearing a country SHALL NOT change the topic, language or publisher values.
-
-#### Scenario: Topic unchanged
-- **WHEN** the user selects and clears a country
-- **THEN** the Topic input keeps its value
-
 ### Requirement: Country select
 The Country filter SHALL be a native `<select aria-label="Country">` listing "All regions" and every interactive map country sorted by name, plus a "Clear country" × button while a country is selected. Choosing a country selects it exactly as a map click does and "All regions" clears it.
 
 #### Scenario: Map and select stay in sync
 - **WHEN** the user clicks Finland, clears it with "Clear selection", then picks Finland in the Country select
 - **THEN** the select shows Finland, then "All regions", then Finland again, and the Finland path is selected after the first and last step
-
-### Requirement: Explore country panel
-When a country is selected the map card SHALL show, inside the "Coverage map" `Mock`, a panel with the country name, its articles and publishers, a "Clear selection" button and the link "Inspect wire feeds →" to `/explore/region`. For an uncovered country it SHALL show "No verified publisher data for <name>" instead of numbers.
-
-#### Scenario: Uncovered country panel
-- **WHEN** the user picks Antarctica in the Country select
-- **THEN** the panel reads "No verified publisher data for Antarctica" and shows no counts
-
-### Requirement: Explore mock coverage data
-The coverage dataset SHALL live in its own typed module keyed by alpha-2 with explicit articles, publishers and level per country (Finland: 12 articles, 4 publishers, high) and SHALL NOT be inferred from article language. The map card subtitle SHALL read "<sum of publishers> verified publishers across <number of covered countries> countries".
-
-#### Scenario: Subtitle from the dataset
-- **WHEN** `/explore` renders the mock dataset
-- **THEN** the subtitle states the summed publishers and the number of dataset countries
-
-### Requirement: Explore empty coverage
-With an empty dataset the subtitle SHALL read "No verified publisher-country data yet", every country SHALL use the no-coverage colour, tooltips SHALL show "No verified publisher data" and the rest of Explore SHALL keep working.
-
-#### Scenario: Empty dataset
-- **WHEN** Explore renders with an empty coverage dataset
-- **THEN** the subtitle reads "No verified publisher-country data yet" and Finland's fill is `#E9EDF2`
 
 ### Requirement: Region map
 `/explore/region` SHALL replace its hand-drawn map with the same `WorldMap` using `interactive={false}` and `selected="FI"`, without zoom controls; the rest of the screen is unchanged.

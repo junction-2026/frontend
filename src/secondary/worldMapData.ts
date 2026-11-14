@@ -6,7 +6,7 @@ import { ALPHA2_BY_NUMERIC } from './countryCodes'
 
 export type Level = 'low' | 'medium' | 'high'
 /** Keyed by upper-case ISO 3166-1 alpha-2. */
-export type Coverage = Record<string, { name?: string; articles: number; publishers: number; level: Level }>
+export type Coverage = Record<string, { name?: string; articles: number; publishers: number; languages?: string[]; level: Level }>
 export type Country = { code: string | null; name: string; d: string }
 
 export const WIDTH = 960
@@ -25,5 +25,6 @@ export const COUNTRIES: Country[] = feature(topo, topo.objects.countries as Geom
 const NAMES = new Map(COUNTRIES.flatMap((c) => (c.code ? [[c.code, c.name] as const] : [])))
 /** Every interactive country, for the Country select. */
 export const SELECTABLE = [...NAMES].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name))
+export const bundledName = (code: string) => NAMES.get(code)
 export const countryName = (code: string, coverage: Coverage) => coverage[code]?.name ?? NAMES.get(code) ?? code
 export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`

@@ -54,7 +54,7 @@ function Detailed({ job, id }: { job: Job; id: string }) {
           </div>
         )}
         <div className="verdict-actions">
-          <Link className="btn-link" href="/explore">Cross-source coverage →</Link>
+          <Link className="btn-link" href={`/explore?job=${encodeURIComponent(job.id)}`}>Explore coverage</Link>
           <Link className="btn-link" href={`/jobs/${encodeURIComponent(job.id)}/detail`}>Open detailed analysis page</Link>
           <span className="spacer" />
           <button type="button" className="icon-btn" aria-label={copied ? 'Copied' : 'Copy'} title="Copy link to this page" onClick={() => void copy()}>
