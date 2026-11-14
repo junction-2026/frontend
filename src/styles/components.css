@@ -54,6 +54,7 @@
   margin: 0 auto 1rem;
   color: var(--muted);
   font-size: 0.8rem;
+}
 
 .tag {
   display: inline-flex;

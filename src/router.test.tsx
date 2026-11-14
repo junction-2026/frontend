@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { matchRoute } from './router'
 
-beforeEach(() => vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))))
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+  vi.stubGlobal('WebSocket', class { close() {} }) // the live view opens an event stream
+})
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -38,20 +41,20 @@ describe('matchRoute', () => {
 })
 
 describe('routes render their stub view in the shell', () => {
-  it.each([
-    ['/', 'Home'],
-    ['/jobs/j1/live', 'Analyzing'],
-    ['/jobs/j1/detail', 'Detail'],
-    ['/history', 'History'],
+  it.each<[string, string | RegExp, number?]>([
+    ['/', 'See beyond the narrative.'],
+    ['/jobs/j1/live', 'Analyzing your content...', 2],
+    ['/jobs/j1/detail', 'Detailed analysis'],
+    ['/history', 'Analysis History'],
     ['/explore', 'Explore the world.'],
     ['/explore/region', 'Explore the world.'],
     ['/ask', /^Ask VEIL/],
     ['/settings', 'Settings & Methodology'],
     ['/states', 'Edge Cases & System States'],
-    ['/unknown', 'Home'],
-  ])('%s', (path, heading) => {
+    ['/unknown', 'See beyond the narrative.'],
+  ])('%s', (path, heading, level = 1) => {
     open(path)
-    expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level, name: heading })).toBeInTheDocument()
     expect(screen.getByRole('banner')).toHaveTextContent('VEIL / Intelligence')
   })
 
@@ -71,7 +74,7 @@ describe('legacy ?job link', () => {
   it('keeps Home for an empty id', () => {
     open('/?job=')
     expect(window.location.search).toBe('?job=')
-    expect(screen.getByRole('heading', { level: 1, name: 'Home' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'See beyond the narrative.' })).toBeInTheDocument()
   })
 })
 
@@ -103,7 +106,7 @@ describe('navigation', () => {
     open('/')
     fireEvent.click(nav('History'))
     expect(window.location.pathname).toBe('/history')
-    expect(screen.getByRole('heading', { level: 1, name: 'History' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Analysis History' })).toBeInTheDocument()
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
     act(() => {
       window.history.back()
