@@ -20,7 +20,9 @@ export function Chat({ id, status, done }: { id: string; status: string; done: b
   const [draft, setDraft] = useState('')
   const countId = useId()
   const end = useRef<HTMLDivElement>(null)
-  useEffect(() => end.current?.scrollIntoView?.({ block: 'nearest' }), [messages.length, pending, error])
+  useEffect(() => {
+    end.current?.scrollIntoView?.({ block: 'nearest' }) // braces: Chromium returns a Promise, which must not become the cleanup
+  }, [messages.length, pending, error])
 
   const effective = conflict ?? status
   const blocked = effective !== 'completed'
