@@ -141,42 +141,6 @@
   font-weight: 500;
 }
 
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.9rem;
-  margin: 1.8rem auto 0;
-  max-width: 660px;
-}
-
-.feature {
-  padding: 1.15rem 1.2rem;
-}
-
-.feature-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--bg-soft);
-  display: grid;
-  place-items: center;
-  margin-bottom: 0.8rem;
-  color: var(--ink-2);
-}
-
-.feature h3 {
-  margin: 0 0 0.4rem;
-  font-size: 1rem;
-  letter-spacing: -0.02em;
-}
-
-.feature p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
 /* ——— Analyzing ——— */
 .quote-banner {
   padding: 1.1rem 1.25rem;
@@ -522,12 +486,6 @@
 @media (prefers-reduced-motion: reduce) {
   .progress-ring > svg {
     animation: none;
-  }
-}
-
-@media (max-width: 960px) {
-  .feature-grid {
-    grid-template-columns: 1fr;
   }
 }
 

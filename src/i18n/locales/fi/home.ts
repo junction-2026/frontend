@@ -22,11 +22,6 @@ export default {
   'sample.breaking.text': 'Uutinen: viranomaiset ovat pulassa kriisin syventyessä – lähteiden mukaan yleisö on pidetty pimennossa kuukausia.',
   'sample.editorial.label': 'Toimituksellisten kehysten vertailu',
   'sample.editorial.text': 'Vaikka kriitikot väittävät uudistusta kiireelliseksi, tarkempi katsaus lukuihin kertoo hiljaisemman tarinan kannustimista ja kehystyksestä.',
-  'feature_card': 'Ominaisuuskortti: {title}',
-  'feature.dissection.title': 'Puolueeton erittely',
-  'feature.dissection.text': 'Erottaa varmennetut tosiasiaoletukset manipuloivasta retoriikasta, sävyn virittämisestä ja valikoivasta pois jättämisestä.',
-  'feature.provenance.title': 'Alkuperä ja signaalit',
-  'feature.provenance.text': 'Tarkastaa kehäviittaukset, alkuperän osoittamisen aikajanat ja automaattisen koordinoidun vahvistamisen kuviot.',
   'url_too_long': 'Linkki on pidempi kuin {max} merkkiä.',
   'url_invalid': 'Anna täydellinen linkki, joka alkaa http:// tai https://.',
 }
