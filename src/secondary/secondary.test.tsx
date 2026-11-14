@@ -178,6 +178,14 @@ describe('Localized screens', () => {
     expect(screen.getByRole('link', { name: 'Avaa historia →' })).toBeInTheDocument()
   })
 
+  it('translates Explore in Russian', () => {
+    localStorage.setItem('veil.locale', 'ru')
+    open('/explore')
+    expect(screen.getByRole('heading', { level: 1, name: 'Исследуйте мир.' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Открыть историю →' })).toBeInTheDocument()
+    expect(document.documentElement).toHaveAttribute('lang', 'ru')
+  })
+
   it('translates Ask, still all mock and without a request', () => {
     localStorage.setItem('veil.locale', 'de')
     open('/ask')

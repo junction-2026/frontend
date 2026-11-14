@@ -5,7 +5,7 @@ const PLURAL = /_(zero|one|two|few|many|other)$/
 const base = (key: string) => key.replace(PLURAL, '')
 const ns = (key: string) => key.slice(0, key.indexOf('.'))
 const ph = (s: string) => [...new Set([...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort().join(',')
-const LOCALES = ['fr', 'ar', 'de', 'fi']
+const LOCALES = ['fr', 'ar', 'de', 'fi', 'ru']
 
 // Everything that makes a locale catalog incomplete against en: missing/extra keys, empty values, other placeholders, plural groups without `_other`.
 // Namespaces come from the keys themselves, so one added by another task is checked without editing this test.
@@ -28,7 +28,7 @@ const files = Object.keys(import.meta.glob('./locales/*/*.ts')).map((p) => /loca
 const namespaces = (lng: string) => files.filter(([l]) => l === lng).map(([, n]) => n).sort()
 
 describe('catalog completeness', () => {
-  it('has en, fr, ar, de and fi', () => expect(Object.keys(CATALOGS).sort()).toEqual(['ar', 'de', 'en', 'fi', 'fr']))
+  it('has en, fr, ar, de, fi and ru', () => expect(Object.keys(CATALOGS).sort()).toEqual(['ar', 'de', 'en', 'fi', 'fr', 'ru']))
 
   it('has no empty en value', () => {
     expect(Object.entries(CATALOGS.en).filter(([, v]) => !v.trim()).map(([k]) => k)).toEqual([])

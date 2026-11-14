@@ -1,9 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Shell } from '../ui/Shell'
 import HomeView from '../views/HomeView'
 import { errorMessage } from '../api/errors'
-import { I18nProvider, formatCountryName, formatNumber, formatPercent, formatRelativeTime, rich, useFormat, useLocale, useT } from '.'
+import { I18nProvider, formatCountryName, formatDate, formatNumber, formatPercent, formatRelativeTime, rich, useFormat, useLocale, useT } from '.'
 import { CATALOGS, MISSING, pluralCategory, translate } from './translate'
 
 const setLanguages = (langs: string[]) => vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(langs)
@@ -34,7 +34,7 @@ const pick = (code: string) => fireEvent.change(select(), { target: { value: cod
 describe('language selector', () => {
   it('lists the native labels, is not mock, and is focusable', async () => {
     render(app())
-    expect([...select().querySelectorAll('option')].map((o) => o.textContent)).toEqual(['English', 'Français', 'العربية', 'Deutsch', 'Suomi'])
+    expect([...select().querySelectorAll('option')].map((o) => o.textContent)).toEqual(['English', 'Français', 'العربية', 'Deutsch', 'Suomi', 'Русский'])
     expect(select().closest('[data-mock]')).toBeNull()
     expect(select().querySelector('option[value=ar]')).toHaveAttribute('lang', 'ar')
     expect(screen.getByRole('combobox', { name: 'Language' })).toBe(select())
@@ -72,6 +72,10 @@ describe('language selector', () => {
     pick('fr')
     expect(document.documentElement).toHaveAttribute('lang', 'fr')
     expect(document.documentElement).toHaveAttribute('dir', 'ltr')
+    pick('ru')
+    expect(document.documentElement).toHaveAttribute('lang', 'ru')
+    expect(document.documentElement).toHaveAttribute('dir', 'ltr')
+    expect(localStorage.getItem('veil.locale')).toBe('ru')
   })
 })
 
@@ -101,6 +105,14 @@ describe('initial locale', () => {
   it('uses the first supported navigator language by primary subtag', () => {
     setLanguages(['ja', 'fi-FI', 'de'])
     expect(current()).toBe('fi')
+  })
+  it('resolves ru-RU to ru and lets a stored ru win over the navigator', () => {
+    setLanguages(['ru-RU'])
+    expect(current()).toBe('ru')
+    cleanup()
+    setLanguages(['fi-FI'])
+    localStorage.setItem('veil.locale', 'ru')
+    expect(current()).toBe('ru')
   })
   it('falls back to en for unsupported languages', () => {
     setLanguages(['ja'])
@@ -132,6 +144,8 @@ describe('initial locale', () => {
     expect(CATALOGS.fi['results.ask']).toBe('Kysy VEILiltä')
     expect(CATALOGS.fr['results.ask']).toBe('Demander à VEIL')
     expect(CATALOGS.ar['results.ask']).toBe('اسأل VEIL')
+    expect(CATALOGS.ru['results.ask']).toBe('Спросить VEIL')
+    for (const [k, v] of Object.entries(CATALOGS.ru)) expect(v, k).not.toMatch(/ВЕИЛ|Вейл|Veil|veil/)
   })
   it('keeps working when storage throws', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('denied') })
@@ -152,6 +166,8 @@ describe('translate', () => {
     expect(translate('en', 'home.chars', { count: 3 })).toBe('3 chars')
     expect(translate('ar', 'home.chars', { count: 2 })).toBe('2 حرفان')
     expect(translate('ar', 'home.chars', { count: 5 })).toBe('5 أحرف')
+    for (const [n, form] of [[1, 'символ'], [2, 'символа'], [5, 'символов'], [11, 'символов'], [21, 'символ']] as const) expect(translate('ru', 'home.chars', { count: n })).toBe(`${n} ${form}`)
+    expect(translate('ru', 'home.chars', { count: 1.5 })).toBe('1.5 символа')
     expect(translate('en', 'common.errors.unknown_analyzer', { ids: 'a, b' })).toBe('Unknown analyzer: a, b.')
   })
   describe('missing keys', () => {
@@ -255,6 +271,16 @@ describe('Intl helpers', () => {
   })
   it('selects every Arabic plural category', () => {
     expect([0, 1, 2, 3, 11, 100].map((n) => pluralCategory(n, 'ar'))).toEqual(['zero', 'one', 'two', 'few', 'many', 'other'])
+  })
+  it('selects the Russian plural categories', () => {
+    expect([1, 2, 5, 11, 21, 1.5].map((n) => pluralCategory(n, 'ru'))).toEqual(['one', 'few', 'many', 'many', 'one', 'other'])
+  })
+  it('formats ru date, number, relative time and country name', () => {
+    expect(formatNumber(1234.5, undefined, 'ru').replace(/\s/g, ' ')).toBe('1 234,5')
+    expect(formatDate('2026-11-14T12:00:00Z', { dateStyle: 'long', timeZone: 'UTC' }, 'ru')).toBe('14 ноября 2026 г.')
+    expect(formatRelativeTime('2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', 'ru')).toBe('вчера')
+    expect(formatRelativeTime('2026-01-01T00:00:00Z', '2026-01-01T03:00:00Z', 'ru')).toBe('3 часа назад')
+    expect(formatCountryName('FI', 'Finland', 'ru')).toBe('Финляндия')
   })
   it('names countries in the locale and falls back to the given name', () => {
     expect(formatCountryName('FI', 'Finland', 'fr')).toBe('Finlande')
