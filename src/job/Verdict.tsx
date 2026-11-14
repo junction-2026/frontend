@@ -1,13 +1,13 @@
 import { useId, useState } from 'react'
 import { verdictOf, type Job } from '../api/types'
-import { useFormat, useT } from '../i18n'
+import { useFormat, useLocale, useT } from '../i18n'
 import { userTextEntry, useLoc, useLocalizedText } from './localize'
 import { timedOut } from './read'
+import { summaryOf } from './summary'
 import { percent } from './text'
+import { cardsOf } from './verdictCards'
 
 type Card = { tone: 'orange' | 'gray' | 'blue'; pill: string; headline: string; sub?: string }
-
-const SHORT = 280
 
 const SKIPPED = ['not_configured', 'disabled_by_request', 'cancelled']
 const text = (v: unknown) => (typeof v === 'string' ? v : '')
@@ -66,26 +66,82 @@ function ConfidenceInfo() {
   )
 }
 
-function Explanation({ original }: { original: string }) {
+// The summary sentence (with the localization note) and the "Read full explanation" disclosure with the complete text,
+// which only exists when the text says more than the summary.
+function useExplanation(original: string, fallback: string) {
   const t = useT()
-  const [full, setFull] = useState(false)
-  const { text: value, note } = useLocalizedText(original, userTextEntry(useLoc()))
-  const chars = Array.from(value) // code points: a surrogate pair is never split
-  const long = chars.length > SHORT
+  const { locale } = useLocale()
+  const [open, setOpen] = useState(false)
+  const id = useId()
+  const { text: shown, note } = useLocalizedText(original, userTextEntry(useLoc()))
+  const full = shown.trim()
+  const summary = summaryOf(full, locale, fallback)
+  const more = full !== '' && full !== summary
+  return {
+    summary: (
+      <>
+        <p className="verdict-summary" dir="auto">{summary}</p>
+        {(summary !== fallback || open) && note}
+      </>
+    ),
+    disclosure: more && (
+      <div className="verdict-explanation">
+        <button type="button" className="btn-link verdict-more" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
+          {open ? t('results.hide_full') : t('results.read_full')}
+        </button>
+        {open && <p id={id} className="verdict-user-text" dir="auto">{full}</p>}
+      </div>
+    ),
+  }
+}
+
+function Result({ job, r }: { job: Job; r: NonNullable<ReturnType<typeof resultOf>> }) {
+  const t = useT()
+  const { locale } = useLocale()
+  const { formatNumber } = useFormat()
+  const verdict = verdictOf(r.verdict)
+  const partial = job.coverage?.failed > 0 || job.analyzers?.some((a) => a.status === 'failed')
+  const cards = cardsOf(job, verdict, locale, t, formatNumber)
+  const { summary, disclosure } = useExplanation(text(r.user_text), t(`results.verdict.${verdict}.body`))
+  const insufficient = verdict === 'uncertain' && r.produced_by === 'orchestrator'
   return (
-    <div className="verdict-explanation">
-      <p className="verdict-user-text" dir="auto">{long && !full ? `${chars.slice(0, SHORT).join('')}…` : value}</p>
-      {note}
-      {long && (
-        <button type="button" className="btn-link" aria-expanded={full} onClick={() => setFull(!full)}>{t('results.show_full')}</button>
+    <section className="verdict" data-verdict={verdict}>
+      <div className="verdict-head">
+        <span className="verdict-pill">
+          <span className="verdict-dot" aria-hidden="true" />
+          {insufficient ? t('results.insufficient') : t(`results.verdict.${verdict}.pill`)}
+        </span>
+        <p className="verdict-confidence">
+          <span>{confidenceText(r.confidence, t, formatNumber)}</span>
+          <ConfidenceInfo />
+        </p>
+      </div>
+      <h2>{t(`results.verdict.${verdict}.heading`)}</h2>
+      {summary}
+      {cards.length > 0 && (
+        <ul className="verdict-cards">
+          {cards.map((c) => (
+            <li key={c.key} className="info-card" data-tone={c.neutral ? 'neutral' : 'verdict'}>
+              <span className="info-card-label">{c.label}</span>
+              <strong className="info-card-value">{c.value}</strong>
+              {c.status && (
+                <span className="info-card-status">
+                  <span className="info-card-dot" aria-hidden="true" />
+                  {c.status}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
       )}
-    </div>
+      {disclosure}
+      {partial && <p role="note" className="verdict-partial">{t('results.partial')}</p>}
+    </section>
   )
 }
 
 export function Verdict({ job }: { job: Job }) {
   const t = useT()
-  const { formatNumber } = useFormat()
   const r = resultOf(job)
   if (!r) {
     const card = cardOf(job, t)
@@ -100,19 +156,5 @@ export function Verdict({ job }: { job: Job }) {
       </article>
     )
   }
-  const verdict = verdictOf(r.verdict)
-  const partial = job.coverage?.failed > 0 || job.analyzers?.some((a) => a.status === 'failed')
-  return (
-    <section className="verdict" data-verdict={verdict}>
-      {verdict === 'uncertain' && r.produced_by === 'orchestrator' && <span className="tag gray">{t('results.insufficient')}</span>}
-      <h2>{t(`results.verdict.${verdict}.heading`)}</h2>
-      <p className="verdict-lead">{t(`results.verdict.${verdict}.body`)}</p>
-      <p className="verdict-confidence">
-        <span>{confidenceText(r.confidence, t, formatNumber)}</span>
-        <ConfidenceInfo />
-      </p>
-      <Explanation original={text(r.user_text)} />
-      {partial && <p role="note" className="verdict-partial">{t('results.partial')}</p>}
-    </section>
-  )
+  return <Result job={job} r={r} />
 }
