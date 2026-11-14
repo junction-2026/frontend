@@ -9,4 +9,4 @@ Visual fidelity correction (junction-2026/project#61, child #90): the UI used Pl
 - No shared contract change, no behaviour, copy, route or progress-logic change. The Home composer, advanced options and Public switch are untouched.
 
 ## Impact
-Specs: ui-design-foundation, analyze-flow-ui. Typography-only edits in job-result-view, results-history-views and secondary-screens stylesheets; their behaviour requirements are unchanged.
+Specs: ui-design-foundation, analyze-flow-ui, results-history-views (verdict headline weight 700 becomes 600). Typography-only edits in job-result-view and secondary-screens stylesheets; their requirements are unchanged.

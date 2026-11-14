@@ -21,7 +21,7 @@ Client-side History-API router (no dependency); an unknown path shows Home. `/?j
 | `/states` | States (mock edge cases) |
 
 Areas not connected to the backend carry a visible `MOCK` badge and are listed in `docs/mock-areas.md`.
-Fonts (Newsreader, Plus Jakarta Sans) are bundled via `@fontsource`; nothing is loaded from Google.
+Inter is bundled via `@fontsource-variable/inter`; nothing is loaded from Google.
 
 ## Commands
 
