@@ -196,7 +196,7 @@ describe('Results: progressive disclosure', () => {
     const btn = screen.getByRole('button', { name: 'View detailed analysis' })
     expect(btn).toHaveAttribute('aria-expanded', 'false')
     expect(btn).toHaveClass('btn-primary')
-    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/ask')
+    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/jobs/j1/ask')
     expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveClass('btn-secondary')
     expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
     for (const t of [/Zweifel/, /Loaded Language/, /Analyzer coverage/, /Patterns/, /Polarity/, /bias factor/, /Everyone knows/, /Propaganda Techniques Detected/])
@@ -523,7 +523,7 @@ describe('Results: verdict info cards in the initial view', () => {
     expect(document.querySelector('.tags, table, .coverage-card')).toBeNull()
     expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
     expect(screen.getByRole('button', { name: 'View detailed analysis' })).toHaveClass('btn-primary')
-    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/ask')
+    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/jobs/j1/ask')
   })
 
   it('shows no card for missing runs and "Unavailable" for a failed fact-check', async () => {

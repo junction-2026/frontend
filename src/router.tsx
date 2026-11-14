@@ -9,6 +9,7 @@ const ROUTES: [RegExp, RouteName][] = [
   [/^\/$/, 'home'],
   [/^\/jobs\/([^/]+)\/live$/, 'analyzing'],
   [/^\/jobs\/([^/]+)\/detail$/, 'detail'],
+  [/^\/jobs\/([^/]+)\/ask$/, 'ask'],
   [/^\/jobs\/([^/]+)$/, 'results'],
   [/^\/history$/, 'history'],
   [/^\/explore$/, 'explore'],
