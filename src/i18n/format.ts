@@ -18,3 +18,23 @@ export function formatRelativeTime(iso: DateInput, now: DateInput = Date.now(), 
   const [unit, size] = UNITS.find(([, s]) => Math.abs(seconds) >= s) ?? (['second', 1] as const)
   return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(Math.round(seconds / size), unit)
 }
+
+// A 0..1 ratio as a whole percent (fr: "86 %" with a non-breaking space; ar: Arabic percent sign).
+export const formatPercent = (ratio: number, options?: Intl.NumberFormatOptions, locale: Locale = activeLocale()) =>
+  formatNumber(ratio, { style: 'percent', ...options }, locale)
+
+export { pluralCategory } from './translate'
+
+const displayNames = new Map<string, Intl.DisplayNames>()
+// The locale's own name of an ISO 3166-1 alpha-2 country; without one (no ICU data, unknown code) the given fallback.
+export function formatCountryName(code: string, fallback: string, locale: string = activeLocale()): string {
+  try {
+    let dn = displayNames.get(locale)
+    if (!dn) displayNames.set(locale, (dn = new Intl.DisplayNames(locale, { type: 'region' })))
+    const n = dn.of(code)
+    if (n && n !== code) return n
+  } catch {
+    /* Intl.DisplayNames missing or invalid code */
+  }
+  return fallback
+}

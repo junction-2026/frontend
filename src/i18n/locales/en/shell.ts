@@ -10,4 +10,7 @@ export default {
   'health.checking': 'Checking backend…',
   'health.offline': 'Backend offline',
   'health.online': 'Backend online',
+  'health.failed': 'Backend health check failed: {detail}',
+  'health.timeout': 'timed out after {ms} ms',
+  'health.bad_body': 'unexpected response body',
 }

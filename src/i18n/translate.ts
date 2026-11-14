@@ -16,18 +16,36 @@ function load(): Record<string, Catalog> {
 }
 export const CATALOGS = load()
 
+// zero | one | two | few | many | other for the locale (Arabic has all six).
+export const pluralCategory = (count: number, locale: string = activeLocale()) => new Intl.PluralRules(locale).select(count)
+
+// An empty value counts as missing, so a blank catalog entry never renders as nothing.
 function lookup(cat: Catalog | undefined, locale: string, key: string, params?: Params): string | undefined {
   if (!cat) return undefined
   if (typeof params?.count === 'number') {
-    const form = cat[`${key}_${new Intl.PluralRules(locale).select(params.count)}`] ?? cat[`${key}_other`]
-    if (form !== undefined) return form
+    const form = cat[`${key}_${pluralCategory(params.count, locale)}`] || cat[`${key}_other`]
+    if (form) return form
   }
-  return cat[key]
+  return cat[key] || undefined
 }
 
-// Active locale → en → the key itself. Never throws and never logs.
+const warned = new Set<string>()
+function warnMissing(locale: string, key: string) {
+  const id = `${locale}:${key}`
+  if (!import.meta.env.DEV || warned.has(id)) return
+  warned.add(id)
+  console.warn(`[i18n] missing translation "${key}" for locale "${locale}"`)
+}
+
+export const MISSING = '…' // a key no catalog defines: never the raw key
+
+// Active locale → en → "…". Never throws; a fallback is warned about once per key in development.
 export function translate(locale: Locale, key: string, params?: Params, catalogs: Record<string, Catalog> = CATALOGS): string {
-  const s = lookup(catalogs[locale], locale, key, params) ?? lookup(catalogs[DEFAULT_LOCALE], DEFAULT_LOCALE, key, params) ?? key
+  let s = lookup(catalogs[locale], locale, key, params)
+  if (s === undefined) {
+    warnMissing(locale, key)
+    s = lookup(catalogs[DEFAULT_LOCALE], DEFAULT_LOCALE, key, params) ?? MISSING
+  }
   return params ? s.replace(/\{(\w+)\}/g, (m, name: string) => (name in params ? String(params[name]) : m)) : s
 }
 

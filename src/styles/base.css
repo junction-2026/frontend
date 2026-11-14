@@ -57,7 +57,8 @@ svg {
   border: 0;
 }
 
-/* Directional glyphs (arrows) get this class so they point the reading direction. */
+/* Directional glyphs (arrows, the search glyph) get this class so they point the reading direction; a transform needs a box. */
 [dir="rtl"] .mirror-rtl {
+  display: inline-block;
   transform: scaleX(-1);
 }

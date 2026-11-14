@@ -13,7 +13,7 @@ export default {
   'a1_pre': 'Jakso ”tuhoavat tulevaisuutemme… ennen kuin on liian myöhäistä” vastaa katastrofointi- ja kiireellisyysmalleja: ',
   'a1_match': '{percent} kuviovastaavuus',
   'a1_post': ' pelkoon vetoamisen luettelon kanssa.',
-  'chip.corpus': 'Korpusviite: #CAT-FEAR-449',
+  'chip.corpus': 'Korpusviite: {id}',
   'chip.weight': 'Paino: korkea (+0,42)',
   'q2': 'Miten muut varmennetut uutislähteet uutisoivat tästä väestöryhmästä?',
   'a2_and': ' ja ',
@@ -26,4 +26,6 @@ export default {
   'input_aria': 'Viesti',
   'input_placeholder': 'Kysy mitä tahansa tästä lähteestä, retorisista tunnusmerkeistä tai uutissähkeiden kontekstista...',
   'send': 'Lähetä',
+  'src.ft': 'Financial Times',
+  'src.reuters': 'Reuters',
 }

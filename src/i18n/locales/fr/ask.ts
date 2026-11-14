@@ -13,7 +13,7 @@ export default {
   'a1_pre': 'Le passage « détruisent notre avenir… avant qu’il ne soit trop tard » correspond à des schémas de catastrophisme et d’urgence, avec ',
   'a1_match': '{percent} de correspondance',
   'a1_post': ' avec le catalogue des appels à la peur.',
-  'chip.corpus': 'Réf. corpus : #CAT-FEAR-449',
+  'chip.corpus': 'Réf. corpus : {id}',
   'chip.weight': 'Poids : élevé (+0,42)',
   'q2': 'Comment les autres sources d’information vérifiées couvrent-elles ce groupe démographique ?',
   'a2_and': ' et ',
@@ -26,4 +26,6 @@ export default {
   'input_aria': 'Message',
   'input_placeholder': 'Posez une question sur cette source, les marqueurs rhétoriques ou le contexte des dépêches...',
   'send': 'Envoyer',
+  'src.ft': 'Financial Times',
+  'src.reuters': 'Reuters',
 }

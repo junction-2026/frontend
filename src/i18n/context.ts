@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo } from 'react'
-import { formatDate, formatNumber, formatRelativeTime } from './format'
+import { formatCountryName, formatDate, formatNumber, formatPercent, formatRelativeTime } from './format'
 import { DEFAULT_LOCALE, dirOf, type Locale } from './locales'
 import { translate, type Params } from './translate'
 
@@ -21,6 +21,8 @@ export function useFormat() {
     () => ({
       formatDate: (v: Parameters<typeof formatDate>[0], o?: Intl.DateTimeFormatOptions) => formatDate(v, o, locale),
       formatNumber: (v: number, o?: Intl.NumberFormatOptions) => formatNumber(v, o, locale),
+      formatPercent: (v: number, o?: Intl.NumberFormatOptions) => formatPercent(v, o, locale),
+      formatCountryName: (code: string, fallback: string) => formatCountryName(code, fallback, locale),
       formatRelativeTime: (iso: Parameters<typeof formatRelativeTime>[0], now?: Parameters<typeof formatRelativeTime>[1]) => formatRelativeTime(iso, now, locale),
     }),
     [locale],

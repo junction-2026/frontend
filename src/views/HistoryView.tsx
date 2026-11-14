@@ -39,11 +39,11 @@ function Item({ job, excerpt, now }: { job: JobSummary; excerpt: string | null |
     <article className="card history-item">
       <div>
         <div className="top">
-          <span>{job.id}</span>
+          <span><bdi>{job.id}</bdi></span>
           <span className={`status-pill ${statusTone(job)}`}>{status(job.status)}</span>
         </div>
         <h3>
-          {excerpt === undefined ? <span className="skeleton-line" aria-hidden="true" /> : excerpt === null ? t('history.excerpt_unavailable') : `“${excerpt}”`}
+          {excerpt === undefined ? <span className="skeleton-line" aria-hidden="true" /> : excerpt === null ? t('history.excerpt_unavailable') : <bdi>{`“${excerpt}”`}</bdi>}
         </h3>
         <div className="tags">
           {v ? <span className={`tag ${v.tone}`}>{t(`history.verdict.${kind}`)}</span> : <span className="tag gray">{t('history.final_assessment', { status: job.finalization?.status ? status(job.finalization.status) : t('history.status.unknown') })}</span>}
@@ -94,7 +94,7 @@ export default function HistoryView() {
 
       <Mock block label={t('history.search_label')}>
         <label className="search-lg">
-          <span aria-hidden="true">⌕</span>
+          <span aria-hidden="true" className="mirror-rtl">⌕</span>
           <input type="search" disabled placeholder={t('history.search_placeholder')} aria-label={t('history.search_aria')} />
           <span className="kbd">⌘ K</span>
         </label>

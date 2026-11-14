@@ -110,4 +110,7 @@ export default {
   'region.wire.2.tag': 'Bureau d’enquête',
   'region.wire.3.title': 'Éditorial : des preuves sereines valent mieux que des récits de panique sur les réseaux critiques',
   'region.wire.3.tag': 'Opinion',
+  'region.wire.1.src': 'Helsingin Sanomat',
+  'region.wire.2.src': 'Yle News',
+  'region.wire.3.src': 'Hufvudstadsbladet (HBL)',
 }
