@@ -88,7 +88,7 @@ The detailed analysis region SHALL contain a section showing `coverage` as `succ
 - **THEN** they are listed only inside a "Not run" disclosure
 
 ### Requirement: Mock-only parts of Results
-In the detailed analysis region the "Polarity / Intensity" signal row, "High rhetorical bias factor" and the Share button SHALL be wrapped in `Mock`. Copy SHALL copy the page URL to the clipboard without `Mock`. "Cross-source coverage →" SHALL link to `/explore` and "Open detailed analysis page" to `/jobs/:id/detail`. The Ask VEIL call-to-action card SHALL NOT be shown on Results; the compact "Ask VEIL" link carries no data and SHALL NOT be wrapped in `Mock`.
+In the detailed analysis region the "Polarity / Intensity" signal row, "High rhetorical bias factor" and the Share button SHALL be wrapped in `Mock`. Copy SHALL copy the page URL to the clipboard without `Mock`. "Explore coverage" SHALL link to `/explore?job=<encoded job id>` and "Open detailed analysis page" to `/jobs/:id/detail`. The Ask VEIL call-to-action card SHALL NOT be shown on Results; the compact "Ask VEIL" link carries no data and SHALL NOT be wrapped in `Mock`.
 
 #### Scenario: Copy
 - **WHEN** the user presses Copy
@@ -97,6 +97,10 @@ In the detailed analysis region the "Polarity / Intensity" signal row, "High rhe
 #### Scenario: Ask VEIL link
 - **WHEN** the Results screen is shown
 - **THEN** the "Ask VEIL" link points to `/ask`, has no `Mock` ancestor and no "Have questions about this verdict" card is shown
+
+#### Scenario: Explore coverage link
+- **WHEN** Results renders for job `j 1`
+- **THEN** the link "Explore coverage" has `href` `/explore?job=j%201` and no "Cross-source coverage" link exists
 
 ### Requirement: Detail metrics
 The Detail screen (`/jobs/:id/detail`) SHALL show a metrics bar with Patterns, the number of detected techniques of the `succeeded` `techniques` run (otherwise "—"), and Claims, the number of `claims` of a `succeeded` `topic_extraction` run (otherwise "—"). Confidence SHALL NOT be shown; Risk and Latency SHALL be wrapped in `Mock`. Technique entries SHALL show `Detection.name` as ID badge and no match percentage.
@@ -240,7 +244,7 @@ Below the verdict the Results screen SHALL show a primary `<button>` "View detai
 - **THEN** `aria-expanded` is false, true, false and the region is present only while expanded
 
 ### Requirement: Detailed analysis region content
-The detailed region SHALL contain the analyzed excerpt (first 400 characters), the technique tags, the Mock-wrapped Polarity/Intensity row and "High rhetorical bias factor", "Cross-source coverage →", "Open detailed analysis page" and the Copy and Share buttons, followed by the Coverage section.
+The detailed region SHALL contain the analyzed excerpt (first 400 characters), the technique tags, the Mock-wrapped Polarity/Intensity row and "High rhetorical bias factor", "Explore coverage", "Open detailed analysis page" and the Copy and Share buttons, followed by the Coverage section.
 
 #### Scenario: Expanded content
 - **WHEN** the region is expanded
