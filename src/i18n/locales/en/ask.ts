@@ -1,10 +1,10 @@
 export default {
-  'mock_label': 'No backend for Ask Stiriri',
+  'mock_label': 'No backend for Ask VEIL',
   'context.status': '● Manipulation detected ({confidence} confidence)',
   'context.source': 'Source item: “Everyone knows these people are destroying our future...”',
   'context.summary': 'This text uses emotionally charged language, unspecified outgroup s...',
   'back': '← Back to summary',
-  'title': 'Ask Stiriri',
+  'title': 'Ask VEIL',
   'badge': 'Interactive Intelligence',
   'grounded': 'Grounded in submitted text, wire reports & fact-checks',
   'prompt': 'Have a question about this source, rhetorical indicators, or corroborating reporting?',

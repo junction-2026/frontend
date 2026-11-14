@@ -26,7 +26,7 @@ describe('StatesView', () => {
   })
 
   it('stays usable in Arabic: dir is rtl and the headings are Arabic', () => {
-    localStorage.setItem('stiriri.locale', 'ar')
+    localStorage.setItem('veil.locale', 'ar')
     render(<I18nProvider><StatesView /></I18nProvider>)
     expect(document.documentElement).toHaveAttribute('dir', 'rtl')
     expect(screen.getByRole('heading', { level: 1, name: 'الحالات الحدّية وحالات النظام' })).toBeInTheDocument()

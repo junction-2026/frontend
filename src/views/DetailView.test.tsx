@@ -18,7 +18,7 @@ afterEach(() => {
 
 // Renders under the real provider in a given locale (the choice is read from storage like on a reload).
 const inLocale = (lng: string, ui: ReactElement) => {
-  localStorage.setItem('stiriri.locale', lng)
+  localStorage.setItem('veil.locale', lng)
   return render(<I18nProvider>{ui}</I18nProvider>)
 }
 

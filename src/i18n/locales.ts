@@ -9,8 +9,8 @@ export const LOCALES = [
 
 export type Locale = (typeof LOCALES)[number]['code']
 export const DEFAULT_LOCALE: Locale = 'en'
-export const STORAGE_KEY = 'stiriri.locale'
-export const LEGACY_STORAGE_KEY = 'veil.locale' // pre-rename brand; read once, then migrated
+export const STORAGE_KEY = 'veil.locale'
+export const LEGACY_STORAGE_KEY = 'stiriri.locale' // interim brand; read once, then migrated
 
 export const isLocale = (v: unknown): v is Locale => LOCALES.some((l) => l.code === v)
 export const dirOf = (locale: Locale) => LOCALES.find((l) => l.code === locale)!.dir

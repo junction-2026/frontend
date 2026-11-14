@@ -17,7 +17,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <header className="topbar">
         <Link className="brand" href="/">
-          Stiriri <span>{t('shell.brand_subtitle')}</span>
+          VEIL <span>{t('shell.brand_subtitle')}</span>
         </Link>
         <nav className="nav-tabs" aria-label={t('shell.nav.label')}>
           {TABS.map((tab) => (
