@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { coverage, job, json } from '../job/fixtures'
+import { I18nProvider, formatDate, useLocale } from '../i18n'
 import HistoryView from './HistoryView'
 
 const fetchMock = vi.fn()
@@ -18,6 +19,9 @@ afterEach(() => {
   fetchMock.mockReset()
   vi.unstubAllGlobals()
   vi.useRealTimers()
+  localStorage.clear()
+  document.documentElement.lang = 'en'
+  document.documentElement.dir = 'ltr'
 })
 
 const summary = (id: string, extra: Record<string, unknown> = {}) => ({
@@ -42,7 +46,7 @@ describe('History', () => {
     expect(labels).toEqual([
       'Today2 analyses',
       'Yesterday1 analysis',
-      `${new Date(ago(5 * 24 * H)).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}1 analysis`,
+      `${formatDate(ago(5 * 24 * H), { year: 'numeric', month: 'short', day: 'numeric' }, 'en')}1 analysis`,
     ])
     expect([...document.querySelectorAll('.history-item .top span:first-child')].map((e) => e.textContent)).toEqual(['a', 'b', 'c', 'd'])
     expect(screen.getByText('1 hour ago')).toBeInTheDocument()
@@ -195,5 +199,40 @@ describe('History', () => {
     for (const el of [search, screen.getByRole('button', { name: /Export Ledger/ }), screen.getByText('Synchronized'), screen.getByText('Workspace session local')])
       expect(inMock(el)).not.toBeNull()
     for (const el of [screen.getByRole('link', { name: 'Reopen Analysis →' }), screen.getByText('Today'), screen.getByRole('button', { name: 'All' })]) expect(inMock(el)).toBeNull()
+  })
+
+  describe('locales', () => {
+    const Pick = () => {
+      const { setLocale } = useLocale()
+      return <button type="button" onClick={() => setLocale('de')}>to-de</button>
+    }
+
+    it('renders translated headings, filters and links in Arabic with rtl', async () => {
+      localStorage.setItem('veil.locale', 'ar')
+      route(() => page([summary('a'), summary('b', { created_at: ago(24 * H) })]))
+      render(<I18nProvider><HistoryView /></I18nProvider>)
+      expect(screen.getByRole('heading', { level: 1, name: 'سجل التحليلات' })).toBeInTheDocument()
+      expect(await screen.findByText('اليوم')).toBeInTheDocument()
+      expect(screen.getAllByText('أمس')).toHaveLength(2) // the day label and the relative time
+      expect(screen.getByRole('button', { name: 'الكل' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getAllByRole('link', { name: 'إعادة فتح التحليل ←' })).toHaveLength(2)
+      expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+      expect(screen.queryByText('Today')).toBeNull()
+    })
+
+    it('re-renders in German after a switch, keeping the loaded items', async () => {
+      route(() => page([summary('a'), summary('b', { status: 'running', done: false, finalization: { status: 'pending', verdict: null } })]))
+      render(<I18nProvider><Pick /><HistoryView /></I18nProvider>)
+      await screen.findByText('Today')
+      fireEvent.click(screen.getByText('to-de'))
+      expect(screen.getByRole('heading', { level: 1, name: 'Analyseverlauf' })).toBeInTheDocument()
+      expect(screen.getByText('Heute')).toBeInTheDocument()
+      expect(screen.getByText('Manipulation erkannt')).toBeInTheDocument()
+      expect(screen.getByText('Abschlussbewertung: ausstehend')).toBeInTheDocument()
+      expect(screen.getByText('läuft')).toHaveClass('status-pill', 'blue')
+      expect(screen.getAllByText('vor 1 Stunde')).toHaveLength(2)
+      expect(screen.getByText('2 Analysen')).toBeInTheDocument()
+      expect(listUrls()).toHaveLength(1) // no reload of the list
+    })
   })
 })

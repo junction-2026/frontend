@@ -1,30 +1,30 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Job } from '../api/types'
+import { useLocale, useT } from '../i18n'
 import { ErrorAlert, Skeleton } from '../job/WithJob'
 import { useJob } from '../job/useJob'
 import { Link } from '../router'
 import { WorldMap } from '../secondary/WorldMap'
-import { SELECTABLE, countryName, plural, type Coverage } from '../secondary/worldMapData'
+import { SELECTABLE, countryName, type Coverage } from '../secondary/worldMapData'
 import '../job/results.css'
 import '../secondary/secondary.css'
 import { readExplore } from './adapter'
 import { aggregateByCountry, filterItems, options, publisherCount, topicsOf } from './filters'
 import { NO_FILTERS, type ExploreData, type ExploreItem, type Filters, type RunState } from './model'
 
-const NO_JOB = 'Open Explore coverage from a completed analysis to see where its stories were published.'
-const SKIP_REASONS: Record<string, string> = { no_searchable_topics: 'no searchable topics were found in the text' }
-const countries = (n: number) => `${n} ${n === 1 ? 'country' : 'countries'}`
+type T = ReturnType<typeof useT>
 
 function Head({ id, topics }: { id?: string; topics?: string[] }) {
+  const t = useT()
   return (
     <div className="page-head">
-      <div className="meta-row"><span>● Topic inquest · Cross-border media topology</span></div>
-      <h1>Explore the world.</h1>
-      <p>Discover how stories are covered across sources and regions. Coverage density reflects verified publisher bureaus, not state responsibility.</p>
+      <div className="meta-row"><span>{t('explore.eyebrow')}</span></div>
+      <h1>{t('explore.title')}</h1>
+      <p>{t('explore.lede')}</p>
       {id && (
         <p className="explore-topics">
-          {topics?.length ? <>Searched topics: {topics.join(' · ')} · </> : null}
-          <Link href={`/jobs/${encodeURIComponent(id)}`}>Back to analysis →</Link>
+          {topics?.length ? <>{t('explore.searched_topics', { topics: topics.join(' · ') })} · </> : null}
+          <Link href={`/jobs/${encodeURIComponent(id)}`}>{t('explore.back_to_analysis')}</Link>
         </p>
       )}
     </div>
@@ -32,34 +32,36 @@ function Head({ id, topics }: { id?: string; topics?: string[] }) {
 }
 
 function Legend() {
+  const t = useT()
   return (
     <div className="map-legend">
       <div className="legend-swatches">
-        Coverage density:
-        <span className="swatch"><i className="a" /> None</span>
-        <span className="swatch"><i className="b" /> Low</span>
-        <span className="swatch"><i className="c" /> Medium</span>
-        <span className="swatch"><i className="d" /> High</span>
+        {t('explore.legend.density')}
+        <span className="swatch"><i className="a" /> {t('explore.legend.none')}</span>
+        <span className="swatch"><i className="b" /> {t('explore.legend.low')}</span>
+        <span className="swatch"><i className="c" /> {t('explore.legend.medium')}</span>
+        <span className="swatch"><i className="d" /> {t('explore.legend.high')}</span>
       </div>
-      <em>Notice: Geographic indicators represent verified publisher operational bureaus, not state responsibility.</em>
+      <em>{t('explore.legend.notice')}</em>
     </div>
   )
 }
 
 // Without a job: head, disabled filters and an empty map; no request is made.
 export function ExploreEmpty() {
+  const t = useT()
   return (
     <section className="view">
       <Head />
-      <div className="filters" aria-label="Explore filters">
-        <label className="field"><span aria-hidden="true">⌕</span><input aria-label="Search topic text" disabled placeholder="Search titles and snippets" /></label>
-        {['Topic', 'Country', 'Languages', 'Publishers'].map((n) => <button key={n} type="button" className="field" disabled>{n}: No data</button>)}
-        <span className="verified-chip">Verified fact-checks only</span>
+      <div className="filters" aria-label={t('explore.filters')}>
+        <label className="field"><span aria-hidden="true">⌕</span><input aria-label={t('explore.search_aria')} disabled placeholder={t('explore.search_placeholder')} /></label>
+        {['topic', 'country', 'languages', 'publishers'].map((n) => <button key={n} type="button" className="field" disabled>{t('explore.filter.no_data', { label: t(`explore.filter.${n}`) })}</button>)}
+        <span className="verified-chip">{t('explore.verified_only')}</span>
       </div>
       <div className="card map-card">
-        <div className="map-card-head"><div><h2>Geographic Coverage &amp; Publisher Distribution</h2><p>{NO_JOB}</p></div></div>
+        <div className="map-card-head"><div><h2>{t('explore.map_title')}</h2><p>{t('explore.no_job')}</p></div></div>
         <WorldMap coverage={{}} selected={null} interactive={false} />
-        <p className="explore-note"><Link href="/history">Open History →</Link></p>
+        <p className="explore-note"><Link href="/history">{t('explore.open_history')}</Link></p>
         <Legend />
       </div>
     </section>
@@ -72,6 +74,7 @@ export function ExploreJob({ id }: { id: string }) {
 }
 
 function Loaded({ id, retry }: { id: string; retry: () => void }) {
+  const t = useT()
   const result = useJob(id)
   if (!result || !result.ok)
     return (
@@ -79,8 +82,8 @@ function Loaded({ id, retry }: { id: string; retry: () => void }) {
         <Head id={id} />
         {!result ? <Skeleton /> : (
           <>
-            <ErrorAlert error={result.error} notFound="Job not found" />
-            {result.error.status !== 404 && <button type="button" className="btn-secondary" onClick={retry}>Retry</button>}
+            <ErrorAlert error={result.error} notFound={t('explore.job_not_found')} />
+            {result.error.status !== 404 && <button type="button" className="btn-secondary" onClick={retry}>{t('explore.retry')}</button>}
           </>
         )}
       </section>
@@ -89,27 +92,28 @@ function Loaded({ id, retry }: { id: string; retry: () => void }) {
 }
 
 // One notice for the news search, null when there are articles to show.
-function newsNotice(s: RunState, job: Job, data: ExploreData): ReactNode {
-  if (s.status === 'missing') return 'Coverage search is not available for this analysis'
-  if (s.status === 'pending' || s.status === 'running')
-    return job.done ? 'Coverage search did not finish for this analysis' : 'Searching news coverage…'
-  if (s.status === 'skipped') return `Coverage search was skipped${s.reason ? `: ${SKIP_REASONS[s.reason] ?? s.reason}` : ''}`
-  if (s.status === 'failed') return `Coverage search failed${s.error ? ` (error code: ${s.error})` : ''}`
-  return data.items.some((i) => i.kind === 'article') ? null : 'No related articles were found. This is not evidence that a claim is false.'
+function newsNotice(s: RunState, job: Job, data: ExploreData, t: T): ReactNode {
+  if (s.status === 'missing') return t('explore.news.missing')
+  if (s.status === 'pending' || s.status === 'running') return job.done ? t('explore.news.unfinished') : t('explore.news.searching')
+  // The reason and the error code come from the API: a known reason is translated, any other is shown as sent.
+  if (s.status === 'skipped') return s.reason ? t('explore.news.skipped_reason', { reason: s.reason === 'no_searchable_topics' ? t('explore.news.skip.no_searchable_topics') : s.reason }) : t('explore.news.skipped')
+  if (s.status === 'failed') return s.error ? t('explore.news.failed_code', { code: s.error }) : t('explore.news.failed')
+  return data.items.some((i) => i.kind === 'article') ? null : t('explore.news.no_articles')
 }
 
-function geoNotice(data: ExploreData, job: Job): string | null {
+function geoNotice(data: ExploreData, job: Job, t: T): string | null {
   if (data.newsStatus.status !== 'succeeded' || !data.items.some((i) => i.kind === 'article')) return null
   const s = data.geoStatus.status
-  if (s === 'pending' || s === 'running') return job.done ? 'Geographic data unavailable for this analysis' : 'Matching publishers…'
-  return data.items.some((i) => i.countryCode) ? null : 'Geographic data unavailable for this analysis'
+  if (s === 'pending' || s === 'running') return job.done ? t('explore.geo.unavailable') : t('explore.geo.matching')
+  return data.items.some((i) => i.countryCode) ? null : t('explore.geo.unavailable')
 }
 
 function Multi({ label, opts, value, onChange }: { label: string; opts: ReturnType<typeof options>; value: string[]; onChange: (v: string[]) => void }) {
-  if (!opts.length) return <button type="button" className="field" disabled>{label}: No data</button>
+  const t = useT()
+  if (!opts.length) return <button type="button" className="field" disabled>{t('explore.filter.no_data', { label })}</button>
   return (
     <details className="field multi">
-      <summary>{label}: {value.length ? value.length : 'All'} ▾</summary>
+      <summary>{t('explore.filter.value', { label, value: value.length ? value.length : t('explore.filter.all') })} ▾</summary>
       <div className="multi-list">
         {opts.map((o) => (
           <label key={o.value}>
@@ -127,6 +131,8 @@ function Multi({ label, opts, value, onChange }: { label: string; opts: ReturnTy
 }
 
 function ExploreBody({ job }: { job: Job }) {
+  const t = useT()
+  const { locale } = useLocale()
   const data = useMemo(() => readExplore(job), [job])
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const set = (patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch }))
@@ -139,44 +145,45 @@ function ExploreBody({ job }: { job: Job }) {
   const sel = filters.country
   const base = data.items.filter((i) => (i.kind === 'fact_check') === filters.verifiedOnly)
   const factOk = data.factStatus.status === 'succeeded' && data.items.some((i) => i.kind === 'fact_check')
-  const notice = newsNotice(data.newsStatus, job, data)
-  const geo = geoNotice(data, job)
+  const notice = newsNotice(data.newsStatus, job, data, t)
+  const geo = geoNotice(data, job, t)
   const none = data.newsStatus.status !== 'succeeded' && !factOk
   const unknown = filtered.filter((i) => i.kind === 'article' && !i.countryCode).length
   const countryCount = Object.keys(stats).length
   const subtitle = countryCount
-    ? `${plural(publisherCount(filtered.filter((i) => i.countryCode)), 'publisher')} across ${countries(countryCount)}`
-    : 'No verified publisher-country data yet'
+    ? t('explore.subtitle', { publishers: t('explore.publisher', { count: publisherCount(filtered.filter((i) => i.countryCode)) }), countries: t('explore.country', { count: countryCount }) })
+    : t('explore.subtitle_none')
+  const countryOptions = SELECTABLE.map((c) => ({ code: c.code, name: countryName(c.code, mapCoverage, locale) })).sort((a, b) => a.name.localeCompare(b.name, locale))
 
   return (
     <section className="view">
       <Head id={job.id} topics={topics} />
-      {job.status === 'failed' && <p role="status" className="explore-note">This analysis failed; showing the results that exist.</p>}
-      {job.status === 'cancelled' && <p role="status" className="explore-note">This analysis was cancelled; showing the results that exist.</p>}
+      {job.status === 'failed' && <p role="status" className="explore-note">{t('explore.job_failed')}</p>}
+      {job.status === 'cancelled' && <p role="status" className="explore-note">{t('explore.job_cancelled')}</p>}
 
-      <div className="filters" aria-label="Explore filters">
+      <div className="filters" aria-label={t('explore.filters')}>
         <label className="field">
           <span aria-hidden="true">⌕</span>
-          <input aria-label="Search topic text" placeholder="Search titles and snippets" value={filters.text} disabled={none} onChange={(e) => set({ text: e.target.value })} />
+          <input aria-label={t('explore.search_aria')} placeholder={t('explore.search_placeholder')} value={filters.text} disabled={none} onChange={(e) => set({ text: e.target.value })} />
         </label>
         <span className="field">
-          <select aria-label="Topic" value={filters.topic ?? ''} disabled={!topics.length} onChange={(e) => set({ topic: e.target.value || null })}>
-            <option value="">{topics.length ? 'All topics' : 'No data'}</option>
+          <select aria-label={t('explore.filter.topic')} value={filters.topic ?? ''} disabled={!topics.length} onChange={(e) => set({ topic: e.target.value || null })}>
+            <option value="">{topics.length ? t('explore.all_topics') : t('explore.no_data')}</option>
             {topics.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </span>
         <span className="field">
-          <select aria-label="Country" value={sel ?? ''} onChange={(e) => set({ country: e.target.value || null })}>
-            <option value="">All regions</option>
-            {SELECTABLE.map((c) => <option key={c.code} value={c.code}>{countryName(c.code, mapCoverage)}</option>)}
+          <select aria-label={t('explore.filter.country')} value={sel ?? ''} onChange={(e) => set({ country: e.target.value || null })}>
+            <option value="">{t('explore.all_regions')}</option>
+            {countryOptions.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
           </select>
-          {sel && <button type="button" className="field-clear" aria-label="Clear country" onClick={() => set({ country: null })}>×</button>}
+          {sel && <button type="button" className="field-clear" aria-label={t('explore.clear_country')} onClick={() => set({ country: null })}>×</button>}
         </span>
-        <Multi label="Languages" opts={options(base, 'language')} value={filters.languages} onChange={(languages) => set({ languages })} />
-        <Multi label="Publishers" opts={options(base, 'publisher')} value={filters.publishers} onChange={(publishers) => set({ publishers })} />
-        <label className="verified-chip" title={factOk ? undefined : 'No fact-checks were found for this analysis'}>
+        <Multi label={t('explore.filter.languages')} opts={options(base, 'language')} value={filters.languages} onChange={(languages) => set({ languages })} />
+        <Multi label={t('explore.filter.publishers')} opts={options(base, 'publisher')} value={filters.publishers} onChange={(publishers) => set({ publishers })} />
+        <label className="verified-chip" title={factOk ? undefined : t('explore.no_fact_checks')}>
           <input type="checkbox" checked={filters.verifiedOnly} disabled={!factOk} onChange={(e) => set({ verifiedOnly: e.target.checked })} />
-          {' '}Verified fact-checks only
+          {' '}{t('explore.verified_only')}
         </label>
       </div>
 
@@ -186,8 +193,8 @@ function ExploreBody({ job }: { job: Job }) {
       <div className="card map-card">
         <div className="map-card-head">
           <div>
-            <h2>Geographic Coverage &amp; Publisher Distribution</h2>
-            <p>{subtitle}{unknown > 0 ? ` · ${plural(unknown, 'article')} with country unknown` : ''}</p>
+            <h2>{t('explore.map_title')}</h2>
+            <p>{unknown > 0 ? t('explore.subtitle_unknown', { subtitle, articles: t('explore.article', { count: unknown }) }) : subtitle}</p>
           </div>
         </div>
         <WorldMap coverage={mapCoverage} selected={sel} onSelect={(country) => set({ country })} />
@@ -201,41 +208,45 @@ function ExploreBody({ job }: { job: Job }) {
 }
 
 function CountryPanel({ code, stats, items, onClear }: { code: string; stats: Coverage; items: ExploreItem[]; onClear: () => void }) {
+  const t = useT()
+  const { locale } = useLocale()
   const info = stats[code]
-  const name = countryName(code, stats)
+  const name = countryName(code, stats, locale)
   return (
     <div className="country-panel">
       <strong>{name}</strong>
       {info ? (
         <>
-          <span>{plural(info.articles, 'article')} · {plural(info.publishers, 'publisher')}</span>
-          <span>Languages: {info.languages?.length ? info.languages.map((l) => l.toUpperCase()).join(', ') : 'unknown'}</span>
+          <span>{t('explore.map.tooltip_counts', { articles: t('explore.article', { count: info.articles }), publishers: t('explore.publisher', { count: info.publishers }) })}</span>
+          <span>{t('explore.panel.languages', { languages: info.languages?.length ? info.languages.map((l) => l.toUpperCase()).join(', ') : t('explore.panel.languages_unknown') })}</span>
           <ul className="country-headlines">
             {items.slice(0, 5).map((i) => <li key={i.id}>{i.title}{' — '}{[i.publisher, i.date].filter(Boolean).join(' · ')}</li>)}
           </ul>
         </>
       ) : (
-        <span>No verified publisher data for {name}</span>
+        <span>{t('explore.panel.no_data', { name })}</span>
       )}
       <div className="country-panel-actions">
-        <button type="button" className="btn-link" onClick={onClear}>Clear selection</button>
-        <Link href="/explore/region">Inspect wire feeds →</Link>
+        <button type="button" className="btn-link" onClick={onClear}>{t('explore.panel.clear')}</button>
+        <Link href="/explore/region">{t('explore.panel.inspect')}</Link>
       </div>
     </div>
   )
 }
 
 function Related({ items, verified, coverage }: { items: ExploreItem[]; verified: boolean; coverage: Coverage }) {
-  const noun = verified ? 'fact-check' : 'article'
+  const t = useT()
+  const { locale } = useLocale()
+  const noun = verified ? 'explore.fact_check' : 'explore.article'
   return (
     <div className="card related">
       <div className="map-card-head">
         <div>
-          <h2>Related Coverage</h2>
-          <p>{plural(items.length, noun)} · {plural(publisherCount(items), 'publisher')}</p>
+          <h2>{t('explore.related.title')}</h2>
+          <p>{t('explore.related.counts', { items: t(noun, { count: items.length }), publishers: t('explore.publisher', { count: publisherCount(items) }) })}</p>
         </div>
       </div>
-      {items.length === 0 ? <p className="explore-note">No items match the current filters.</p> : (
+      {items.length === 0 ? <p className="explore-note">{t('explore.related.none')}</p> : (
         <ul className="related-list">
           {items.map((i) => (
             <li key={`${i.kind}:${i.id}`} className="related-card">
@@ -245,7 +256,7 @@ function Related({ items, verified, coverage }: { items: ExploreItem[]; verified
                 {i.date && <span>{i.date}</span>}
                 {i.language && <span>{i.language.toUpperCase()}</span>}
                 {i.rating && <span className="tag orange">{i.rating}</span>}
-                {i.kind === 'article' && (i.countryCode ? <span className="tag green">{countryName(i.countryCode, coverage)}</span> : <span className="tag gray">Country unknown</span>)}
+                {i.kind === 'article' && (i.countryCode ? <span className="tag green">{countryName(i.countryCode, coverage, locale)}</span> : <span className="tag gray">{t('explore.related.country_unknown')}</span>)}
               </div>
               {i.kind === 'fact_check' && <ClaimLines item={i} />}
               {i.snippet && <p>{i.snippet}</p>}
@@ -259,12 +270,13 @@ function Related({ items, verified, coverage }: { items: ExploreItem[]; verified
 
 // A match is a similar checked claim (fact-check-result): only an equal claim may be called a check of the extracted one.
 function ClaimLines({ item: { forClaim, checkedClaim } }: { item: ExploreItem }) {
+  const t = useT()
   const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
-  if (forClaim && checkedClaim && same(forClaim, checkedClaim)) return <p>Fact-check of: {forClaim}</p>
+  if (forClaim && checkedClaim && same(forClaim, checkedClaim)) return <p>{t('explore.claim.same', { claim: forClaim })}</p>
   return (
     <>
-      {checkedClaim && <p>Similar claim reviewed: {checkedClaim}</p>}
-      {forClaim && <p>Found for: {forClaim}</p>}
+      {checkedClaim && <p>{t('explore.claim.similar', { claim: checkedClaim })}</p>}
+      {forClaim && <p>{t('explore.claim.found_for', { claim: forClaim })}</p>}
     </>
   )
 }

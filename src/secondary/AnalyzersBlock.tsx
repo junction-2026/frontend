@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
 import { listAnalyzers } from '../api/client'
 import { errorMessage } from '../api/errors'
-import type { AnalyzerInfo } from '../api/types'
+import type { AnalyzerInfo, ApiError } from '../api/types'
+import { useT } from '../i18n'
 
-type State = { items: AnalyzerInfo[] } | { error: string } | null
+type State = { items: AnalyzerInfo[] } | { error: ApiError } | null
 
 // The only backend-connected part of Settings: read-only, so it is not wrapped in Mock.
 export function AnalyzersBlock() {
+  const t = useT()
   const [state, setState] = useState<State>(null)
 
   useEffect(() => {
     let active = true
     void listAnalyzers().then((r) => {
       if (!active) return
-      setState(r.ok ? { items: Array.isArray(r.data.items) ? r.data.items : [] } : { error: errorMessage(r.error) })
+      setState(r.ok ? { items: Array.isArray(r.data.items) ? r.data.items : [] } : { error: r.error })
     })
     return () => {
       active = false
@@ -24,16 +26,16 @@ export function AnalyzersBlock() {
   const enabled = items.filter((a) => a.enabled === true).length
 
   return (
-    <section className="card settings-block" aria-label="Active AI analyzers & ensembles">
+    <section className="card settings-block" aria-label={t('settings.analyzers.title')}>
       <div className="settings-block-head">
-        <span>Active AI analyzers &amp; ensembles</span>
+        <span>{t('settings.analyzers.title')}</span>
         {state && 'items' in state && (
-          <span className="status-pill green">● {enabled} of {items.length} analyzers enabled</span>
+          <span className="status-pill green">{t('settings.analyzers.enabled_count', { enabled, total: items.length })}</span>
         )}
       </div>
-      {!state && <p role="status">Loading analyzers…</p>}
-      {state && 'error' in state && <p role="alert">{state.error}</p>}
-      {state && 'items' in state && items.length === 0 && <p>No analyzers are configured.</p>}
+      {!state && <p role="status">{t('settings.analyzers.loading')}</p>}
+      {state && 'error' in state && <p role="alert">{errorMessage(state.error)}</p>}
+      {state && 'items' in state && items.length === 0 && <p>{t('settings.analyzers.none')}</p>}
       {items.map((a) => {
         const deps = Array.isArray(a.depends_on) ? a.depends_on : []
         return (
@@ -43,16 +45,16 @@ export function AnalyzersBlock() {
               <div>
                 <h4>
                   {a.name} <span className="badge-soft">{a.id}</span>
-                  {a.trigger === 'after_all_analyzers_settled' && <span className="badge-blue">Final assessment</span>}
-                  {a.selectable === false && <span className="badge-soft">Not selectable</span>}
+                  {a.trigger === 'after_all_analyzers_settled' && <span className="badge-blue">{t('settings.analyzers.final')}</span>}
+                  {a.selectable === false && <span className="badge-soft">{t('settings.analyzers.not_selectable')}</span>}
                 </h4>
                 <p>
-                  Category: {a.category}
-                  {deps.length > 0 && ` · Depends on: ${deps.join(', ')}`}
+                  {t('settings.analyzers.category', { category: a.category })}
+                  {deps.length > 0 && ` · ${t('settings.analyzers.depends_on', { ids: deps.join(', ') })}`}
                 </p>
               </div>
             </div>
-            <span className={a.enabled ? 'status-pill green' : 'status-pill gray'}>{a.enabled ? 'Enabled' : 'Disabled'}</span>
+            <span className={a.enabled ? 'status-pill green' : 'status-pill gray'}>{a.enabled ? t('settings.analyzers.enabled') : t('settings.analyzers.disabled')}</span>
           </div>
         )
       })}
