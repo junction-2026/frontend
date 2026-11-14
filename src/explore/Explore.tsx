@@ -247,12 +247,24 @@ function Related({ items, verified, coverage }: { items: ExploreItem[]; verified
                 {i.rating && <span className="tag orange">{i.rating}</span>}
                 {i.kind === 'article' && (i.countryCode ? <span className="tag green">{countryName(i.countryCode, coverage)}</span> : <span className="tag gray">Country unknown</span>)}
               </div>
-              {i.forClaim && <p>Fact-check of: {i.forClaim}</p>}
+              {i.kind === 'fact_check' && <ClaimLines item={i} />}
               {i.snippet && <p>{i.snippet}</p>}
             </li>
           ))}
         </ul>
       )}
     </div>
+  )
+}
+
+// A match is a similar checked claim (fact-check-result): only an equal claim may be called a check of the extracted one.
+function ClaimLines({ item: { forClaim, checkedClaim } }: { item: ExploreItem }) {
+  const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+  if (forClaim && checkedClaim && same(forClaim, checkedClaim)) return <p>Fact-check of: {forClaim}</p>
+  return (
+    <>
+      {checkedClaim && <p>Similar claim reviewed: {checkedClaim}</p>}
+      {forClaim && <p>Found for: {forClaim}</p>}
+    </>
   )
 }

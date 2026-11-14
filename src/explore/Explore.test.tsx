@@ -264,11 +264,22 @@ describe('Explore data', () => {
     expect(box).toBeEnabled()
     fireEvent.click(box)
     expect(cards()).toHaveLength(1)
-    expect(screen.getByText('Fact-check of: Claim text')).toBeInTheDocument()
+    // the reviewed claim differs from the extracted one: it must not read as a check of it
+    expect(screen.getByText('Similar claim reviewed: Claim')).toBeInTheDocument()
+    expect(screen.getByText('Found for: Claim text')).toBeInTheDocument()
+    expect(screen.queryByText(/Fact-check of/)).toBeNull()
     expect(within(cards()[0]).getByText('False')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Check title' })).toHaveAttribute('href', 'https://fc.example/check')
     expect(screen.queryByText('Headline 1')).toBeNull()
     expect(screen.getByText('1 fact-check · 1 publisher')).toBeInTheDocument()
+  })
+
+  it('calls a fact-check "Fact-check of" only when the reviewed claim equals the extracted one', async () => {
+    await show(exploreJob({ articles: [article(1)], checks: [factCheck({ claim: '  claim TEXT ' }), factCheck({ url: 'https://fc.example/2', claim: null })] }))
+    fireEvent.click(screen.getByLabelText('Verified fact-checks only'))
+    expect(screen.getByText('Fact-check of: Claim text')).toBeInTheDocument()
+    expect(screen.getAllByText('Found for: Claim text')).toHaveLength(1) // no claim sent: cannot confirm, so not "Fact-check of"
+    expect(screen.queryByText(/Similar claim reviewed/)).toBeNull()
   })
 
   it('disables the fact-check filter without fact-checks, and filters without values', async () => {

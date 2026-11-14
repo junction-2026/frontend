@@ -4,7 +4,7 @@
 ## Decisions
 - **Country** comes only from `source_info.articles[i].outlet.country_code`, joined by index and verified by equal `url` and `matched: true`. Anything else is "Country unknown" and never mapped.
 - **Map shading ignores the country filter** (`filterItems` with `country: null`) so other countries stay visible while one is selected; the panel, list, counts and subtitle use the fully filtered output.
-- **Topic select vs fact-checks**: fact-checks are not found by a search query, so the Topic select does not apply to them; free text matches title, snippet and `for_claim`.
+- **Topic select vs fact-checks**: fact-checks are not found by a search query, so the Topic select does not apply to them; free text matches title, snippet, `for_claim` and `claim`. A provider match is a similar claim, so a card says "Fact-check of" only when `claim` equals `for_claim` (trimmed, case-insensitive).
 - **Levels** are relative to the maximum article count of the dataset being shaded (high > 2/3, medium > 1/3, else low).
 - **Run status** of an unknown value is `pending` while the job runs and `skipped` once it is done; a `succeeded` run whose result cannot be read counts as `failed` (`unreadable_result`).
 - **Retry** remounts the job request by changing a React key; no new hook.

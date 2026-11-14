@@ -103,9 +103,9 @@ describe('readExplore fact-checks', () => {
       checks: [factCheck(), factCheck({ url: 'ftp://x.example', title: 'bad' }), factCheck({ url: 'https://fc2.example/c', title: '', claim: 'The claim', publisher: null, site: 'fc2.example', rating: 'Mixed' })],
     })
     const checks = d.items.filter((i) => i.kind === 'fact_check')
-    expect(checks.map((i) => [i.title, i.publisher, i.date, i.rating, i.forClaim, i.countryCode])).toEqual([
-      ['Check title', 'Fact Org', '2026-01-02', 'False', 'Claim text', null],
-      ['The claim', 'fc2.example', '2026-01-02', 'Mixed', 'Claim text', null],
+    expect(checks.map((i) => [i.title, i.publisher, i.date, i.rating, i.forClaim, i.checkedClaim, i.countryCode])).toEqual([
+      ['Check title', 'Fact Org', '2026-01-02', 'False', 'Claim text', 'Claim', null],
+      ['The claim', 'fc2.example', '2026-01-02', 'Mixed', 'Claim text', 'The claim', null],
     ])
     expect(d.items.filter((i) => i.kind === 'article').map((i) => i.title)).toEqual(['a news piece'])
     expect(read({ articles: [article(1)] }).items.some((i) => i.kind === 'fact_check')).toBe(false)

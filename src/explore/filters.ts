@@ -9,7 +9,7 @@ export function filterItems(items: ExploreItem[], f: Filters): ExploreItem[] {
   return items.filter((i) => {
     if ((i.kind === 'fact_check') !== f.verifiedOnly) return false
     if (f.topic && i.kind === 'article' && i.topic !== f.topic) return false
-    if (text && ![i.title, i.snippet, i.forClaim].some((s) => s?.toLowerCase().includes(text))) return false
+    if (text && ![i.title, i.snippet, i.forClaim, i.checkedClaim].some((s) => s?.toLowerCase().includes(text))) return false
     if (f.languages.length && !(i.language && f.languages.includes(i.language))) return false
     if (f.publishers.length && !f.publishers.includes(publisherKey(i))) return false
     if (f.country && i.countryCode !== f.country) return false

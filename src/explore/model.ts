@@ -17,7 +17,8 @@ export type ExploreItem = {
   outletDomain: string | null
   topic: string | null // SearchQuery `original` the article was found by
   rating: string | null // fact-check only
-  forClaim: string | null // fact-check only
+  forClaim: string | null // fact-check only: the extracted claim it was found for
+  checkedClaim: string | null // fact-check only: the claim the review is actually about (FactCheck.claim)
 }
 
 export type RunState = {

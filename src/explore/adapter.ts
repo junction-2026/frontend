@@ -80,7 +80,7 @@ export function readExplore(job: Job): ExploreData {
       date: str(a.date), language, snippet: str(a.snippet), query, origin: str(a.origin),
       countryCode: cc, countryName: cc ? str(outlet?.country) : null,
       outletName: str(outlet?.name), outletDomain: outlet ? str(outlet.domain) : null,
-      topic: topicOf(query, language), rating: null, forClaim: null,
+      topic: topicOf(query, language), rating: null, forClaim: null, checkedClaim: null,
     }]
   })
 
@@ -96,7 +96,7 @@ export function readExplore(job: Job): ExploreData {
       domain: str(f.site) ?? hostOf(url), publisher: str(f.publisher) ?? str(f.site),
       date: str(f.review_date), language: str(f.language), snippet: null, query: null, origin: null,
       countryCode: null, countryName: null, outletName: null, outletDomain: null, topic: null,
-      rating: str(f.rating), forClaim: str(f.for_claim),
+      rating: str(f.rating), forClaim: str(f.for_claim), checkedClaim: str(f.claim),
     }]
   })
 

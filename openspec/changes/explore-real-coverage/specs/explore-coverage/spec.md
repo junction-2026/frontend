@@ -63,11 +63,18 @@ A covered country's display name SHALL be the Outlet `country` when non-empty, e
 - **THEN** the country is named "Germany"
 
 ### Requirement: Fact-check items
-Each fact_check FactCheck with an `http`/`https` `url` SHALL become an ExploreItem with `kind` `fact_check`, title (`title` else `claim`), publisher (`publisher` else `site`), date `review_date`, language, rating (verbatim `rating`), `forClaim` and `countryCode` null. They SHALL be shown only while the "Verified fact-checks only" filter is on, which SHALL be enabled only when fact_check succeeded with at least one FactCheck. A news_search Article SHALL never be classified as a fact-check.
+Each fact_check FactCheck with an `http`/`https` `url` SHALL become an ExploreItem with `kind` `fact_check`, title (`title` else `claim`), publisher (`publisher` else `site`), date `review_date`, language, rating (verbatim `rating`), `forClaim` (`for_claim`), `checkedClaim` (`claim`) and `countryCode` null. A news_search Article SHALL never be classified as a fact-check.
 
 #### Scenario: Isolation
 - **WHEN** an Article has the same URL as a FactCheck
 - **THEN** both exist as separate items of their own kind and only the FactCheck is listed with the filter on
+
+### Requirement: Verified fact-checks filter
+Fact-check items SHALL be shown only while the "Verified fact-checks only" filter is on, and that filter SHALL be enabled only when fact_check succeeded with at least one FactCheck.
+
+#### Scenario: No fact-checks
+- **WHEN** fact_check is missing, failed or has no FactCheck
+- **THEN** the filter is disabled
 
 ### Requirement: Single filter pipeline
 One function `filterItems(items, filters)` SHALL apply topic/query (the SearchQuery `original` the item was found by, or a free-text match on title and snippet), language, publisher, country and verified-only. The map coverage, tooltips, country panel, Related Coverage list, result counts and subtitle SHALL all derive from its output; the country filter is excluded only for map shading so other countries stay visible.
@@ -105,11 +112,22 @@ A selected country SHALL show its name, article count, distinct publishers, dist
 - **THEN** the list is filtered to Finland and then shows all items again, and no new request was sent
 
 ### Requirement: Related Coverage list
-A card list below the map SHALL render the filtered items with all text as plain text (no HTML or Markdown). The title SHALL link to `url` only for `http`/`https` with `target="_blank"` and `rel="noopener noreferrer"`, the date SHALL be shown verbatim, null fields SHALL be omitted, and an item without a verified country SHALL carry a "Country unknown" tag. Fact-check items SHALL show their rating and "Fact-check of: <for_claim>".
+A card list below the map SHALL render the filtered items with all text as plain text (no HTML or Markdown). The title SHALL link to `url` only for `http`/`https` with `target="_blank"` and `rel="noopener noreferrer"`, the date SHALL be shown verbatim, null fields SHALL be omitted, and an item without a verified country SHALL carry a "Country unknown" tag. Fact-check items SHALL additionally show their rating and the claims per "Fact-check claim presentation".
 
 #### Scenario: Markup in a snippet
 - **WHEN** a snippet is `<img src=x onerror=alert(1)>`
 - **THEN** those characters are shown literally and no `img` element exists
+
+### Requirement: Fact-check claim presentation
+A card SHALL say "Fact-check of: <for_claim>" only when the FactCheck `claim` equals `for_claim` after a trimmed, case-insensitive comparison. Otherwise it SHALL show "Similar claim reviewed: <claim>" followed by "Found for: <for_claim>", and only "Found for: <for_claim>" when no `claim` was sent, because a provider match is a similar checked claim (shared fact-check-result).
+
+#### Scenario: Similar claim
+- **WHEN** a FactCheck has `claim` "Rente mit 70 beschlossen" and `for_claim` "Rente ab 70"
+- **THEN** its card shows its rating, "Similar claim reviewed: Rente mit 70 beschlossen" and "Found for: Rente ab 70", and no "Fact-check of" text
+
+#### Scenario: Same claim
+- **WHEN** `claim` and `for_claim` differ only in case or surrounding whitespace
+- **THEN** the card shows "Fact-check of: <for_claim>"
 
 ### Requirement: Unknown country summary
 The map card subtitle SHALL read "<P> publishers across <C> countries · <U> articles with country unknown" from the filtered data, the last part only when U is greater than 0 (singular forms are used for 1).
