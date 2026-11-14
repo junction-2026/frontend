@@ -29,7 +29,7 @@ describe('Explore and Region', () => {
   it('keeps Explore unmarked and Region marked as mock, and Clear selection leads back to Explore', () => {
     open('/explore')
     expect(screen.getByRole('heading', { level: 1, name: 'Explore the world.' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'World coverage map' }).closest('.view')!.querySelector('[data-mock]')).toBeNull()
+    expect(screen.getByRole('group', { name: 'World coverage map' }).closest('.view')!.querySelector('[data-mock]')).toBeNull()
     cleanup()
     open('/explore/region')
     expect(mocked(screen.getByText('99.1%'))).not.toBeNull()
@@ -150,16 +150,15 @@ describe('Localized screens', () => {
     localStorage.setItem('veil.locale', 'fi')
     open('/explore')
     expect(screen.getByRole('heading', { level: 1, name: 'Tutki maailmaa.' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Maailmankartta kattavuudesta' })).toBeInTheDocument()
-    expect(screen.getByText('Kattavuuden tiheys:')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Avaa historia →' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Maailmankartta kattavuudesta' })).toBeInTheDocument()
+    expect(screen.getAllByText('Analyysejä maata kohti:').length).toBeGreaterThan(0)
   })
 
   it('translates Explore in Russian', () => {
     localStorage.setItem('veil.locale', 'ru')
     open('/explore')
     expect(screen.getByRole('heading', { level: 1, name: 'Исследуйте мир.' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Открыть историю →' })).toBeInTheDocument()
+    expect(screen.getAllByText('Анализов на страну:').length).toBeGreaterThan(0)
     expect(document.documentElement).toHaveAttribute('lang', 'ru')
   })
 })

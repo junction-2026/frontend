@@ -1,0 +1,7 @@
+.pmap-panel { flex-direction: column; align-items: stretch; }
+.pmap-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.pmap-panel .related-list { max-height: 24rem; overflow-y: auto; }
+.technique-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.4rem 0 0; padding: 0; list-style: none; }
+.technique-chips .tag { padding: 0.15rem 0.55rem; font-size: 0.78rem; }
+.technique-chips small { font-weight: 500; }
+.map-stage .country:focus-visible { outline: none; stroke: #0b2545; stroke-width: 2.5px; }

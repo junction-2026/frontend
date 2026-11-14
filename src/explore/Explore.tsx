@@ -47,27 +47,6 @@ function Legend() {
   )
 }
 
-// Without a job: head, disabled filters and an empty map; no request is made.
-export function ExploreEmpty() {
-  const t = useT()
-  return (
-    <section className="view">
-      <Head />
-      <div className="filters" aria-label={t('explore.filters')}>
-        <label className="field"><span aria-hidden="true" className="mirror-rtl">⌕</span><input aria-label={t('explore.search_aria')} disabled placeholder={t('explore.search_placeholder')} /></label>
-        {['topic', 'country', 'languages', 'publishers'].map((n) => <button key={n} type="button" className="field" disabled>{t('explore.filter.no_data', { label: t(`explore.filter.${n}`) })}</button>)}
-        <span className="verified-chip">{t('explore.verified_only')}</span>
-      </div>
-      <div className="card map-card">
-        <div className="map-card-head"><div><h2>{t('explore.map_title')}</h2><p>{t('explore.no_job')}</p></div></div>
-        <WorldMap coverage={{}} selected={null} interactive={false} />
-        <p className="explore-note"><Link href="/history">{t('explore.open_history')}</Link></p>
-        <Legend />
-      </div>
-    </section>
-  )
-}
-
 export function ExploreJob({ id }: { id: string }) {
   const [attempt, setAttempt] = useState(0) // a new key remounts the job request
   return <Loaded key={`${id}:${attempt}`} id={id} retry={() => setAttempt((a) => a + 1)} />

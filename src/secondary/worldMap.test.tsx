@@ -146,3 +146,46 @@ describe('WorldMap static', () => {
     expect(screen.queryByRole('button')).toBeNull()
   })
 })
+
+describe('World map customization', () => {
+  const Custom = (p: { onSelect?: (c: string | null) => void; selected?: string | null }) => (
+    <WorldMap coverage={{}} selected={p.selected ?? null} onSelect={p.onSelect} fillFor={(c) => (c === 'DE' ? '#123456' : '#E9EDF2')} renderTooltip={(c) => <em>tip {c}</em>} focusable />
+  )
+
+  it('uses fillFor and renderTooltip, keeping the fill while hovered or selected', () => {
+    const { rerender } = render(<Custom />)
+    expect(document.querySelector('path[data-code="DE"]')).toHaveAttribute('fill', '#123456')
+    expect(document.querySelector('path[data-code="FR"]')).toHaveAttribute('fill', '#E9EDF2')
+    fireEvent.pointerEnter(document.querySelector('path[data-code="DE"]')!)
+    expect(screen.getByRole('tooltip')).toHaveTextContent('tip DE')
+    expect(document.querySelector('path[data-code="DE"]')).toHaveAttribute('fill', '#123456')
+    rerender(<Custom selected="DE" />)
+    expect(document.querySelector('path[data-code="DE"]')).toHaveAttribute('fill', '#123456')
+  })
+
+  it('makes countries focusable: label, tooltip on focus with aria-describedby, Enter and Space select, blur hides', () => {
+    const onSelect = vi.fn()
+    render(<Custom onSelect={onSelect} />)
+    const de = document.querySelector<SVGPathElement>('path[data-code="DE"]')!
+    expect(de).toHaveAttribute('tabindex', '0')
+    expect(de).toHaveAttribute('aria-label', 'Germany')
+    expect(document.querySelector('path:not([data-code])')).not.toHaveAttribute('tabindex') // inert features stay out
+    fireEvent.focus(de)
+    expect(de).toHaveAttribute('aria-describedby', screen.getByRole('tooltip').id)
+    fireEvent.keyDown(de, { key: 'Enter' })
+    fireEvent.keyDown(de, { key: ' ' })
+    fireEvent.keyDown(de, { key: 'a' })
+    expect(onSelect.mock.calls).toEqual([['DE'], ['DE']])
+    fireEvent.blur(de)
+    expect(screen.queryByRole('tooltip')).toBeNull()
+  })
+
+  it('keeps today\'s behaviour without the props: not focusable, role img, coverage tooltip', () => {
+    render(<ExploreView />)
+    expect(finland()).not.toHaveAttribute('tabindex')
+    expect(finland()).not.toHaveAttribute('role')
+    expect(screen.getByRole('img', { name: 'World coverage map' })).toBeInTheDocument()
+    fireEvent.keyDown(finland(), { key: 'Enter' })
+    expect(finland()).not.toHaveAttribute('data-selected')
+  })
+})

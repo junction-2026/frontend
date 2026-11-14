@@ -1,3 +1,4 @@
+import { readAnalyses, readCountries, type CountriesResponse, type MapAnalysesPage } from './mapTypes'
 import type { AnalyzerInfo, ApiResult, ChatReply, ChatRequest, CreateJobBody, Job, JobLocalization, JobSummary, Page } from './types'
 
 const BASE = '/api/v1'
@@ -67,4 +68,19 @@ export async function postJobChat(jobId: string, body: ChatRequest, timeoutMs = 
   } finally {
     clearTimeout(timer)
   }
+}
+
+// Propaganda map (shared spec propaganda-map-api).
+async function readMap<T>(path: string, read: (raw: unknown) => T): Promise<ApiResult<T>> {
+  const r = await request<unknown>(path)
+  return r.ok ? { ok: true, data: read(r.data) } : r
+}
+export const getMapCountries = () => readMap<CountriesResponse>('/map/countries', readCountries)
+
+export function listCountryAnalyses(code: string, { cursor, limit }: { cursor?: string | null; limit?: number } = {}) {
+  const q = new URLSearchParams()
+  if (limit !== undefined) q.set('limit', String(limit))
+  if (cursor) q.set('cursor', cursor)
+  const qs = q.toString()
+  return readMap<MapAnalysesPage>(`/map/countries/${id(code)}/analyses${qs ? `?${qs}` : ''}`, readAnalyses)
 }

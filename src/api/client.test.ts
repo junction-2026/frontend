@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cancelJob, createJob, getJob, getJobLocalization, listAnalyzers, listJobs, postJobChat } from './client'
+import { cancelJob, createJob, getJob, getJobLocalization, getMapCountries, listAnalyzers, listCountryAnalyses, listJobs, postJobChat } from './client'
 import { errorMessage } from './errors'
 import { isDone, verdictOf } from './types'
 
@@ -157,4 +157,39 @@ describe('chat error copy', () => {
     [{ code: 'rate_limited', details: { retry_after_s: 12 } }, /12 seconds/],
     [{ code: 'rate_limited' }, /a moment/],
   ])('%j', (e, text) => expect(errorMessage({ status: 0, message: 'raw', ...e })).toMatch(text))
+})
+
+describe('propaganda map client', () => {
+  it('reads countries tolerantly: extra members ignored, bad items dropped', async () => {
+    fetchMock.mockResolvedValue(json({ items: [{ country_code: 'ru', country: 'Russia', analyses: 2, extra: 1, techniques: [{ name: 'Doubt', display: 'Doubt', analyses: 1, x: 1 }] }, { country_code: 'DE', analyses: 0 }, 'junk'], analyses: 2, more: true }))
+    expect(await getMapCountries()).toEqual({ ok: true, data: { analyses: 2, items: [{ country_code: 'RU', country: 'Russia', analyses: 2, techniques: [{ name: 'Doubt', display: 'Doubt', analyses: 1 }] }] } })
+    expect(calls()).toEqual([['/api/v1/map/countries', 'GET']])
+  })
+
+  it('reads analyses: no strength stays absent, verdict and title may be null', async () => {
+    fetchMock.mockResolvedValue(json({ items: [{ job_id: 'j1', created_at: '2026-01-02T03:04:05Z', country_code: 'DE', country: 'Germany', outlet: { name: 'DW', domain: 'dw.com', z: 1 }, source: { url: 'https://dw.com/a', title: null }, snippet: 's', techniques: [{ name: 'Repetition', display: 'Repetition' }, { name: 'Doubt', display: 'Doubt', strength: 'weak', q: 1 }], verdict: null, extra: {} }, { snippet: 'no id' }], next_cursor: 'c2' }))
+    const r = await listCountryAnalyses('DE', { limit: 20 })
+    expect(r.ok && r.data.next_cursor).toBe('c2')
+    const [a] = r.ok ? r.data.items : []
+    expect(r.ok && r.data.items).toHaveLength(1)
+    expect(a.techniques).toEqual([{ name: 'Repetition', display: 'Repetition' }, { name: 'Doubt', display: 'Doubt', strength: 'weak' }])
+    expect(a.techniques[0]).not.toHaveProperty('strength')
+    expect(a.verdict).toBeNull()
+    expect(a.source.title).toBeNull()
+    expect(a.outlet).toEqual({ name: 'DW', domain: 'dw.com' })
+  })
+
+  it('sends encoded code, limit and cursor only when given', async () => {
+    fetchMock.mockResolvedValue(json({ items: [], next_cursor: null }))
+    await listCountryAnalyses('R U', { cursor: 'c 1', limit: 20 })
+    await listCountryAnalyses('FR')
+    expect(calls()).toEqual([['/api/v1/map/countries/R%20U/analyses?limit=20&cursor=c+1', 'GET'], ['/api/v1/map/countries/FR/analyses', 'GET']])
+  })
+
+  it('surfaces an ApiError and tolerates a missing items member', async () => {
+    fetchMock.mockResolvedValueOnce(json({ error: { code: 'invalid_request', message: 'bad' } }, 400))
+    expect(await listCountryAnalyses('DEU')).toEqual({ ok: false, error: { status: 400, code: 'invalid_request', message: 'bad' } })
+    fetchMock.mockResolvedValueOnce(json({}))
+    expect(await getMapCountries()).toEqual({ ok: true, data: { items: [], analyses: 0 } })
+  })
 })
