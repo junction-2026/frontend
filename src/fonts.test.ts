@@ -33,6 +33,11 @@ describe('fonts', () => {
     expect(bad).toEqual([])
   })
 
+  it('--fw-extrabold is used only by the .verdict h2 rule', () => {
+    const uses = css.flatMap((f) => [...readFileSync(f, 'utf8').matchAll(/([^{}]+)\{[^}]*font-weight:\s*var\(--fw-extrabold\)/g)].map((m) => `${f}: ${m[1].trim()}`))
+    expect(uses).toEqual(['src/job/results.css: .verdict h2'])
+  })
+
   it('every font-family is var(--font) except monospace', () => {
     const bad = css.flatMap((f) =>
       [...readFileSync(f, 'utf8').matchAll(/font-family:\s*([^;}]+)/g)]
