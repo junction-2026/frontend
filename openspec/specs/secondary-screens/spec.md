@@ -46,11 +46,11 @@ The "Inspect wire feeds →" link in the Explore country panel SHALL navigate to
 - **THEN** the heading is inside a mock element labelled "Example states", every link targets `/`, `/history` or `/ask`, and the Retry Wire Retrieval button is disabled and marked
 
 ### Requirement: Settings screen
-`/settings` SHALL render an `<h1>` "Settings & Methodology", the tabs (Interface & Language, Analyzers & Ensembles, Accessibility, Epistemic Framework, Data Retention) and the "Interface & analysis language" block. The tabs and that block SHALL each be wrapped in `Mock`, and their toggles SHALL be non-functional (`aria-disabled="true"`, state unchanged by clicks). The Accessibility, Epistemic Framework and Data Retention sections exist only as tabs, as in the mock.
+`/settings` SHALL render an `<h1>` "Settings & Methodology", the tabs (Interface & Language, Analyzers & Ensembles, Accessibility, Epistemic Framework, Data Retention) wrapped in `Mock`, the analyzers block, the "View edge-case states →" link to `/states` and the "Return to Analyze" link to `/`. It SHALL NOT render a language block, fake select, "Recommended" badge or `role="switch"` element.
 
 #### Scenario: Mock settings
 - **WHEN** `/settings` is rendered
-- **THEN** the tabs and the language block are inside mock elements and clicking the toggle does not change `aria-checked`
+- **THEN** the tabs are inside a mock element, and no language block or `role="switch"` element is present
 
 ### Requirement: Settings analyzers block
 The "Active AI analyzers & ensembles" block SHALL call `GET /api/v1/analyzers` once and list its items, and SHALL NOT be wrapped in `Mock`. The header SHALL show the pill "● <enabled> of <total> analyzers enabled".
@@ -205,11 +205,11 @@ Country names SHALL be shown with `Intl.DisplayNames` (region) in the active loc
 - **THEN** the selected region reads "Finnland" and the index coverage reads "99,1 %"
 
 ### Requirement: Settings mock under every locale
-The Settings tabs and the "Interface & analysis language" block SHALL keep their `Mock` wrapper and `aria-disabled="true"` toggle in every locale; only their text is translated.
+The Settings tabs SHALL keep their `Mock` wrapper in every locale; only their text is translated, and no locale SHALL render the removed language block.
 
 #### Scenario: French Settings stays mock
-- **WHEN** the locale is `fr` and the user clicks the language toggle on `/settings`
-- **THEN** the labels are French, the toggle keeps `aria-checked="true"` and `aria-disabled="true"` and the block is inside a mock element
+- **WHEN** the locale is `fr` and `/settings` is rendered
+- **THEN** it shows "Paramètres et méthodologie", the "Conservation des données" tab inside a mock element, the "Analyseurs IA et ensembles actifs" region, and no "Langue de l’interface" text or switch
 
 ### Requirement: Secondary screens right-to-left layout
 `secondary.css` SHALL use logical properties so the screens mirror under `dir=rtl`; the map SVG SHALL NOT be mirrored.
