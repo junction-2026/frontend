@@ -24,7 +24,8 @@ function Source({ href, label }: { href: string | null; label: string }) {
 function Card({ c }: { c: Record<string, unknown> }) {
   const t = useT()
   const enc = obj(c.encyclopedia) && text(c.encyclopedia.quote) !== '' ? c.encyclopedia : null // anything else reads as no_coverage
-  const elsewhere = (Array.isArray(c.elsewhere) ? c.elsewhere : []).filter(obj).filter((e) => text(e.snippet) !== '')
+  // keep each item's original index: a QuoteRef's `index` addresses the unfiltered `elsewhere` array
+  const elsewhere = (Array.isArray(c.elsewhere) ? c.elsewhere : []).map((e, index) => ({ e, index })).filter(({ e }) => obj(e) && text(e.snippet) !== '') as { e: Record<string, unknown>; index: number }[]
   const sense = c.sense === 'same' || c.sense === 'differs' ? c.sense : 'unknown'
   // QuoteRefs that resolve to a shown quote; unresolvable ones are ignored.
   const refs = sense === 'differs' && Array.isArray(c.differs_from) ? c.differs_from.filter(obj) : []
@@ -55,9 +56,9 @@ function Card({ c }: { c: Record<string, unknown> }) {
           <p className="tech-note">{t('results.term.no_elsewhere')}</p>
         ) : (
           <ul className="wiki-values">
-            {elsewhere.map((e, i) => (
-              <li key={i} data-differs={differs(i) || undefined}>
-                {differs(i) && marker}
+            {elsewhere.map(({ e, index }) => (
+              <li key={index} data-differs={differs(index) || undefined}>
+                {differs(index) && marker}
                 <p className="wiki-passage" dir="auto">{text(e.snippet)}</p>
                 <Source href={newsHref(e.url)} label={text(e.title) || text(e.domain) || text(e.url)} />
                 {text(e.domain) && text(e.title) && <> · <bdi dir="auto">{text(e.domain)}</bdi></>}

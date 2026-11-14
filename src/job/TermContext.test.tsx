@@ -4,6 +4,7 @@ import { I18nProvider } from '../i18n'
 import { job, run } from './fixtures'
 import { TermContext } from './TermContext'
 import JobView from './JobView'
+import { Verdict } from './Verdict'
 
 const ENC = 'https://en.wikipedia.org/w/index.php?title=Great_Reset&oldid=1250000000'
 const enc = (extra: Record<string, unknown> = {}) => ({ quote: 'The Great Reset is an initiative.', title: 'Great Reset', url: ENC, language: 'en', page_id: 1, revision_id: 1250000000, ...extra })
@@ -101,13 +102,32 @@ describe('Term context section', () => {
   })
 })
 
+describe('QuoteRef index', () => {
+  it('addresses the original elsewhere array, not the list of usable items', () => {
+    const { container } = show([term({ sense: 'differs', elsewhere: [news(0, { snippet: '' }), news(1), news(2)], differs_from: [{ source: 'elsewhere', index: 2 }] })])
+    const marked = container.querySelectorAll('[data-differs]')
+    expect(marked).toHaveLength(1)
+    expect(marked[0]).toHaveTextContent('Snippet 2 about the Great Reset')
+  })
+})
+
 describe('placement', () => {
-  it('comes after the Wikipedia section in the job view and leaves the final assessment alone', () => {
+  it('comes after the Wikipedia section in the job view', () => {
     const wp = run('wikipedia', 'succeeded', { result: { languages: ['en'], claims: [], requests_used: 0, cached: 0 } })
     const tc = run('term_context', 'succeeded', { result: result([term()]) })
     const { container } = render(<I18nProvider><JobView job={job({ analyzers: [wp, tc] }) as never} /></I18nProvider>)
     const w = container.querySelector('.wiki-lookup')!
     const t = container.querySelector('.term-context')!
     expect(w.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('the final assessment shows no Wikipedia quotation from term context', () => {
+    const tc = run('term_context', 'succeeded', { result: result([term()]) })
+    const j = job({ analyzers: [tc] }) as never
+    const { container } = render(<I18nProvider><Verdict job={j} /><JobView job={j} /></I18nProvider>)
+    const quote = 'The Great Reset is an initiative.'
+    expect(container.querySelectorAll('.term-context')).toHaveLength(1)
+    expect(within(container.querySelector('.term-context') as HTMLElement).getByText(quote)).toBeInTheDocument()
+    expect(screen.getAllByText(quote)).toHaveLength(1)
   })
 })
