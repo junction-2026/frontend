@@ -1,15 +1,33 @@
 import { useState } from 'react'
 import type { Job } from '../api/types'
-import { useFormat, useT } from '../i18n'
-import { plain, readLlm, readTechniques, str, techniqueName, type Detection } from './read'
+import { useFormat, useLocale, useT } from '../i18n'
+import { findingEntry, translatedOf, useLoc, useLocalizedText } from './localize'
+import { plain, readLlm, readTechniques, str, techniqueInfo, techniqueText, whyText, type Finding } from './read'
 import { segment, validSpans, type Span } from './segments'
 import './job.css'
 
 type Active = { key: string; whys: string[] }
 
+// One LLM finding: name and definition (catalog by label), explanation from the localization with its marker,
+// the quoted span text verbatim.
+function LlmFinding({ f, name, definition }: { f: Finding; name: string; definition: string }) {
+  const { text, note } = useLocalizedText(f.explanation, findingEntry(useLoc(), f.index, f.label))
+  return (
+    <li className="tech-item">
+      <strong>{name}</strong>
+      <p>{definition}</p>
+      <p dir="auto">{text}</p>
+      {note}
+      {typeof f.span.text === 'string' && <blockquote><bdi dir="auto">{f.span.text}</bdi></blockquote>}
+    </li>
+  )
+}
+
 // The Detail body: highlighted text, technique list and the AI-assessed group of a loaded job.
 export default function JobView({ job }: { job: Job }) {
   const t = useT()
+  const { locale } = useLocale()
+  const loc = useLoc()
   const { formatNumber: fmt } = useFormat()
   const [selected, setSelected] = useState<string | null>(null)
   const [active, setActive] = useState<Active | null>(null)
@@ -18,18 +36,21 @@ export default function JobView({ job }: { job: Job }) {
   const title = typeof rawTitle === 'string' && rawTitle.trim() !== '' ? rawTitle : ''
   const techniques = readTechniques(job)
   const llm = readLlm(job)
-  const names = new Map<string, string>(techniques?.detected.map((d: Detection) => [d.name, techniqueName(d)]))
+  const infos = new Map((techniques?.detected ?? []).map((d) => [d.name, techniqueInfo(d, locale, techniques?.lang)]))
+  const names = new Map<string, string>([...infos].map(([id, i]) => [id, i.name]))
   const spans: Span[] = techniques
     ? techniques.detected.flatMap((d) =>
-        validSpans(content, d.spans).map((s) => ({ ...s, technique: d.name, why: str((s as Span).why) })),
+        validSpans(content, d.spans).map((s) => ({ ...s, technique: d.name, why: whyText(infos.get(d.name)!, locale, str((s as Span).why), s.text) })),
       )
     : []
+  const llmText = (f: Finding) => techniqueText(f.label, locale, llm?.lang ?? locale, { name: f.name, definition: f.definition })
   const llmSpans = (field: string, text: string): Span[] =>
     (llm?.findings ?? [])
       .filter((f) => f.span.field === field)
       .flatMap((f) => {
-        names.set(`llm:${f.label}`, `${t('results.jobview.ai_prefix')} ${f.name}`)
-        return validSpans(text, [{ ...f.span, technique: `llm:${f.label}` }]).map((s) => ({ ...s, why: f.explanation }))
+        names.set(`llm:${f.label}`, `${t('results.jobview.ai_prefix')} ${llmText(f).name}`)
+        const why = (loc.need && translatedOf(findingEntry(loc, f.index, f.label))) || f.explanation
+        return validSpans(text, [{ ...f.span, technique: `llm:${f.label}` }]).map((s) => ({ ...s, why }))
       })
   const contentSpans = [...spans, ...llmSpans('content', content)]
   const titleSpans = llmSpans('title', title)
@@ -73,11 +94,11 @@ export default function JobView({ job }: { job: Job }) {
           <span>{t('results.jobview.payload')}</span>
         </div>
         {title !== '' && (
-          <p className="job-text job-title" data-testid="job-title">
+          <p className="job-text job-title" data-testid="job-title" dir="auto">
             {marked('title', title, titleSpans)}
           </p>
         )}
-        <div className="job-text" data-testid="job-text">
+        <div className="job-text" data-testid="job-text" dir="auto">
           {marked('content', content, contentSpans)}
         </div>
       </div>
@@ -107,6 +128,7 @@ export default function JobView({ job }: { job: Job }) {
             {techniques.detected.map((d) => {
               const n = spanCount(d.name)
               const pl = plain(d)
+              const info = infos.get(d.name)!
               const anchor = firstSpan(d.name)
               return (
                 <li key={d.name} className="tech-item">
@@ -118,12 +140,13 @@ export default function JobView({ job }: { job: Job }) {
                     <span className="tech-item-top">
                       <strong className="job-technique-name">{names.get(d.name)}</strong>
                       <span className="badge-soft">{t('results.jobview.id')} {d.name}</span>
+                      {(d.strength === 'strong' || d.strength === 'weak') && <span className="badge-soft">{t(`results.jobview.strength.${d.strength}`)}</span>}
                     </span>
-                    <span className="job-technique-definition">{pl.definition ?? String(d.explanation ?? '')}</span>{' '}
+                    <span className="job-technique-definition">{info.definition}</span>{' '}
                     <span className="job-technique-count">{n > 0 ? t('results.jobview.phrases', { count: n, n: fmt(n) }) : t('results.jobview.no_phrase')}</span>
                   </button>
-                  {n === 0 && pl.why && <p className="job-technique-why">{pl.why}</p>}
-                  {anchor && <div className="anchor">{t('results.jobview.anchor')} “{anchor.text}”</div>}
+                  {n === 0 && pl.why && <p className="job-technique-why">{whyText(info, locale, pl.why)}</p>}
+                  {anchor && <div className="anchor">{t('results.jobview.anchor')} “<bdi dir="auto">{anchor.text}</bdi>”</div>}
                 </li>
               )
             })}
@@ -138,14 +161,7 @@ export default function JobView({ job }: { job: Job }) {
             <>
               <p className="tech-note">{t('results.jobview.llm_note')}</p>
               <ul className="job-llm">
-                {llm.findings.map((f, i) => (
-                  <li key={i} className="tech-item">
-                    <strong>{f.name}</strong>
-                    <p>{f.definition}</p>
-                    <p>{f.explanation}</p>
-                    {typeof f.span.text === 'string' && <blockquote>{f.span.text}</blockquote>}
-                  </li>
-                ))}
+                {llm.findings.map((f) => <LlmFinding key={f.index} f={f} name={llmText(f).name} definition={llmText(f).definition} />)}
               </ul>
             </>
           )}

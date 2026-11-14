@@ -129,3 +129,14 @@
   border-inline-start: 4px solid #a5d8ff;
   white-space: pre-wrap;
 }
+
+/* Marker under a translated or not-localized text; the toggle is a .btn-link. */
+.loc-note {
+  display: block;
+  margin-block: 0.25rem 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.loc-note .btn-link {
+  margin-inline-start: 0.4rem;
+}

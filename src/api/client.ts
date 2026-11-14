@@ -1,4 +1,4 @@
-import type { AnalyzerInfo, ApiResult, CreateJobBody, Job, JobSummary, Page } from './types'
+import type { AnalyzerInfo, ApiResult, CreateJobBody, Job, JobLocalization, JobSummary, Page } from './types'
 
 const BASE = '/api/v1'
 
@@ -45,3 +45,5 @@ export function listJobs({ limit, cursor, status }: { limit?: number; cursor?: s
 export const getJob = (jobId: string) => request<Job>(`/jobs/${id(jobId)}`)
 export const cancelJob = (jobId: string) => request<Job>(`/jobs/${id(jobId)}/cancel`, { method: 'POST' })
 export const listAnalyzers = () => request<{ items: AnalyzerInfo[] }>('/analyzers')
+export const getJobLocalization = (jobId: string, language: string) =>
+  request<JobLocalization>(`/jobs/${id(jobId)}/localization?language=${encodeURIComponent(language)}`)

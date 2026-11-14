@@ -1,5 +1,6 @@
 import type { AnalyzerRun, Job } from '../api/types'
 import { useT, useFormat } from '../i18n'
+import { analyzerName, availabilityNote } from './activity'
 import { timedOut } from './read'
 
 const NOT_RUN = ['disabled', 'not_selected']
@@ -27,11 +28,11 @@ function Row({ a }: { a: AnalyzerRun }) {
   const t = useT()
   const p = pill(a, t)
   const av = availability(a, t)
-  const note = str(a.note) || (a.status === 'failed' ? str(a.error?.code) : '')
+  const note = availabilityNote(t, a) || (a.status === 'failed' ? str(a.error?.code) : '')
   return (
     <li className="analyzer-row">
       <div className="analyzer-main">
-        <strong>{str(a.name) || str(a.id)}</strong>
+        <strong>{analyzerName(t, a)}</strong>
         {note && <span className="analyzer-note">{note}</span>}
       </div>
       {av && <span className="badge-soft">{av}</span>}

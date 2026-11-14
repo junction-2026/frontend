@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { verdictOf, type Job } from '../api/types'
 import { useFormat, useT } from '../i18n'
+import { userTextEntry, useLoc, useLocalizedText } from './localize'
 import { timedOut } from './read'
 import { percent } from './text'
 
@@ -65,14 +66,16 @@ function ConfidenceInfo() {
   )
 }
 
-function Explanation({ value }: { value: string }) {
+function Explanation({ original }: { original: string }) {
   const t = useT()
   const [full, setFull] = useState(false)
+  const { text: value, note } = useLocalizedText(original, userTextEntry(useLoc()))
   const chars = Array.from(value) // code points: a surrogate pair is never split
   const long = chars.length > SHORT
   return (
     <div className="verdict-explanation">
-      <p className="verdict-user-text">{long && !full ? `${chars.slice(0, SHORT).join('')}…` : value}</p>
+      <p className="verdict-user-text" dir="auto">{long && !full ? `${chars.slice(0, SHORT).join('')}…` : value}</p>
+      {note}
       {long && (
         <button type="button" className="btn-link" aria-expanded={full} onClick={() => setFull(!full)}>{t('results.show_full')}</button>
       )}
@@ -108,7 +111,7 @@ export function Verdict({ job }: { job: Job }) {
         <span>{confidenceText(r.confidence, t, formatNumber)}</span>
         <ConfidenceInfo />
       </p>
-      <Explanation value={text(r.user_text)} />
+      <Explanation original={text(r.user_text)} />
       {partial && <p role="note" className="verdict-partial">{t('results.partial')}</p>}
     </section>
   )

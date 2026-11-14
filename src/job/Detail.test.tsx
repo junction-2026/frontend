@@ -337,7 +337,7 @@ describe('job result view (Detail)', () => {
       await show(job(c, { span_status: 'ok', detected: [{ ...det('Loaded_Language', [span('Loaded_Language', c, 'LYING')]), score: 0.96 }] }))
       expect(screen.getByText('ID: Loaded_Language')).toHaveClass('badge-soft')
       expect(screen.queryByText(/Match|96/)).toBeNull()
-      expect(screen.getByText('Excerpt anchor: “LYING”')).toBeInTheDocument()
+      expect(screen.getByText('LYING', { selector: 'bdi' }).closest('.anchor')).toHaveTextContent('Excerpt anchor: “LYING”')
     })
   })
 })
