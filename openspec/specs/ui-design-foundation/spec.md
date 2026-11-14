@@ -97,8 +97,8 @@ Each of `src/views/{Home,Analyzing,Results,Detail,History,Explore,Region,Ask,Sta
 - **THEN** it has no row for the top-bar language selector or the Home language chip
 
 ### Requirement: Product brand
-The document `<title>` SHALL be "Stiriri / Intelligence". The top-bar brand link SHALL read "Stiriri" followed by the translated brand subtitle ("Intelligence" in `en`) and point to `/`. The brand name "Stiriri" SHALL NOT be translated in any locale.
+The document `<title>` SHALL be "VEIL / Intelligence". The top-bar brand link SHALL read "VEIL" followed by the translated brand subtitle ("Intelligence" in `en`) and point to `/`. The brand name "VEIL" SHALL NOT be translated in any locale.
 
 #### Scenario: Brand in en
 - **WHEN** the app is shown in `en`
-- **THEN** the document title is "Stiriri / Intelligence" and the banner brand link reads "Stiriri / Intelligence" and points to `/`
+- **THEN** the document title is "VEIL / Intelligence" and the banner brand link reads "VEIL / Intelligence" and points to `/`

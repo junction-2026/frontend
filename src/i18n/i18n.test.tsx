@@ -50,7 +50,7 @@ describe('language selector', () => {
     expect(screen.getByRole('link', { name: 'Verlauf' })).toBeInTheDocument()
     expect(screen.getByText('Sehen Sie hinter die Erzählung.')).toBeInTheDocument()
     expect(screen.getByText('0 Zeichen')).toBeInTheDocument()
-    expect(localStorage.getItem('stiriri.locale')).toBe('de')
+    expect(localStorage.getItem('veil.locale')).toBe('de')
     unmount()
     render(app()) // reload
     expect(select()).toHaveValue('de')
@@ -108,24 +108,30 @@ describe('initial locale', () => {
   })
   it('prefers a valid stored value and ignores an invalid one', () => {
     setLanguages(['fi-FI'])
-    localStorage.setItem('stiriri.locale', 'xx')
+    localStorage.setItem('veil.locale', 'xx')
     expect(current()).toBe('fi')
   })
-  it('adopts a valid legacy veil.locale and migrates it', () => {
-    localStorage.setItem('veil.locale', 'de')
+  it('adopts a valid legacy stiriri.locale and migrates it', () => {
+    localStorage.setItem('stiriri.locale', 'de')
     expect(current()).toBe('de')
-    expect(localStorage.getItem('stiriri.locale')).toBe('de')
-    expect(localStorage.getItem('veil.locale')).toBeNull()
+    expect(localStorage.getItem('veil.locale')).toBe('de')
+    expect(localStorage.getItem('stiriri.locale')).toBeNull()
   })
-  it('prefers stiriri.locale over the legacy key', () => {
-    localStorage.setItem('veil.locale', 'de')
-    localStorage.setItem('stiriri.locale', 'fi')
+  it('prefers veil.locale over the legacy key', () => {
+    localStorage.setItem('stiriri.locale', 'de')
+    localStorage.setItem('veil.locale', 'fi')
     expect(current()).toBe('fi')
   })
   it('ignores an invalid legacy value', () => {
     setLanguages(['fi-FI'])
-    localStorage.setItem('veil.locale', 'xx')
+    localStorage.setItem('stiriri.locale', 'xx')
     expect(current()).toBe('fi')
+  })
+  it('names the product VEIL in the catalogs, inflected where needed', () => {
+    expect(CATALOGS.de['results.ask']).toBe('VEIL fragen')
+    expect(CATALOGS.fi['results.ask']).toBe('Kysy VEILiltä')
+    expect(CATALOGS.fr['results.ask']).toBe('Demander à VEIL')
+    expect(CATALOGS.ar['results.ask']).toBe('اسأل VEIL')
   })
   it('keeps working when storage throws', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('denied') })
