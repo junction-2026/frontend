@@ -1,4 +1,4 @@
-export type Span = { technique: string; text: string; start: number; end: number }
+export type Span = { technique: string; text: string; start: number; end: number; why?: string }
 export type Segment = { text: string; techniques: string[] }
 
 // Keeps only spans whose offsets are valid UTF-16 indices into content and whose slice equals text.
