@@ -27,6 +27,10 @@
   --radius: 14px;
   --radius-sm: 10px;
   --radius-pill: 999px;
+  --radius-verdict: 24px;
+  --verdict-detected-bg: #e4f3e8;
+  --verdict-uncertain-bg: #fff0d9;
+  --verdict-not-detected-bg: #e6f0ff;
   --font: "Plus Jakarta Sans", "Segoe UI", sans-serif;
   --serif: "Newsreader Variable", "Newsreader", "Iowan Old Style", Georgia, serif;
   --max: 1080px;

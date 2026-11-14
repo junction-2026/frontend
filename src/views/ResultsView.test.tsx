@@ -20,55 +20,172 @@ const show = async (j: unknown) => {
 const withResult = (extra: Record<string, unknown>) => job({ finalization: finalization('completed', { result: assessment(extra) }) })
 const techniques = (detected: unknown[], status = 'succeeded') => run('techniques', status, { result: { detected } })
 const inMock = (el: HTMLElement) => el.closest('[data-mock]')
+const toggle = () => fireEvent.click(screen.getByRole('button', { name: /detailed analysis$/ }))
+const verdictEl = () => document.querySelector('[data-verdict]') as HTMLElement
+const long = (n: number) => 'x'.repeat(n)
 
-describe('Results: verdict card', () => {
+describe('Results: verdict component', () => {
   it.each([
-    ['detected', 'Manipulation detected', 'red'],
-    ['not_detected', 'No manipulation indicators', 'green'],
-    ['uncertain', 'Uncertain', 'orange'],
-    ['suspicious', 'Uncertain', 'orange'], // unknown verdict reads as uncertain
-  ])('shows verdict %s as a "%s" banner coloured %s', async (verdict, label, colour) => {
+    ['detected', 'Yes, propaganda detected.', 'VEIL identified signs of manipulative messaging in this content.'],
+    ['not_detected', 'No clear signs of propaganda.', 'VEIL did not identify strong indicators of propaganda in this content.'],
+    ['uncertain', "We're not sure yet.", 'The available evidence is insufficient or conflicting.'],
+    ['suspicious', "We're not sure yet.", 'The available evidence is insufficient or conflicting.'], // unknown reads as uncertain
+  ])('shows verdict %s', async (verdict, heading, body) => {
     const h = await show(withResult({ verdict }))
-    expect(h).toHaveTextContent(label)
-    expect(h.parentElement).toHaveClass('verdict-banner', colour)
-    expect(document.querySelector('.verdict-card .status-pill')).toBeNull()
+    const el = verdictEl()
+    expect(document.querySelectorAll('[data-verdict]')).toHaveLength(1)
+    expect(el.tagName).toBe('SECTION')
+    expect(el.dataset.verdict).toBe(verdict === 'suspicious' ? 'uncertain' : verdict)
+    expect(el).toContainElement(h)
+    expect(h).toHaveTextContent(heading)
+    expect(el).toHaveTextContent(body)
+    expect(el).toHaveTextContent('This text pressures the reader.')
     expect(inMock(h)).toBeNull()
   })
 
-  it('does not show user_text or a confidence number', async () => {
+  it('chooses the state only from the verdict, never from confidence', async () => {
+    await show(withResult({ verdict: 'not_detected', confidence: 0.99 }))
+    expect(verdictEl().dataset.verdict).toBe('not_detected')
+  })
+
+  it('shows the confidence as a rounded percentage', async () => {
+    await show(withResult({ confidence: 0.94 }))
+    expect(verdictEl()).toHaveTextContent('94% confidence')
+  })
+
+  it.each([[null], [undefined], ['0.9'], [Number.NaN], [1.2], [-0.1]])('shows "Confidence unavailable" for %s', async (confidence) => {
+    await show(withResult({ confidence }))
+    expect(verdictEl()).toHaveTextContent('Confidence unavailable')
+    expect(verdictEl().textContent).not.toMatch(/%/)
+  })
+
+  it('explains confidence in a tooltip on focus and hover, and hides it on blur and Escape', async () => {
+    await show(withResult({}))
+    const btn = screen.getByRole('button', { name: 'What does confidence mean?' })
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    act(() => btn.focus())
+    const tip = screen.getByRole('tooltip')
+    expect(tip).toHaveTextContent("How confident VEIL's final assessment is that this verdict is supported by the available evidence. It is not the probability that the content is propaganda.")
+    expect(btn).toHaveAttribute('aria-describedby', tip.id)
+    fireEvent.keyDown(btn, { key: 'Escape' })
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    fireEvent.mouseEnter(btn)
+    expect(screen.getByRole('tooltip')).toBeInTheDocument()
+    fireEvent.mouseLeave(btn)
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    act(() => btn.focus())
+    act(() => btn.blur())
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    expect(document.body.textContent).not.toMatch(/calibrated|model consensus|probability of propaganda/i)
+  })
+
+  it('shows user_text literally as a text node', async () => {
     const text = '<b>fake</b> [click](https://example.com) http://example.com'
-    await show(withResult({ user_text: text, confidence: 0.86 }))
+    await show(withResult({ user_text: text }))
+    expect(screen.getByText(text)).toBeInTheDocument()
+    expect(verdictEl().querySelector('b, a')).toBeNull()
+    expect(screen.getByText(text)).toHaveClass('verdict-user-text')
+  })
+
+  it('shortens user_text over 280 code points and expands it in place', async () => {
+    const text = `${'😀'.repeat(279)}ab${long(10)}`
+    await show(withResult({ user_text: text }))
+    const btn = screen.getByRole('button', { name: 'Show full explanation' })
+    expect(btn).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByText(text)).toBeNull()
-    expect(document.body).not.toHaveTextContent('fake')
-    expect(screen.queryByText(/0\.86|86 ?%/)).toBeNull()
-    expect(screen.queryByText(/confidence/i)).toBeNull()
+    expect(screen.getByText(`${'😀'.repeat(279)}a…`)).toBeInTheDocument()
+    fireEvent.click(btn)
+    expect(btn).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText(text)).toBeInTheDocument()
   })
 
-  it('labels an orchestrator result as insufficient evidence next to the banner', async () => {
-    const h = await show(withResult({ verdict: 'uncertain', confidence: null, produced_by: 'orchestrator', user_text: 'Nothing could be checked.' }))
-    expect(screen.queryByText('Nothing could be checked.')).toBeNull()
-    expect(h).toHaveTextContent('Uncertain')
-    expect(screen.getByText('Insufficient evidence')).toBeInTheDocument()
+  it('shows user_text of exactly 280 code points in full without a button', async () => {
+    await show(withResult({ user_text: '😀'.repeat(280) }))
+    expect(screen.getByText('😀'.repeat(280))).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Show full explanation' })).toBeNull()
   })
 
-  it('lists one tag per detected technique without scores', async () => {
-    await show(
-      job({
-        analyzers: [
-          techniques([
-            { name: 'Loaded_Language', display: 'Loaded Language', score: 0.91, strength: 'high' },
-            { name: 'Doubt', display: 'Doubt', plain_language: { name: 'Zweifel' }, score: 0.5 },
-          ]),
-        ],
-      }),
-    )
-    const tags = document.querySelector('.tags') as HTMLElement
+  it('labels an orchestrator uncertain result as insufficient evidence', async () => {
+    await show(withResult({ verdict: 'uncertain', confidence: null, produced_by: 'orchestrator' }))
+    expect(within(verdictEl()).getByText('Insufficient evidence')).toBeInTheDocument()
+    cleanup()
+    await show(withResult({ verdict: 'uncertain' }))
+    expect(screen.queryByText('Insufficient evidence')).toBeNull()
+  })
+
+  it('warns inside the verdict when an analyzer failed or timed out, not otherwise', async () => {
+    await show(job({ coverage: coverage({ failed: 0 }), analyzers: [run('claims', 'succeeded')] }))
+    expect(screen.queryByRole('note')).toBeNull()
+    cleanup()
+    await show(job({ coverage: coverage({ failed: 0 }), analyzers: [run('claims', 'failed', { error: { code: 'timeout', message: 'x' } })] }))
+    expect(within(verdictEl()).getByRole('note')).toHaveTextContent('Some analyzers did not finish, so this result is based on partial evidence.')
+    cleanup()
+    await show(job({ coverage: coverage({ failed: 2 }) }))
+    expect(within(verdictEl()).getByRole('note')).toBeInTheDocument()
+    cleanup()
+    await show(job({ coverage: coverage({ failed: 0 }) }))
+    expect(screen.queryByRole('note')).toBeNull()
+  })
+})
+
+describe('Results: progressive disclosure', () => {
+  const rich = () =>
+    job({
+      analyzers: [
+        techniques([{ name: 'Loaded_Language', display: 'Loaded Language', score: 0.91 }, { name: 'Doubt', display: 'Doubt', plain_language: { name: 'Zweifel' } }]),
+        run('topic_extraction', 'succeeded', { result: { claims: [{}, {}, {}] } }),
+      ],
+    })
+
+  it('shows only the verdict and the two actions at first', async () => {
+    await show(rich())
+    const btn = screen.getByRole('button', { name: 'View detailed analysis' })
+    expect(btn).toHaveAttribute('aria-expanded', 'false')
+    expect(btn).toHaveClass('btn-primary')
+    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/ask')
+    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveClass('btn-secondary')
+    expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
+    for (const t of [/Zweifel/, /Loaded Language/, /Analyzer coverage/, /Patterns/, /Polarity/, /bias factor/, /Everyone knows/, /Propaganda Techniques Detected/])
+      expect(screen.queryByText(t)).toBeNull()
+    expect(screen.queryByText(/Have questions about this verdict/)).toBeNull()
+    expect(inMock(screen.getByRole('link', { name: 'Ask VEIL' }))).toBeNull()
+  })
+
+  it('expands to the full detailed analysis and collapses again, keeping focus on the button', async () => {
+    await show(rich())
+    const btn = screen.getByRole('button', { name: 'View detailed analysis' })
+    btn.focus()
+    fireEvent.click(btn)
+    expect(btn).toHaveAccessibleName('Hide detailed analysis')
+    expect(btn).toHaveAttribute('aria-expanded', 'true')
+    const region = screen.getByRole('region', { name: 'Detailed analysis' })
+    expect(btn).toHaveAttribute('aria-controls', region.id)
+    expect(document.activeElement).toBe(btn)
+    const tags = region.querySelector('.tags') as HTMLElement
     expect([...tags.children].map((t) => t.textContent)).toEqual(['Loaded Language', 'Zweifel'])
-    expect(screen.queryByText(/0\.91|91 ?%|\(0\./)).toBeNull()
+    expect(within(region).queryByText(/0\.91|91 ?%/)).toBeNull()
+    expect(within(region).getByText('2 detected')).toBeInTheDocument()
+    expect(within(region).getByText('3 extracted')).toBeInTheDocument()
+    expect(within(region).getByRole('heading', { name: 'Propaganda Techniques Detected' })).toBeInTheDocument()
+    expect(within(region).getByRole('heading', { name: 'Analyzer coverage' })).toBeInTheDocument()
+    expect(region.querySelector('.quote-text')).toHaveTextContent('Everyone knows')
+    expect(region.querySelector('.job-text')).toHaveTextContent('Everyone knows')
+    expect(within(region).getByRole('link', { name: 'Open detailed analysis page' })).toHaveAttribute('href', '/jobs/j1/detail')
+    fireEvent.click(btn)
+    expect(btn).toHaveAccessibleName('View detailed analysis')
+    expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
+    expect(screen.queryByText('Analyzer coverage')).toBeNull()
+  })
+
+  it('cuts the analyzed excerpt at 400 characters', async () => {
+    await show(job({ input: { content: long(500) } }))
+    toggle()
+    expect(screen.getByText(`“${long(400)}…”`)).toBeInTheDocument()
   })
 
   it('shows no technique tags for a failed techniques run', async () => {
     await show(job({ analyzers: [techniques([{ name: 'Doubt', display: 'Doubt' }], 'failed')] }))
+    toggle()
     expect(document.querySelector('.tags')).toBeNull()
   })
 })
@@ -79,8 +196,10 @@ describe('Results: finalization and job states', () => {
   it.each([['pending'], ['running']])('shows progress while finalization is %s, with analyzers visible', async (status) => {
     await show(job({ status: 'finalizing', done: false, finalization: finalization(status), analyzers }))
     expect(screen.getByText('Final assessment in progress')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Watch live progress' })).toBeInTheDocument()
+    toggle()
     expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
-    expect(document.querySelector('.verdict-banner')).toBeNull()
+    expect(verdictEl()).toBeNull()
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('The analyzers are still working.')
   })
 
@@ -91,22 +210,26 @@ describe('Results: finalization and job states', () => {
   ])('shows the reason of a skipped finalization (%s)', async (reason, text) => {
     await show(job({ finalization: finalization('skipped', { reason }), analyzers }))
     expect(screen.getByText(text)).toBeInTheDocument()
+    toggle()
     expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
     expect(screen.queryByText('Analysis failed')).toBeNull()
-    expect(document.querySelector('.verdict-banner')).toBeNull()
+    expect(verdictEl()).toBeNull()
+    expect(screen.queryByText(/confidence/i)).toBeNull()
     expect(screen.getByText('Final assessment skipped')).toHaveClass('status-pill', 'gray')
   })
 
   it('shows "No final assessment" for a done job without a finalization result', async () => {
     await show(job({ finalization: finalization('pending') }))
     expect(screen.getByText('No final assessment')).toHaveClass('status-pill', 'gray')
-    expect(document.querySelector('.verdict-banner')).toBeNull()
+    expect(screen.getByText('No final assessment is available for this job.')).toBeInTheDocument()
+    expect(verdictEl()).toBeNull()
   })
 
   it('shows a failed finalization with its code, and Timed out for timeout', async () => {
     await show(job({ finalization: finalization('failed', { error: { code: 'adapter_error', message: 'x' } }), analyzers }))
     expect(screen.getByText('Final assessment failed')).toBeInTheDocument()
     expect(screen.getByText('adapter_error')).toBeInTheDocument()
+    expect(verdictEl()).toBeNull()
     cleanup()
     await show(job({ finalization: finalization('failed', { error: { code: 'timeout', message: 'x' } }), analyzers }))
     expect(screen.getByText('Timed out')).toBeInTheDocument()
@@ -123,6 +246,7 @@ describe('Results: finalization and job states', () => {
     )
     expect(screen.getByText('Scrape failed')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('<i>Account</i> is private')
+    expect(verdictEl()).toBeNull()
     expect(screen.getByText('Error code: account_private')).toBeInTheDocument()
     expect(document.querySelector('h2 i')).toBeNull()
   })
@@ -130,18 +254,22 @@ describe('Results: finalization and job states', () => {
   it('shows "Analysis failed" for any other failed job', async () => {
     await show(job({ status: 'failed', finalization: finalization('skipped') }))
     expect(screen.getByText('Analysis failed')).toBeInTheDocument()
+    expect(verdictEl()).toBeNull()
+    expect(screen.queryByText(/confidence/i)).toBeNull()
   })
 
   it('shows Cancelled and keeps the settled runs', async () => {
     await show(job({ status: 'cancelled', finalization: finalization('skipped', { reason: 'cancelled' }), analyzers: [run('techniques', 'succeeded', { result: { detected: [] } }), run('claims', 'failed', { error: { code: 'cancelled', message: 'x' } })] }))
     expect(screen.getByText('Cancelled')).toBeInTheDocument()
+    expect(verdictEl()).toBeNull()
+    toggle()
     expect(screen.getByText('techniques analyzer')).toBeInTheDocument()
     expect(screen.getByText('claims analyzer')).toBeInTheDocument()
   })
 
   it('judges an unknown status by done', async () => {
     await show(job({ status: 'archived', done: true, finalization: finalization('completed', { result: assessment() }) }))
-    expect(screen.getByText('Manipulation detected')).toBeInTheDocument()
+    expect(screen.getByText('Yes, propaganda detected.')).toBeInTheDocument()
     cleanup()
     vi.useFakeTimers()
     fetchMock.mockResolvedValue(json(job({ status: 'archived', done: false, finalization: finalization('pending') })))
@@ -163,6 +291,7 @@ describe('Results: coverage and analyzer outcomes', () => {
         ],
       }),
     )
+    toggle()
     expect(screen.getByText('1 succeeded · 1 failed · 1 skipped of 3 applicable')).toBeInTheDocument()
     expect(screen.getByRole('progressbar').firstElementChild).toHaveStyle({ width: '50%' })
     expect(within(screen.getByText('claims analyzer').closest('li') as HTMLElement).getByText('Timed out')).toBeInTheDocument()
@@ -173,6 +302,7 @@ describe('Results: coverage and analyzer outcomes', () => {
 
   it('shows a plain failure code, and treats an unknown availability as unavailable', async () => {
     await show(job({ analyzers: [run('claims', 'failed', { error: { code: 'adapter_error', message: 'x' } }), run('entities', 'succeeded', { availability: 'partial' })] }))
+    toggle()
     const claims = screen.getByText('claims analyzer').closest('li') as HTMLElement
     expect(within(claims).getByText('Failed')).toBeInTheDocument()
     expect(within(claims).getByText('adapter_error')).toBeInTheDocument()
@@ -181,6 +311,7 @@ describe('Results: coverage and analyzer outcomes', () => {
 
   it('collapses disabled and not_selected runs under "Not run"', async () => {
     await show(job({ analyzers: [run('a', 'skipped', { reason: 'disabled' }), run('b', 'skipped', { reason: 'not_selected' }), run('c', 'succeeded')] }))
+    toggle()
     const details = screen.getByText('Not run (2)').closest('details') as HTMLElement
     expect(within(details).getByText('a analyzer')).toBeInTheDocument()
     expect(within(details).getByText('b analyzer')).toBeInTheDocument()
@@ -201,16 +332,13 @@ describe('Results: page chrome, mock parts and polling', () => {
 
   it('wraps only the mock parts in Mock', async () => {
     await show(job())
-    for (const el of [
-      screen.getByText(/Polarity: /),
-      screen.getByText('High rhetorical bias factor'),
-      screen.getByRole('button', { name: 'Share' }),
-      screen.getByText(/Open Ask VEIL Conversation/),
-    ])
+    toggle()
+    for (const el of [screen.getByText(/Polarity: /), screen.getByText('High rhetorical bias factor'), screen.getByRole('button', { name: 'Share' })])
       expect(inMock(el)).not.toBeNull()
     for (const el of [
       screen.getByRole('button', { name: 'Copy' }),
-      screen.getByRole('link', { name: /Explore full analysis/ }),
+      screen.getByRole('link', { name: 'Open detailed analysis page' }),
+      screen.getByRole('link', { name: 'Ask VEIL' }),
       screen.getByText('Job j1'),
       screen.getByText('1 succeeded · 1 failed · 1 skipped of 2 applicable'),
     ])
@@ -221,7 +349,8 @@ describe('Results: page chrome, mock parts and polling', () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { clipboard: { writeText } })
     await show(job())
-    expect(screen.getByRole('link', { name: /Explore full analysis/ })).toHaveAttribute('href', '/jobs/j1/detail')
+    toggle()
+    expect(screen.getByRole('link', { name: 'Open detailed analysis page' })).toHaveAttribute('href', '/jobs/j1/detail')
     expect(screen.getByRole('link', { name: /Cross-source coverage/ })).toHaveAttribute('href', '/explore')
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
     expect(writeText).toHaveBeenCalledWith(window.location.href)

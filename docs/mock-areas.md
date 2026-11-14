@@ -12,10 +12,9 @@ backend". Real data is never wrapped in it. Each screen task appends its rows he
 | `/jobs/:id/live` | "Cluster: eu-west-alpha-2" | The backend does not report a cluster |
 | `/jobs/:id/live` | "Zero-retention ephemeral pipeline" | A retention claim the API does not state |
 | `/jobs/:id/live` | Ledger caption "Synchronous consensus pool" | No backend counterpart |
-| /jobs/:id | "Polarity / Intensity" signal row | The analysis API has no polarity or intensity |
-| /jobs/:id | "High rhetorical bias factor" | No such rating exists in the final assessment |
-| /jobs/:id | Share button | No share feature exists |
-| /jobs/:id | Ask VEIL call to action | The Ask VEIL conversation is not connected to the backend |
+| /jobs/:id (detailed analysis section) | "Polarity / Intensity" signal row | The analysis API has no polarity or intensity |
+| /jobs/:id (detailed analysis section) | "High rhetorical bias factor" | No such rating exists in the final assessment |
+| /jobs/:id (detailed analysis section) | Share button | No share feature exists |
 | /jobs/:id/detail | "Risk" tag and "Latency" value in the metrics bar | The API has no risk rating or per-job latency |
 | /history | Search box (disabled) | `GET /api/v1/jobs` has no text search |
 | /history | "Export Ledger" button (disabled) | No export endpoint exists |
