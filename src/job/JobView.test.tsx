@@ -28,7 +28,7 @@ const job = (content: string, result: unknown, extra: object = {}) => ({
   status: 'completed',
   done: true,
   input: { content },
-  analyzers: [{ name: 'techniques', status: 'succeeded', result }],
+  analyzers: [{ id: 'techniques', name: 'Technique classifier', status: 'succeeded', result }],
   ...extra,
 })
 const show = async (j: unknown) => {
@@ -78,7 +78,7 @@ describe('job view', () => {
 
   it('shows "no technique analysis available" for a failed or missing run, and never translation sentences', async () => {
     const c = 'Hallo'
-    const text = await show(job(c, null, { analyzers: [{ name: 'techniques', status: 'failed', result: null }] }))
+    const text = await show(job(c, null, { analyzers: [{ id: 'techniques', name: 'Technique classifier', status: 'failed', result: null }] }))
     expect(text.textContent).toBe(c)
     expect(screen.getByText(/no technique analysis available/i)).toBeInTheDocument()
     cleanup()
@@ -190,7 +190,8 @@ describe('job view', () => {
   describe('plain language and LLM techniques', () => {
     const pl = { name: 'Geladene Sprache', definition: 'Worte mit starkem Gefühlsdruck.', why: 'WHY-DOC' }
     const llmRun = (findings: unknown[], status = 'succeeded') => ({
-      name: 'llm_techniques',
+      id: 'llm_techniques',
+      name: 'LLM technique detection',
       status,
       result: status === 'succeeded' ? { source: 'llm', findings } : null,
     })

@@ -1,5 +1,5 @@
 export type Detection = { name: string; display: string; explanation: string; spans?: unknown; plain_language?: unknown }
-export type AnalyzerRun = { name?: string; status?: string; result?: unknown }
+export type AnalyzerRun = { id?: string; name?: string; status?: string; result?: unknown }
 export type Job = {
   status: string
   done?: boolean

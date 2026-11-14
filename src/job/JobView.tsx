@@ -14,7 +14,7 @@ const str = (v: unknown) => (typeof v === 'string' && v !== '' ? v : undefined)
 
 // null when the techniques run is missing, not succeeded or has no usable result.
 function readTechniques(job: Job): Techniques | null {
-  const run = job.analyzers?.find((a) => a.name === 'techniques')
+  const run = job.analyzers?.find((a) => a.id === 'techniques')
   const r = run?.result as { detected?: unknown; span_status?: unknown } | null | undefined
   if (run?.status !== 'succeeded' || typeof r !== 'object' || r === null || !Array.isArray(r.detected)) return null
   const detected = r.detected.filter(
@@ -25,7 +25,7 @@ function readTechniques(job: Job): Techniques | null {
 
 // null when the run is absent or still pending; findings with an unknown label or missing texts are ignored.
 function readLlm(job: Job): Llm | null {
-  const run = job.analyzers?.find((a) => a.name === 'llm_techniques')
+  const run = job.analyzers?.find((a) => a.id === 'llm_techniques')
   if (!run) return null
   if (run.status === 'failed' || run.status === 'skipped') return { unavailable: true, findings: [] }
   const r = run.result as { findings?: unknown } | null | undefined
