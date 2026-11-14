@@ -47,8 +47,12 @@ A non-2xx response with a valid error envelope SHALL yield its `code`, `message`
 - **THEN** the handler receives seq 2 and 3 once each
 
 ### Requirement: Event stream reconnect
-When the connection closes without a terminal event (or the snapshot of a done job), the client SHALL reconnect at most 3 times with 1 s, 2 s and 4 s backoff and then report that it gave up.
+When the connection closes without a terminal event (or the snapshot of a done job), the client SHALL reconnect with 1 s, 2 s and 4 s backoff and then report that it gave up after 3 consecutive failed reconnects; a connection that delivers an event resets this budget.
+
+#### Scenario: Budget reset by a working connection
+- **WHEN** every reconnected socket delivers a `job.snapshot` before it drops
+- **THEN** the client keeps reconnecting after 1 s each time and never gives up
 
 #### Scenario: Reconnect cap
-- **WHEN** the socket closes four times without a terminal event
+- **WHEN** the socket closes four times in a row without delivering an event or a terminal event
 - **THEN** exactly three reconnects are attempted, after 1 s, 2 s and 4 s

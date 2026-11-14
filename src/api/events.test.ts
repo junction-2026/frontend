@@ -93,6 +93,17 @@ describe('subscribeJobEvents', () => {
     expect(onGiveUp).toHaveBeenCalledTimes(1)
   })
 
+  it('resets the reconnect budget once a connection delivers an event', () => {
+    const { onGiveUp } = setup()
+    for (let i = 0; i < 5; i++) {
+      sockets()[i].emit('job.snapshot', i, { job: { done: false } })
+      sockets()[i].drop()
+      vi.advanceTimersByTime(1000)
+      expect(sockets()).toHaveLength(i + 2)
+    }
+    expect(onGiveUp).not.toHaveBeenCalled()
+  })
+
   it('applies the snapshot after a reconnect even when its seq equals the last seen', () => {
     const { types } = setup()
     sockets()[0].emit('analyzer.started', 5)

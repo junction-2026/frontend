@@ -41,6 +41,7 @@ export function subscribeJobEvents(jobId: string, { onEvent, onGiveUp }: EventHa
       if (typeof e !== 'object' || e === null || typeof e.type !== 'string' || typeof e.seq !== 'number' || !isKnown(e.type)) return
       if (e.type !== 'job.snapshot' && e.seq <= lastSeq) return
       lastSeq = e.seq
+      attempt = 0 // the backoff budget is for consecutive failed connections
       // A snapshot of a done job is followed by a normal close, with no terminal event.
       if (TERMINAL.includes(e.type) || (e.type === 'job.snapshot' && (e.data?.job as { done?: unknown } | undefined)?.done === true)) finished = true
       onEvent(e)
