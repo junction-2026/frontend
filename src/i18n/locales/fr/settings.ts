@@ -1,7 +1,7 @@
 export default {
   'eyebrow': 'Préférences et audit / ● Cadre v3.18',
   'title': 'Paramètres et méthodologie',
-  'lede': 'Configurez les préférences d’analyse, les options d’accessibilité et découvrez le cadre épistémique de VEIL.',
+  'lede': 'Configurez les préférences d’analyse, les options d’accessibilité et découvrez le cadre épistémique de Stiriri.',
   'tabs_label': 'Onglets des paramètres',
   'tab.interface': 'Interface et langue',
   'tab.analyzers': 'Analyseurs et ensembles',
@@ -11,7 +11,7 @@ export default {
   'language_block': 'Langue de l’interface et de l’analyse',
   'local_override': 'Remplacement local',
   'interface_language': 'Langue de l’interface',
-  'interface_language_text': 'Contrôle les libellés, les textes d’aide et les réponses d’Ask VEIL dans l’interface du produit.',
+  'interface_language_text': 'Contrôle les libellés, les textes d’aide et les réponses d’Ask Stiriri dans l’interface du produit.',
   'interface_language_value': 'Anglais (US) ▾',
   'input_language': 'Langue du texte analysé',
   'recommended': 'Recommandé',

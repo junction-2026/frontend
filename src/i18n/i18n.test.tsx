@@ -50,7 +50,7 @@ describe('language selector', () => {
     expect(screen.getByRole('link', { name: 'Verlauf' })).toBeInTheDocument()
     expect(screen.getByText('Sehen Sie hinter die Erzählung.')).toBeInTheDocument()
     expect(screen.getByText('0 Zeichen')).toBeInTheDocument()
-    expect(localStorage.getItem('veil.locale')).toBe('de')
+    expect(localStorage.getItem('stiriri.locale')).toBe('de')
     unmount()
     render(app()) // reload
     expect(select()).toHaveValue('de')
@@ -107,6 +107,22 @@ describe('initial locale', () => {
     expect(current()).toBe('en')
   })
   it('prefers a valid stored value and ignores an invalid one', () => {
+    setLanguages(['fi-FI'])
+    localStorage.setItem('stiriri.locale', 'xx')
+    expect(current()).toBe('fi')
+  })
+  it('adopts a valid legacy veil.locale and migrates it', () => {
+    localStorage.setItem('veil.locale', 'de')
+    expect(current()).toBe('de')
+    expect(localStorage.getItem('stiriri.locale')).toBe('de')
+    expect(localStorage.getItem('veil.locale')).toBeNull()
+  })
+  it('prefers stiriri.locale over the legacy key', () => {
+    localStorage.setItem('veil.locale', 'de')
+    localStorage.setItem('stiriri.locale', 'fi')
+    expect(current()).toBe('fi')
+  })
+  it('ignores an invalid legacy value', () => {
     setLanguages(['fi-FI'])
     localStorage.setItem('veil.locale', 'xx')
     expect(current()).toBe('fi')
