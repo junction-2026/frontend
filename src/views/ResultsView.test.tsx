@@ -41,21 +41,34 @@ const long = (n: number) => 'x'.repeat(n)
 
 describe('Results: verdict component', () => {
   it.each([
-    ['detected', 'Yes, propaganda detected.', 'VEIL identified signs of manipulative messaging in this content.'],
-    ['not_detected', 'No clear signs of propaganda.', 'VEIL did not identify strong indicators of propaganda in this content.'],
-    ['uncertain', "We're not sure yet.", 'The available evidence is insufficient or conflicting.'],
-    ['suspicious', "We're not sure yet.", 'The available evidence is insufficient or conflicting.'], // unknown reads as uncertain
-  ])('shows verdict %s', async (verdict, heading, body) => {
-    const h = await show(withResult({ verdict }))
+    ['detected', 'Yes, propaganda detected.', 'Propaganda detected'],
+    ['not_detected', 'No clear signs of propaganda.', 'No clear signs'],
+    ['uncertain', 'The result is inconclusive.', 'Inconclusive'],
+    ['suspicious', 'The result is inconclusive.', 'Inconclusive'], // unknown reads as uncertain
+  ])('shows verdict %s', async (verdict, heading, pill) => {
+    const h = await show(withResult({ verdict, confidence: 0.95 }))
     const el = verdictEl()
     expect(document.querySelectorAll('[data-verdict]')).toHaveLength(1)
     expect(el.tagName).toBe('SECTION')
     expect(el.dataset.verdict).toBe(verdict === 'suspicious' ? 'uncertain' : verdict)
     expect(el).toContainElement(h)
     expect(h).toHaveTextContent(heading)
-    expect(el).toHaveTextContent(body)
-    expect(el).toHaveTextContent('This text pressures the reader.')
+    expect(el.querySelector('.verdict-pill')).toHaveTextContent(pill)
+    expect(el.querySelector('.verdict-summary')).toHaveTextContent('This text pressures the reader.')
+    expect(el).toHaveTextContent('95% confidence')
     expect(inMock(h)).toBeNull()
+    // header row first (pill, then confidence), then headline and summary
+    expect([...el.children].slice(0, 3).map((c) => c.className || c.tagName)).toEqual(['verdict-head', 'H2', 'verdict-summary'])
+    expect([...(el.firstElementChild as HTMLElement).children].map((c) => c.className)).toEqual(['verdict-pill', 'verdict-confidence'])
+  })
+
+  it('falls back to the fixed verdict sentence when the user text gives no usable sentence', async () => {
+    await show(withResult({ verdict: 'uncertain', user_text: 'Too short.' }))
+    expect(verdictEl().querySelector('.verdict-summary')).toHaveTextContent('The available evidence is insufficient or conflicting.')
+    cleanup()
+    await show(withResult({ verdict: 'not_detected', user_text: '' }))
+    expect(verdictEl().querySelector('.verdict-summary')).toHaveTextContent('VEIL did not identify strong indicators of propaganda in this content.')
+    expect(screen.queryByRole('button', { name: 'Read full explanation' })).toBeNull()
   })
 
   it('chooses the state only from the verdict, never from confidence', async () => {
@@ -94,35 +107,53 @@ describe('Results: verdict component', () => {
     expect(document.body.textContent).not.toMatch(/calibrated|model consensus|probability of propaganda/i)
   })
 
+  it('never shows the word consensus or a percentage other than the confidence', async () => {
+    await show(withResult({ confidence: 0.94, user_text: 'This text pressures the reader. It repeats 50% of its claims.' }))
+    expect(verdictEl().textContent).not.toMatch(/consensus/i)
+    expect(verdictEl().textContent?.match(/\d+\s?%/g)).toEqual(['94%'])
+  })
+
   it('shows user_text literally as a text node', async () => {
     const text = '<b>fake</b> [click](https://example.com) http://example.com'
     await show(withResult({ user_text: text }))
     expect(screen.getByText(text)).toBeInTheDocument()
     expect(verdictEl().querySelector('b, a')).toBeNull()
-    expect(screen.getByText(text)).toHaveClass('verdict-user-text')
+    expect(screen.getByText(text)).toHaveClass('verdict-summary')
+    expect(screen.queryByRole('button', { name: 'Read full explanation' })).toBeNull() // the whole text is the summary
   })
 
-  it('shortens user_text over 280 code points and expands it in place', async () => {
-    const text = `${'😀'.repeat(279)}ab${long(10)}`
-    await show(withResult({ user_text: text }))
-    const btn = screen.getByRole('button', { name: 'Show full explanation' })
+  it('shows one sentence and reveals the full plain text behind "Read full explanation"', async () => {
+    const full = 'This text pressures the reader. Read <b>fake</b> [click](https://example.com)\nSecond line.'
+    await show(withResult({ user_text: full }))
+    const btn = screen.getByRole('button', { name: 'Read full explanation' })
     expect(btn).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByText(text)).toBeNull()
-    expect(screen.getByText(`${'😀'.repeat(279)}a…`)).toBeInTheDocument()
+    expect(screen.getByText('This text pressures the reader.')).toHaveAttribute('dir', 'auto')
+    expect(document.querySelector('.verdict-user-text')).toBeNull() // collapsed content is not rendered
     fireEvent.click(btn)
     expect(btn).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByText(text)).toBeInTheDocument()
+    expect(btn).toHaveAccessibleName('Hide full explanation')
+    const block = document.getElementById(btn.getAttribute('aria-controls') as string) as HTMLElement
+    expect(block).toHaveClass('verdict-user-text')
+    expect(block).toHaveAttribute('dir', 'auto')
+    expect(block.textContent).toBe(full)
+    expect(verdictEl().querySelector('b, a')).toBeNull()
+    fireEvent.click(btn)
+    expect(document.querySelector('.verdict-user-text')).toBeNull()
   })
 
-  it('shows user_text of exactly 280 code points in full without a button', async () => {
-    await show(withResult({ user_text: '😀'.repeat(280) }))
-    expect(screen.getByText('😀'.repeat(280))).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Show full explanation' })).toBeNull()
+  it('never cuts a long text: a too long first sentence gives the fixed sentence and the full text stays reachable', async () => {
+    const text = `${'word '.repeat(60)}end. Next one.`
+    await show(withResult({ verdict: 'detected', user_text: text }))
+    expect(verdictEl().querySelector('.verdict-summary')).toHaveTextContent('VEIL identified signs of manipulative messaging in this content.')
+    fireEvent.click(screen.getByRole('button', { name: 'Read full explanation' }))
+    expect(document.querySelector('.verdict-user-text')?.textContent).toBe(text.trim())
+    expect(screen.queryByText(/…/)).toBeNull()
   })
 
   it('labels an orchestrator uncertain result as insufficient evidence', async () => {
     await show(withResult({ verdict: 'uncertain', confidence: null, produced_by: 'orchestrator' }))
-    expect(within(verdictEl()).getByText('Insufficient evidence')).toBeInTheDocument()
+    expect(within(verdictEl()).getByText('Insufficient evidence')).toHaveClass('verdict-pill')
+    expect(verdictEl().querySelector('h2')).toHaveTextContent('The result is inconclusive.')
     cleanup()
     await show(withResult({ verdict: 'uncertain' }))
     expect(screen.queryByText('Insufficient evidence')).toBeNull()
@@ -454,5 +485,74 @@ describe('Results in another locale', () => {
     expect(await screen.findByText('Abruf fehlgeschlagen')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: 'API says <i>no</i>' })).toBeInTheDocument()
     expect(screen.getByText('Fehlercode: x_code')).toBeInTheDocument()
+  })
+})
+
+describe('Results: verdict info cards in the initial view', () => {
+  const CONTENT = 'Everyone knows these people are destroying our future.'
+  const strong = () =>
+    job({
+      input: { content: CONTENT },
+      analyzers: [
+        run('techniques', 'succeeded', {
+          result: {
+            detected: [
+              { name: 'Doubt', display: 'Doubt', strength: 'weak' },
+              { name: 'Loaded_Language', display: 'Loaded Language', strength: 'strong', spans: [{ technique: 'Loaded_Language', text: 'destroying', start: 32, end: 42 }] },
+            ],
+          },
+        }),
+        run('fact_check', 'succeeded', { result: { fact_checks: [{}, {}] } }),
+      ],
+    })
+
+  it('shows only the top technique, the passage count and the fact-check count, and no tags or tables', async () => {
+    await show(strong())
+    const cards = [...document.querySelectorAll('.info-card')].map((c) => c.textContent)
+    expect(cards).toEqual(['Top techniqueLoaded LanguageDetected', 'Evidence1 passageLocated', 'Fact-checks2 matchesRelated checks found'])
+    expect(screen.getAllByText('Loaded Language')).toHaveLength(1)
+    expect(screen.queryByText('Doubt')).toBeNull()
+    expect(document.querySelector('.tags, table, .coverage-card')).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'View detailed analysis' })).toHaveClass('btn-primary')
+    expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/ask')
+  })
+
+  it('shows no card for missing runs and "Unavailable" for a failed fact-check', async () => {
+    await show(job({ analyzers: [] }))
+    expect(document.querySelector('.verdict-cards')).toBeNull()
+    cleanup()
+    await show(job({ analyzers: [run('fact_check', 'failed')] }))
+    expect([...document.querySelectorAll('.info-card')].map((c) => c.textContent)).toEqual(['Fact-checksUnavailable'])
+  })
+
+  it('does not claim a fact-check confirms the verdict', async () => {
+    await show(strong())
+    expect(verdictEl().textContent).not.toMatch(/confirm/i)
+  })
+})
+
+describe('Results verdict card in Arabic', () => {
+  it('renders Arabic strings with dir=rtl and Intl numbers', async () => {
+    fetchMock.mockResolvedValue(
+      json(
+        job({
+          input: { content: 'Everyone knows these people are destroying our future.' },
+          analyzers: [run('techniques', 'succeeded', { result: { detected: [{ name: 'Loaded_Language', display: 'x', strength: 'strong', spans: [{ technique: 'Loaded_Language', text: 'destroying', start: 32, end: 42 }] }] } })],
+          finalization: finalization('completed', { result: assessment({ verdict: 'detected', confidence: 0.86, user_text: 'هل هذا النص يضغط على القارئ؟ نعم، يفعل ذلك.' }) }),
+        }),
+      ),
+    )
+    inLocale('ar', <ResultsView id="j1" />)
+    expect(await screen.findByRole('heading', { level: 2, name: 'نعم، تم اكتشاف دعاية.' })).toBeInTheDocument()
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+    const el = verdictEl()
+    expect(el.querySelector('.verdict-pill')).toHaveTextContent('تم اكتشاف دعاية')
+    expect(el.querySelector('.verdict-summary')).toHaveTextContent('هل هذا النص يضغط على القارئ؟')
+    expect(el.querySelector('.verdict-summary')).toHaveAttribute('dir', 'auto')
+    expect(el.querySelector('.verdict-confidence')?.textContent?.replace(/\s/g, '')).toContain(new Intl.NumberFormat('ar', { style: 'percent' }).format(0.86).replace(/\s/g, ''))
+    expect([...el.querySelectorAll('.info-card-label')].map((l) => l.textContent)).toEqual(['أبرز أسلوب', 'الأدلة', 'الأساليب'])
+    expect(within(el).getByRole('button', { name: 'قراءة الشرح الكامل' })).toHaveAttribute('aria-expanded', 'false')
+    expect(el.querySelector('.info-card:nth-child(2) .info-card-value')?.textContent).toBe(`${new Intl.NumberFormat('ar').format(1)} مقطع`) // Intl digits
   })
 })

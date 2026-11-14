@@ -100,7 +100,14 @@ const mount = (lng: string, ui = <ResultsView id="j1" />) => {
   localStorage.setItem('veil.locale', lng)
   return render(<I18nProvider><Switch to="fr" /><Switch to="ar" /><Switch to="de" /><Switch to="en" />{ui}</I18nProvider>)
 }
-const loaded = () => waitFor(() => expect(document.querySelector('.verdict-user-text')).not.toBeNull())
+const loaded = () => waitFor(() => expect(document.querySelector('.verdict-summary')).not.toBeNull())
+// The short card shows a fixed sentence for a short translation, so the complete text sits behind "Read full explanation".
+const userText = (text: string) =>
+  waitFor(() => {
+    const more = document.querySelector('.verdict-more')
+    if (more?.getAttribute('aria-expanded') === 'false') fireEvent.click(more)
+    expect(screen.getByText(text)).toBeInTheDocument()
+  })
 const open = async () => {
   await loaded()
   const btn = document.querySelector('.results-actions button.btn-primary') as HTMLElement
@@ -139,7 +146,7 @@ describe('one French analysis in every locale', () => {
       expect(within(llm).getByText(`[${lng}] statistical_cherry_picking explanation`)).toBeInTheDocument()
       expect(llm.querySelector('blockquote bdi[dir=auto]')?.textContent).toBe('300 % de hausse')
       // verdict text translated and labelled with the source language
-      await waitFor(() => expect(screen.getByText(`[${lng}] user text`)).toBeInTheDocument())
+      await userText(`[${lng}] user text`)
       expect(screen.getAllByText(translate(lng as Locale, 'results.loc.machine_translated', { language: languageName('fr', lng) })).length).toBeGreaterThan(0)
       expect(locRequests()).toHaveLength(1)
       // highlight why: catalog template with the span text verbatim
@@ -167,7 +174,7 @@ describe('one French analysis in every locale', () => {
     serve(analysis())
     mount('de', <DetailView id="j1" />)
     expect(await screen.findByText(CATALOGS.de['techniques.Loaded_Language.name'], { selector: '.job-technique-name' })).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('[de] user text')).toBeInTheDocument())
+    await userText('[de] user text')
     expect(screen.getAllByText('Maschinell übersetzt aus: Französisch').length).toBeGreaterThan(0)
   })
 })
@@ -182,15 +189,15 @@ describe('language switch', () => {
     expect(jobFetches()).toBe(1)
 
     fireEvent.click(screen.getByText('switch-ar'))
-    await waitFor(() => expect(screen.getByText('[ar] user text')).toBeInTheDocument())
+    await userText('[ar] user text')
     expect(locRequests()).toEqual(['/api/v1/jobs/j1/localization?language=ar'])
     expect(screen.getByRole('region', { name: translate('ar', 'results.detailed_region') })).toBeInTheDocument() // still open
     expect(document.documentElement).toHaveAttribute('dir', 'rtl')
 
     fireEvent.click(screen.getByText('switch-de'))
-    await waitFor(() => expect(screen.getByText('[de] user text')).toBeInTheDocument())
+    await userText('[de] user text')
     fireEvent.click(screen.getByText('switch-ar'))
-    await waitFor(() => expect(screen.getByText('[ar] user text')).toBeInTheDocument())
+    await userText('[ar] user text')
     fireEvent.click(screen.getByText('switch-fr'))
     expect(screen.getByText(FR_USER_TEXT)).toBeInTheDocument()
 
@@ -209,7 +216,7 @@ describe('language switch', () => {
     serve(analysis())
     mount('ar')
     await open()
-    await waitFor(() => expect(screen.getByText('[ar] user text')).toBeInTheDocument())
+    await userText('[ar] user text')
     fireEvent.click(screen.getAllByRole('button', { name: translate('ar', 'results.loc.show_original') })[0])
     expect(screen.getByText(FR_USER_TEXT)).toBeInTheDocument()
     expect(screen.queryByText('[ar] user text')).toBeNull()
@@ -224,7 +231,7 @@ describe('LLM highlight why and cache retry', () => {
     serve(analysis())
     mount('ar')
     await open()
-    await waitFor(() => expect(screen.getByText('[ar] user text')).toBeInTheDocument())
+    await userText('[ar] user text')
     focusLlm()
     expect(region()).toHaveTextContent('[ar] statistical_cherry_picking explanation')
     expect(region()).toHaveTextContent(translate('ar', 'results.loc.machine_translated', { language: languageName('fr', 'ar') }))
@@ -260,11 +267,11 @@ describe('LLM highlight why and cache retry', () => {
     fireEvent.click(screen.getByText('switch-ar'))
     await waitFor(() => expect(locRequests()).toHaveLength(1))
     fireEvent.click(screen.getByText('switch-de'))
-    await waitFor(() => expect(screen.getByText('[de] user text')).toBeInTheDocument())
+    await userText('[de] user text')
     fireEvent.click(screen.getByText('switch-ar'))
     await waitFor(() => expect(locRequests()).toHaveLength(3))
     fireEvent.click(screen.getByText('switch-de'))
-    await waitFor(() => expect(screen.getByText('[de] user text')).toBeInTheDocument())
+    await userText('[de] user text')
     expect(locRequests()).toHaveLength(3) // de was good: not asked again
   })
 })
@@ -287,7 +294,7 @@ describe('fallbacks', () => {
     await open()
     expect(await screen.findByText(FR_USER_TEXT)).toBeInTheDocument()
     expect(screen.getAllByText(note('ar')).length).toBeGreaterThan(0)
-    expect(within(document.querySelector('.verdict-explanation') as HTMLElement).queryByText(/ترجمة آلية/)).toBeNull()
+    expect(within(document.querySelector('.verdict') as HTMLElement).queryByText(/ترجمة آلية/)).toBeNull()
     // technique names are still the catalog's
     expect(screen.getAllByText(CATALOGS.ar['techniques.Loaded_Language.name']).length).toBeGreaterThan(0)
     noRaw()
