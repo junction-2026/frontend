@@ -1,4 +1,5 @@
 import { useState, type ComponentType } from 'react'
+import { I18nProvider } from './i18n'
 import { initRouter, useRoute, type RouteName } from './router'
 import { Shell } from './ui/Shell'
 import AnalyzingView from './views/AnalyzingView'
@@ -29,8 +30,10 @@ export default function App() {
   const route = useRoute()
   const View = VIEWS[route.name]
   return (
-    <Shell>
-      <View id={route.id ?? ''} />
-    </Shell>
+    <I18nProvider>
+      <Shell>
+        <View id={route.id ?? ''} />
+      </Shell>
+    </I18nProvider>
   )
 }
