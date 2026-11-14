@@ -60,3 +60,28 @@ docker run --rm -p 8081:80 \
 ```
 
 `--add-host=host.docker.internal:host-gateway` is needed on Linux so the container can reach a backend on the host.
+
+## Link previews (Open Graph / Twitter)
+
+Crawlers do not run the SPA, so the nginx container (njs module of `nginx:alpine`) answers HTML routes with the built
+`index.html` plus a card block in `<head>` (`nginx/og.js`, `nginx/og-handler.js`). The same document is served to every
+user agent; only the `<!-- og:start -->…<!-- og:end -->` block differs. `index.html` carries the generic card for
+`vite dev`/`preview`; the images are `public/og/*.png` (1200x630, regenerate with `python3 scripts/og-images.py` after `npm ci`).
+
+`PUBLIC_ORIGIN` (scheme+host[+port], e.g. `https://stiriri.dev`; a trailing slash is stripped) prefixes every `og:url` and
+image URL. It defaults to `http://localhost` and **must be set in production**:
+`docker run -e PUBLIC_ORIGIN=https://stiriri.dev …`.
+
+| Route | Card |
+| --- | --- |
+| `/`, `/ask`, `/history`, unknown paths, malformed job ids | Generic site card (`og/site.png`) |
+| `/jobs/{id}`, `/jobs/{id}/detail`, `/jobs/{id}/live`, finished job | Verdict card: `VEIL verdict: <label>`, verdict heading plus `user_text` (max 200 characters, escaped), `og/verdict-*.png` |
+| same, not done or finalization pending/running | "VEIL analysis in progress" (`og/pending.png`) |
+| same, failed, cancelled, finalization failed/skipped or no result | "VEIL analysis unavailable" (`og/unavailable.png`) |
+| same, backend 404, other error, invalid JSON or no answer within 2 s | Generic site card |
+
+The status is always 200. Cards never contain the input, its source, scrape URLs, analyzer results or confidence.
+The job is read with an internal subrequest through the `/api/` proxy.
+
+Container smoke test (needs docker, not part of CI): `scripts/og-smoke.sh` builds the image, starts it with a stub
+backend (`scripts/og-stub-backend.mjs`) and checks the tags with `curl -A Twitterbot`.

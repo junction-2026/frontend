@@ -1,6 +1,14 @@
+js_import og from /etc/nginx/njs/og-handler.js;
+# Public origin of the site (scheme+host[+port]); prefixes every og:url and og:image.
+js_var $og_origin "${PUBLIC_ORIGIN}";
+
 server {
     listen 80;
     root /usr/share/nginx/html;
+
+    # The card handler reads the whole Get job response in memory (r.subrequest); the default (one page) is far
+    # smaller than a real job. A larger response breaks the request in nginx, so keep this well above any job.
+    subrequest_output_buffer_size 32m;
 
     location = /healthz {
         proxy_pass ${BACKEND_URL}/healthz;
@@ -24,7 +32,30 @@ server {
         proxy_read_timeout 5s;
     }
 
+    location /og/ {
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    # HTML routes: index.html with the link-preview card injected (nginx/og.js); assets are served as files.
+    location = / {
+        js_content og.html;
+    }
+
+    location = /index.html {
+        js_content og.html;
+    }
+
     location / {
-        try_files $uri /index.html;
+        try_files $uri @spa;
+    }
+
+    location @spa {
+        js_content og.html;
+    }
+
+    # Only used when the handler itself fails: the plain SPA shell.
+    location @plain {
+        try_files /index.html =404;
+        add_header Cache-Control no-cache;
     }
 }
