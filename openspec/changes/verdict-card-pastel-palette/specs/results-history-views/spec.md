@@ -31,7 +31,7 @@ Each verdict state SHALL use its own tokens from the Verdict tokens requirement 
 - **THEN** both cards have the same `data-verdict` and so the same palette
 
 ### Requirement: Verdict headline typography
-The headline SHALL use the Inter family (`var(--font)` once the visual-fidelity change lands) at weight 800 (`var(--fw-extrabold)`), `font-size: clamp(2rem, 1.25rem + 2.6vw, 3.25rem)`, line-height 1.08, letter-spacing -0.02em and `overflow-wrap: anywhere`, and SHALL be the most prominent element of the card. No other text weight in the card changes.
+The headline SHALL use `var(--font)` (Inter) at weight 800 (`var(--fw-extrabold)`), `font-size: clamp(2rem, 1.25rem + 2.6vw, 3.25rem)`, line-height 1.08, letter-spacing -0.02em and `overflow-wrap: anywhere`, and SHALL be the most prominent element of the card. No other text weight in the card changes.
 
 #### Scenario: Headline size
 - **WHEN** the card is rendered

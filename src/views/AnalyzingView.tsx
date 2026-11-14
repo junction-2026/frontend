@@ -100,7 +100,7 @@ function Live({ id }: { id: string }) {
   const heading = terminal === 'cancelled' ? t('analysis.heading.cancelled') : terminal === 'failed' ? t('analysis.heading.failed') : t('analysis.heading.running')
 
   return (
-    <section className="view">
+    <section className="view analyze-view">
       <div className="card quote-banner">
         <div className="meta-row">
           <span>{t('analysis.submitted', { id })}</span>
@@ -124,9 +124,9 @@ function Live({ id }: { id: string }) {
         <>
           <div className="analyze-center">
             <div className={terminal ? 'progress-ring idle' : 'progress-ring'} aria-hidden="true">
-              <svg viewBox="0 0 64 64"><circle className="track" cx="32" cy="32" r="24" /><circle className="arc" cx="32" cy="32" r="24" /></svg>
+              <svg viewBox="0 0 56 56"><circle className="track" cx="28" cy="28" r="26.75" /><circle className="arc" cx="28" cy="28" r="26.75" /></svg>
               <div className="core">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 14c3-6 13-6 16 0" /><path d="M8 18c2-3 6-3 8 0" /><circle cx="12" cy="8" r="2" /></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg>
               </div>
             </div>
             <h2>{heading}</h2>

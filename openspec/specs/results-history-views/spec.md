@@ -351,7 +351,7 @@ Every static string of the History view (title, lede, mock labels, search placeh
 - **THEN** it has dir rtl, no static Latin-script text other than the brand and the job id, the id and the excerpt are inside `bdi`, and the status filter stays selected after a locale switch
 
 ### Requirement: Verdict headline typography
-The headline SHALL use Inter, weight 700, `font-size: clamp(2rem, 1.25rem + 2.6vw, 3.25rem)`, line-height 1.08, letter-spacing -0.02em and `overflow-wrap: anywhere`, and SHALL be the most prominent element of the card.
+The headline SHALL use Inter, weight 600, `font-size: clamp(2rem, 1.25rem + 2.6vw, 3.25rem)`, line-height 1.08, letter-spacing -0.02em and `overflow-wrap: anywhere`, and SHALL be the most prominent element of the card.
 
 #### Scenario: Headline size
 - **WHEN** the card is rendered

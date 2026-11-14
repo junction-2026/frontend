@@ -14,10 +14,10 @@ body {
   min-height: 100vh;
   font-family: var(--font);
   color: var(--ink);
-  background:
-    radial-gradient(1200px 500px at 50% -120px, rgba(76, 130, 251, 0.06), transparent 60%),
-    linear-gradient(180deg, #f7f7f5 0%, var(--bg) 40%, #efefeb 100%);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis-weight: none;
   text-rendering: optimizeLegibility;
 }
 

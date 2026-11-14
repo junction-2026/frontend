@@ -1,13 +1,13 @@
 /* Design tokens from UI_DESIGN/css/styles.css. */
 :root {
-  --bg: #f4f4f2;
+  --bg: #fafaf9;
   --bg-soft: #ecece8;
   --surface: #ffffff;
-  --ink: #111111;
+  --ink: #171717;
   --ink-2: #3a3a3a;
-  --muted: #6b6b6b;
+  --muted: #737373;
   --faint: #9a9a9a;
-  --line: #e4e4e0;
+  --line: #ecece9;
   --line-strong: #d2d2cc;
   --accent: #111111;
   --blue: #4c82fb;
@@ -23,7 +23,7 @@
   --purple: #b8a4d8;
   --purple-soft: #efe8f8;
   --danger: #c0392b;
-  --shadow: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.05);
+  --shadow: 0 1px 2px rgba(17, 17, 17, 0.04);
   --radius: 14px;
   --radius-sm: 10px;
   --radius-pill: 999px;
@@ -47,8 +47,12 @@
   --verdict-not-detected-pill-bg: #e5f7ec;
   --verdict-not-detected-pill-text: #246b45;
   --fw-extrabold: 800; /* verdict headline only */
-  --font: "Plus Jakarta Sans", "Segoe UI", sans-serif;
-  --serif: "Newsreader Variable", "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font: "Inter Variable", Inter, system-ui, sans-serif;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --progress-active: #3b82f6;
+  --progress-track: #eaf2ff;
   --max: 1080px;
   --nav-h: 64px;
   --mock: #d6249f; /* MockBadge outline and badge */

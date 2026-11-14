@@ -199,6 +199,16 @@ describe('AnalyzingView scrape jobs', () => {
 })
 
 describe('AnalyzingView terminal states', () => {
+  it('spins the ring while running and marks it idle when terminal', () => {
+    mounted()
+    snapshot()
+    const ring = () => document.querySelector('.progress-ring') as HTMLElement
+    expect(ring()).not.toHaveClass('idle')
+    expect(ring()).toHaveAttribute('aria-hidden', 'true')
+    ws().emit('job.cancelled', 4, { job: job({ status: 'cancelled', done: true }) })
+    expect(ring()).toHaveClass('idle')
+  })
+
   it('replaces the location with the results on job.completed', () => {
     const before = window.history.length
     mounted()
