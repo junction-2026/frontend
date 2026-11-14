@@ -65,6 +65,7 @@ export type Job = {
   input: Input | null
   scrape: Record<string, unknown> | null
   options: { finalize?: boolean; [k: string]: unknown }
+  public?: boolean // absent means public
   analyzers: AnalyzerRun[]
   coverage: Coverage
   finalization: Finalization
@@ -121,8 +122,8 @@ export type ClaimLookup = {
 export type WikipediaLookup = { languages: string[]; claims: ClaimLookup[]; requests_used: number; cached: number; [k: string]: unknown }
 
 export type CreateJobBody =
-  | { input: Input; analyzers?: string[]; options?: { finalize?: boolean } }
-  | { scrape: { url: string; max_posts?: number; max_comments?: number }; analyzers?: string[]; options?: { finalize?: boolean } }
+  | { input: Input; analyzers?: string[]; options?: { finalize?: boolean }; public?: boolean }
+  | { scrape: { url: string; max_posts?: number; max_comments?: number }; analyzers?: string[]; options?: { finalize?: boolean }; public?: boolean }
 
 export type Page<T> = { items: T[]; next_cursor: string | null }
 

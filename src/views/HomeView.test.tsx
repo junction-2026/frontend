@@ -159,6 +159,70 @@ describe('HomeView advanced options', () => {
   })
 })
 
+describe('HomeView visibility switch', () => {
+  const sw = () => screen.getByRole('switch', { name: 'Public' })
+
+  it('is on by default, described by the hint, and the hint never says private or secret', () => {
+    render(<HomeView />)
+    expect(sw()).toHaveAttribute('aria-checked', 'true')
+    const hint = document.getElementById(sw().getAttribute('aria-describedby')!)!
+    expect(hint).toHaveTextContent(/not public are not shown in History.*anyone with the link/)
+    expect(hint.textContent).not.toMatch(/private|secret/i)
+  })
+
+  it('toggles on click and is a native focusable button (Space and Enter activate it)', () => {
+    render(<HomeView />)
+    fireEvent.click(sw())
+    expect(sw()).toHaveAttribute('aria-checked', 'false')
+    expect(sw().tagName).toBe('BUTTON') // native buttons fire click on Space and Enter
+    expect(sw()).toHaveAttribute('type', 'button')
+    fireEvent.click(sw())
+    expect(sw()).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it.each([
+    ['text', 'hello', { input: { content: 'hello' } }],
+    ['link', 'https://bsky.app/profile/a/post/1', { scrape: { url: 'https://bsky.app/profile/a/post/1' } }],
+  ])('%s: omits public when on, sends public:false when off, and navigates both times', async (mode, value, expected) => {
+    for (const off of [false, true]) {
+      fetchMock.mockReset()
+      route()
+      const { unmount } = render(<HomeView />)
+      if (mode === 'link') fireEvent.click(screen.getByRole('tab', { name: 'Social Link' }))
+      if (off) fireEvent.click(sw())
+      type(value)
+      analyze()
+      await waitFor(() => expect(window.location.pathname).toBe('/jobs/job%201/live'))
+      expect(body()).toEqual(off ? { ...expected, public: false } : expected)
+      window.history.replaceState(null, '', '/')
+      unmount()
+    }
+  })
+
+  it('resets to public after a successful submission and on a fresh visit', async () => {
+    route()
+    const { unmount } = render(<HomeView />)
+    fireEvent.click(sw())
+    type('hello')
+    analyze()
+    await waitFor(() => expect(sw()).toHaveAttribute('aria-checked', 'true'))
+    fireEvent.click(sw())
+    unmount()
+    render(<HomeView />)
+    expect(sw()).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('stays off after a failed submission so the user can retry', async () => {
+    route(err(500, 'internal_error', 'x'))
+    render(<HomeView />)
+    fireEvent.click(sw())
+    type('hello')
+    analyze()
+    await screen.findByRole('alert')
+    expect(sw()).toHaveAttribute('aria-checked', 'false')
+  })
+})
+
 describe('HomeView errors', () => {
   it('lists each field of a 422 validation_failed and keeps the content', async () => {
     route(err(422, 'validation_failed', 'bad', { fields: { 'scrape.url': 'must be http(s)', input: 'exactly one' } }))
