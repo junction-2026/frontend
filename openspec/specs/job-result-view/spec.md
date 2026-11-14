@@ -6,15 +6,19 @@ Defines the job result view of the frontend: when it is shown, how it fetches an
 ## Requirements
 
 ### Requirement: Routing
-The App SHALL render the job result view when `location.search` has a non-empty `job` parameter, and otherwise the existing health check UI unchanged.
+The job result view (highlighted text, technique list, why region, notes and LLM-assessed group) SHALL be rendered by the router inside the Detail screen for `/jobs/:id/detail`. `/?job=<id>` with a non-empty id SHALL be redirected to `/jobs/<id>` (ui-design-foundation, Legacy job link); with an empty or missing `job` parameter the Home view is rendered.
 
 #### Scenario: Job parameter
+- **WHEN** the URL is `/jobs/abc/detail`
+- **THEN** the job result view is rendered for id `abc` and requests `/api/v1/jobs/abc`
+
+#### Scenario: Legacy parameter
 - **WHEN** the URL is `/?job=abc`
-- **THEN** the job result view is rendered and no `/healthz` request is sent
+- **THEN** the URL is replaced by `/jobs/abc` and the Results screen is rendered, which links to `/jobs/abc/detail`
 
 #### Scenario: No job parameter
 - **WHEN** the URL has no `job` parameter or `job=` is empty
-- **THEN** the health check UI is rendered
+- **THEN** the Home view is rendered
 
 ### Requirement: Job fetching and polling
 The view SHALL fetch `GET /api/v1/jobs/{id}` (id URL-encoded, same-origin base as `/healthz`), SHALL poll every 2000 ms while the job `done` is not true and `status` is not `completed`, `failed` or `cancelled`, and SHALL stop polling on a terminal status or unmount. A network error or HTTP 404 SHALL show an error message with `role="alert"` and stop polling.

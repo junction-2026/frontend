@@ -1,0 +1,489 @@
+/* Home composer and analyzing view, ported from UI_DESIGN/css/styles.css (status-pill and bar live in components.css). */
+.home-hero {
+  text-align: center;
+  padding: 2.2rem 0 1.5rem;
+}
+
+.home-hero h1 {
+  margin: 1rem 0 0.55rem;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.home-hero .lede {
+  margin: 0 auto 1.6rem;
+  max-width: 28rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.composer {
+  text-align: left;
+  padding: 0.85rem;
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+.composer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+  padding: 0 0.2rem;
+}
+
+.mode-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: var(--bg-soft);
+  border-radius: var(--radius-pill);
+}
+
+.mode-tabs button {
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.mode-tabs button.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.support-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--faint);
+  font-size: 0.8rem;
+}
+
+.composer textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem 1.05rem;
+  outline: none;
+  background: #fafafa;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.composer textarea:focus {
+  border-color: #b9c8e8;
+  box-shadow: 0 0 0 3px rgba(76, 130, 251, 0.12);
+  background: #fff;
+}
+
+.composer-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0 0.15rem;
+}
+
+.composer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.composer-meta .live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.composer-meta .live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.char-count {
+  color: var(--faint);
+  font-size: 0.82rem;
+}
+
+.try-row {
+  margin: 0.95rem auto 0;
+  max-width: 760px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.try-row button {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 560;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+  margin: 1.8rem auto 0;
+  max-width: 980px;
+}
+
+.feature {
+  padding: 1.15rem 1.2rem;
+}
+
+.feature-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--bg-soft);
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.8rem;
+  color: var(--ink-2);
+}
+
+.feature h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.feature p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ——— Analyzing ——— */
+.quote-banner {
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.quote-banner .meta-row {
+  margin-bottom: 0.75rem;
+  justify-content: space-between;
+}
+
+.quote-text {
+  margin: 0 0 0.9rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.quote-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.4rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.analyze-center {
+  text-align: center;
+  padding: 0.5rem 0 1.4rem;
+}
+
+.progress-ring {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  position: relative;
+}
+
+.progress-ring svg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.progress-ring .track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 4;
+}
+
+.progress-ring .arc {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 150;
+  stroke-dashoffset: 55;
+  animation: spin-arc 1.4s linear infinite;
+  transform-origin: 32px 32px;
+}
+
+.progress-ring .core {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--blue);
+}
+
+.analyze-center h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+.analyze-center p {
+  margin: 0 auto 1.2rem;
+  max-width: 34rem;
+  color: var(--muted);
+}
+
+.analyze-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ledger {
+  padding: 1rem 1.1rem 0.4rem;
+}
+
+.ledger-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+  gap: 1rem;
+}
+
+.ledger-head h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ledger-head span {
+  color: var(--faint);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ledger-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+
+.ledger-item h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+}
+
+.ledger-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.ledger-right {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+/* Additions for real data */
+.bar > span {
+  transition: width 0.3s ease;
+}
+
+.status-pill.gray {
+  background: var(--bg-soft);
+  color: var(--muted);
+}
+
+.quote-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.composer textarea.error,
+.form-error {
+  border-color: var(--danger);
+}
+
+.form-error {
+  margin: 0.7rem 0.2rem 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: #fdeceb;
+  color: var(--danger);
+  font-size: 0.86rem;
+}
+
+.form-error ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.advanced-panel {
+  margin: 0.75rem 0.15rem 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fafafa;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+}
+
+.advanced-panel label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.advanced-panel .hint {
+  color: var(--orange);
+  font-size: 0.75rem;
+}
+
+.mode-tabs button[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.check.running {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.check.orange {
+  background: var(--orange-soft);
+  color: var(--orange);
+}
+
+.check.gray {
+  background: var(--bg-soft);
+  color: var(--muted);
+}
+
+.ledger-item > div:nth-child(2) {
+  min-width: 0;
+}
+
+.ledger-item p {
+  overflow-wrap: anywhere;
+}
+
+.ledger-item .num {
+  color: var(--faint);
+  margin-right: 0.15rem;
+}
+
+.analyze-fail {
+  max-width: 560px;
+  margin: 0 auto 1.4rem;
+  padding: 1.1rem 1.15rem;
+  text-align: left;
+}
+
+.analyze-fail h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.analyze-fail p {
+  margin: 0 0 0.8rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.analyze-fail .fault-box {
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  margin-bottom: 0.75rem;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.analyze-fail .err {
+  color: var(--orange);
+  margin-top: 0.35rem;
+  font-weight: 600;
+}
+
+.cancelling {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.progress-ring.idle .arc {
+  animation: none;
+}
+
+@media (max-width: 960px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .composer-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
