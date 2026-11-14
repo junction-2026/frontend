@@ -17,18 +17,22 @@ Defines how the frontend is run and shipped: the same-origin `/healthz` proxy in
 - **THEN** the connection is proxied to the backend
 
 ### Requirement: Multi-stage Dockerfile
-The Dockerfile SHALL be multi-stage: `node:22-alpine` runs `npm ci && npm run build`; `nginx:alpine` copies `dist/` to `/usr/share/nginx/html` and `nginx/default.conf.template` to `/etc/nginx/templates/default.conf.template` so the stock entrypoint substitutes `${BACKEND_URL}`.
+The Dockerfile SHALL be multi-stage: `node:22-alpine` runs `npm ci && npm run build`; `nginx:alpine` copies `dist/` (which includes `og/*.png` from `public/og/`) to `/usr/share/nginx/html`, `nginx/default.conf.template` to `/etc/nginx/templates/default.conf.template` so the stock entrypoint substitutes `${BACKEND_URL}` and `${PUBLIC_ORIGIN}`, and the njs files to `/etc/nginx/njs/`.
 
 #### Scenario: Image build
 - **WHEN** `docker build .` runs
-- **THEN** an nginx image containing the built bundle is produced
+- **THEN** an nginx image containing the built bundle, the njs files and `/usr/share/nginx/html/og/*.png` is produced
 
 ### Requirement: nginx behaviour
-nginx SHALL listen on port 80 (`EXPOSE 80`). `location = /healthz` SHALL proxy to `${BACKEND_URL}/healthz` and `location /api/` SHALL proxy to `${BACKEND_URL}/api/`, each with `proxy_connect_timeout` and `proxy_read_timeout` of 5s. `location /` SHALL serve static files with `try_files $uri /index.html`. The image SHALL set `ENV BACKEND_URL=http://host.docker.internal:8080` as its default.
+nginx SHALL listen on port 80 (`EXPOSE 80`). `location = /healthz` SHALL proxy to `${BACKEND_URL}/healthz` and `location /api/` SHALL proxy to `${BACKEND_URL}/api/`, each with `proxy_connect_timeout` and `proxy_read_timeout` of 5s. Static files SHALL be served as files; every other HTML route SHALL be answered by the njs head injection (requirement "HTML head injection"). The image SHALL set `ENV BACKEND_URL=http://host.docker.internal:8080` as its default.
 
 #### Scenario: Proxy at runtime
 - **WHEN** the container runs with `-e BACKEND_URL=<backend>`
 - **THEN** `GET /healthz` and `GET /api/v1/jobs/{id}` on port 80 are forwarded to the backend
+
+#### Scenario: Assets unchanged
+- **WHEN** `GET /assets/<hashed file>` is requested
+- **THEN** the file is served as before
 
 ### Requirement: Docker ignore
 `.dockerignore` SHALL exclude node_modules, dist, coverage, .git and .env.
@@ -57,3 +61,32 @@ nginx SHALL add `location ~ ^/api/v1/jobs/[^/]+/events$` that proxies the WebSoc
 #### Scenario: Event stream at runtime
 - **WHEN** a WebSocket is opened to `/api/v1/jobs/{id}/events` on port 80
 - **THEN** it is upgraded and stays open for up to 120 s without traffic
+
+### Requirement: njs module and public origin
+The image SHALL load `ngx_http_js_module.so` (shipped with nginx:alpine) in the main nginx context and SHALL set `ENV PUBLIC_ORIGIN=http://localhost`. The template SHALL pass the origin to njs with `js_var $og_origin "${PUBLIC_ORIGIN}"`.
+
+#### Scenario: Module loaded
+- **WHEN** the container starts with `-e PUBLIC_ORIGIN=https://stiriri.dev`
+- **THEN** nginx starts with the njs module loaded and cards use `https://stiriri.dev`
+
+### Requirement: HTML head injection
+`location = /`, `location = /index.html` and the fallback of `location /` (`try_files $uri @spa`) SHALL be answered by an njs `js_content` handler that returns the built `index.html` with the link-preview card block inserted (capability link-preview-cards), as 200 `text/html` with `Cache-Control: no-cache`. If the handler fails, an internal `@plain` location SHALL serve the plain `index.html`. `location /og/` SHALL send `Cache-Control: public, max-age=86400`.
+
+#### Scenario: SPA shell with card
+- **WHEN** `GET /history` or `GET /jobs/{id}` is requested with any User-Agent
+- **THEN** the response is 200 `text/html` with `Cache-Control: no-cache` and the same body and asset references as `dist/index.html` except for the replaced card block
+
+#### Scenario: Card image
+- **WHEN** `GET /og/site.png` is requested
+- **THEN** the response is `image/png` with `Cache-Control: public, max-age=86400`
+
+### Requirement: Handler data sources
+The head-injection handler SHALL read `/usr/share/nginx/html/index.html` once per worker and cache it, and SHALL get a job via `r.subrequest('/api/v1/jobs/<id>')` through the `/api/` proxy, so no `resolver` is needed. The server block SHALL set `subrequest_output_buffer_size 32m` (the default, one memory page, is smaller than a real Get job; an oversized subrequest response is an nginx error that closes the request without an HTML body and that the handler cannot catch).
+
+#### Scenario: Job lookup
+- **WHEN** `GET /jobs/{id}` is requested
+- **THEN** the backend receives one `GET /api/v1/jobs/{id}` through the `/api/` location
+
+#### Scenario: Large job
+- **WHEN** the job response is larger than 64 KB (for example 5 MB with a long `input.content` and analyzer results)
+- **THEN** the response is 200 with the SPA shell and the job's verdict card
