@@ -1,3 +1,4 @@
+import { inflateSync } from 'node:zlib'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
@@ -133,5 +134,74 @@ describe('public/og images', () => {
     expect(b.subarray(1, 4).toString()).toBe('PNG')
     expect([b.readUInt32BE(16), b.readUInt32BE(20)]).toEqual([1200, 630])
     expect(statSync(`${dir}/${f}`).size).toBeLessThanOrEqual(300 * 1024)
+  })
+})
+
+describe('og generator', () => {
+  it('maps verdict-detected to the red palette', () => {
+    const entry = /'verdict-detected': \([^\n]*\),/.exec(readFileSync('scripts/og-images.py', 'utf8'))?.[0] ?? ''
+    expect(entry).toContain('#c0392b')
+    expect(entry).not.toContain('#1f8a4c')
+    expect(entry).not.toContain('#e4f3e8')
+  })
+
+  it('decodes verdict-detected.png and checks its pixels', () => {
+    // 8-bit RGB, non-interlaced PNG: inflate IDAT, undo the row filters, then read RGB triples.
+    const buf = readFileSync('public/og/verdict-detected.png')
+    expect(buf[24]).toBe(8)
+    expect(buf[25]).toBe(2)
+    expect(buf[28]).toBe(0)
+    const w = buf.readUInt32BE(16)
+    const h = buf.readUInt32BE(20)
+    const idat: Buffer[] = []
+    for (let off = 8; off < buf.length; ) {
+      const len = buf.readUInt32BE(off)
+      const type = buf.subarray(off + 4, off + 8).toString('latin1')
+      if (type === 'IDAT') idat.push(buf.subarray(off + 8, off + 8 + len))
+      off += 12 + len
+    }
+    const raw = inflateSync(Buffer.concat(idat))
+    const bpp = 3
+    const stride = w * bpp
+    const px = Buffer.alloc(stride * h)
+    for (let y = 0; y < h; y++) {
+      const filter = raw[y * (stride + 1)]
+      const src = y * (stride + 1) + 1
+      for (let i = 0; i < stride; i++) {
+        const x = raw[src + i]
+        const a = i >= bpp ? px[y * stride + i - bpp] : 0
+        const b = y > 0 ? px[(y - 1) * stride + i] : 0
+        const c = i >= bpp && y > 0 ? px[(y - 1) * stride + i - bpp] : 0
+        let pred = 0
+        if (filter === 1) pred = a
+        else if (filter === 2) pred = b
+        else if (filter === 3) pred = (a + b) >> 1
+        else if (filter === 4) {
+          const p = a + b - c
+          const pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c)
+          pred = pa <= pb && pa <= pc ? a : pb <= pc ? b : c
+        }
+        px[y * stride + i] = (x + pred) & 0xff
+      }
+    }
+    const at = (x: number, y: number) => {
+      const o = y * stride + x * bpp
+      return [px[o], px[o + 1], px[o + 2]]
+    }
+    const [br, bg, bb] = at(600, 20)
+    expect(br).toBeGreaterThan(bg)
+    expect(br).toBeGreaterThan(bb)
+    expect(at(12, 315)).toEqual([0xc0, 0x39, 0x2b]) // accent bar is --danger
+    // ink (from the generator) must reach 7:1 against the decoded background
+    const ink = /INK, MUTED, BG = '#([0-9a-f]{6})'/i.exec(readFileSync('scripts/og-images.py', 'utf8'))?.[1] ?? ''
+    const lin = (v: number) => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+    const lum = (r: number, g: number, b: number) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+    const iv = [0, 2, 4].map((i) => parseInt(ink.slice(i, i + 2), 16))
+    const [l1, l2] = [lum(br, bg, bb), lum(iv[0], iv[1], iv[2])].sort((a, b) => b - a)
+    expect((l1 + 0.05) / (l2 + 0.05)).toBeGreaterThanOrEqual(7)
+    for (let i = 0; i < px.length; i += bpp) {
+      const r = px[i], g = px[i + 1], b = px[i + 2]
+      if (g - Math.max(r, b) > 16) throw new Error(`green-dominant pixel at index ${i / bpp}`)
+    }
   })
 })
