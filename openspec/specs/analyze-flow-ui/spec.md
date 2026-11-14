@@ -91,11 +91,15 @@ The progress bar and the text `Stage <done> of <total> completed` SHALL come fro
 - **THEN** that text is shown
 
 ### Requirement: Active Worker Ledger rows
-The `Active Worker Ledger` SHALL list one row per PlanEntry in plan order. A row title SHALL be the Activity text, or the PlanEntry `name` before the analyzer started. The detail SHALL be the Activity detail, or for a settled row the analyzer `note`, or the preview counts when a preview exists, all as plain text. The duration SHALL come from `duration_ms`.
+The `Active Worker Ledger` SHALL list one row per PlanEntry in plan order. A row title SHALL be the catalog title of the Activity `key`, or before the analyzer started the catalog name of its id; the Activity `text` or PlanEntry `name` for a key or id the catalog lacks. The detail SHALL be the Activity detail localized from `params`, or for a settled row the availability note, or the preview counts when a preview exists, all as plain text. The duration SHALL come from `duration_ms`.
 
 #### Scenario: Title before and after start
-- **WHEN** a plan entry `news_search` named "News search" has not started and then `analyzer.started` carries the Activity text "Searching news coverage"
-- **THEN** its row title is first "News search" and then "Searching news coverage"
+- **WHEN** a plan entry `news_search` has not started and then `analyzer.started` carries the Activity key `news_search`
+- **THEN** its row title is first the catalog name of `news_search` and then the catalog title of the key
+
+#### Scenario: Detail from params
+- **WHEN** the locale is `de` and the Activity is `news_search` with `params.languages: ["de", "en"]`
+- **THEN** the detail is the German phrase naming Deutsch and Englisch, not the English API detail
 
 ### Requirement: Finalizer row and hide toggle
 The finalizer row SHALL follow `analysis.finalizing`, `analysis.finalized` and `analysis.finalization_failed`. The `Hide progress details` toggle SHALL collapse the ledger.
@@ -189,14 +193,18 @@ All fixed text of `/jobs/:id/live` (banner, heading, phase line, stage counter, 
 - **THEN** the page re-renders in the new language without a reload, including a cancel error already shown
 
 ### Requirement: Analyzing enum labels and API strings
-Job status in the banner pill and analyzer status in a ledger pill SHALL map the enum value to a catalog key; a value the catalog does not know SHALL render as the raw value. API-provided strings (the submitted content, activity `text` and `detail`, analyzer names and notes, error `code` and `message`, the preview `label` and source language) SHALL be shown unchanged and SHALL NOT be passed through `t()`.
+Job status in the banner pill and analyzer status in a ledger pill SHALL map the enum value to a catalog key; an unknown value SHALL render as the raw value. Activity `text` and `detail` SHALL be localized from `key` and `params` and kept as sent only for a key the catalog lacks. Other API strings (unknown analyzer names, error `code` and `message`, the preview `label` and source language) SHALL be shown unchanged, not passed through `t()`. The submitted content SHALL be in `<bdi dir="auto">`.
 
 #### Scenario: Unknown status
 - **WHEN** the job status is `weird_status`
 - **THEN** the banner pill shows `weird_status`
 
+#### Scenario: Known activity key
+- **WHEN** an activity with key `translation` arrives in English while the locale is `de`
+- **THEN** the ledger row shows the German catalog title
+
 #### Scenario: API text
-- **WHEN** an activity text arrives in English while the locale is `de`
+- **WHEN** an activity with key `bot_detection` and text "Bot detection" arrives
 - **THEN** the ledger row shows that text unchanged
 
 ### Requirement: Analyzing numbers and durations
@@ -231,3 +239,14 @@ When every selectable analyzer is checked the request SHALL omit `analyzers`, ot
 #### Scenario: Analyzers list fails
 - **WHEN** `GET /api/v1/analyzers` fails
 - **THEN** the panel shows the error and the next submission has no `analyzers` member
+
+### Requirement: Home fully localized
+Every static string of Home (eyebrow, title, lede, mode tabs and their label, support note, placeholders, input label, advanced options, analyzer states, character count, sample links, feature cards, error messages) SHALL come from the catalogs in en, fr, ar, de and fi. Analyzer names from the API SHALL be wrapped in `<bdi>`. The submit arrow SHALL mirror under `[dir=rtl]`. Changing the locale SHALL keep the typed input, the mode and the open panel.
+
+#### Scenario: Home in Arabic
+- **WHEN** Home is rendered in ar
+- **THEN** html has lang ar and dir rtl and no static Latin-script text other than the brand "VEIL" appears
+
+#### Scenario: Input survives a switch
+- **WHEN** text is typed and the locale changes
+- **THEN** the textarea keeps its value
