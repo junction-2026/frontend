@@ -22,6 +22,7 @@ export default {
   'status.completed': 'valmis',
   'status.failed': 'epäonnistui',
   'status.cancelled': 'peruutettu',
+  'status.skipped': 'ohitettu',
   'status.unknown': 'tuntematon',
   'excerpt_unavailable': 'Katkelma ei ole saatavilla',
   'verdict.detected': 'Manipulointi havaittu',

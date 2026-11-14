@@ -220,6 +220,14 @@ describe('History', () => {
       expect(screen.queryByText('Today')).toBeNull()
     })
 
+    it('translates a skipped finalization status and shows an unknown one as sent', async () => {
+      localStorage.setItem('veil.locale', 'de')
+      route(() => page([summary('a', { finalization: { status: 'skipped', verdict: null } }), summary('b', { finalization: { status: 'odd', verdict: null } })]))
+      render(<I18nProvider><HistoryView /></I18nProvider>)
+      expect(await screen.findByText('Abschlussbewertung: übersprungen')).toBeInTheDocument()
+      expect(screen.getByText('Abschlussbewertung: odd')).toBeInTheDocument()
+    })
+
     it('re-renders in German after a switch, keeping the loaded items', async () => {
       route(() => page([summary('a'), summary('b', { status: 'running', done: false, finalization: { status: 'pending', verdict: null } })]))
       render(<I18nProvider><Pick /><HistoryView /></I18nProvider>)

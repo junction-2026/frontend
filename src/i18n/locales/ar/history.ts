@@ -22,6 +22,7 @@ export default {
   'status.completed': 'مكتمل',
   'status.failed': 'فشل',
   'status.cancelled': 'ملغى',
+  'status.skipped': 'تم التخطي',
   'status.unknown': 'غير معروف',
   'excerpt_unavailable': 'المقتطف غير متاح',
   'verdict.detected': 'تم رصد تلاعب',

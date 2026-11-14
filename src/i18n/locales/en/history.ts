@@ -22,6 +22,7 @@ export default {
   'status.completed': 'completed',
   'status.failed': 'failed',
   'status.cancelled': 'cancelled',
+  'status.skipped': 'skipped',
   'status.unknown': 'unknown',
   'excerpt_unavailable': 'Excerpt unavailable',
   'verdict.detected': 'Manipulation detected',

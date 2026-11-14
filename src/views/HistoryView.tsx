@@ -19,7 +19,7 @@ const FILTERS = [
   { key: 'cancelled', status: 'cancelled' },
 ] as const
 
-const STATUSES = ['pending', 'running', 'completed', 'failed', 'cancelled']
+const STATUSES = ['pending', 'running', 'completed', 'failed', 'cancelled', 'skipped']
 
 function statusTone(j: JobSummary) {
   if (j.status === 'failed') return 'orange'
