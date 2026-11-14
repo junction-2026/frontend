@@ -1,13 +1,16 @@
 import { useState, type FormEvent } from 'react'
+import { useFormat, useT } from '../i18n'
 import { Link } from '../router'
 import { Mock } from '../ui/MockBadge'
 import '../secondary/secondary.css'
 
-const LABEL = 'No backend for Ask VEIL'
-const SUGGESTIONS = ['What other techniques were detected?', 'What evidence contradicts this claim?']
-
 // Mock: the thread is canned and sending only appends a local bubble; nothing is sent to the backend.
 export default function AskView() {
+  const t = useT()
+  const { formatNumber } = useFormat()
+  const label = t('ask.mock_label')
+  const percent = (v: number) => formatNumber(v, { style: 'percent' })
+  const suggestions = [t('ask.suggestion.1'), t('ask.suggestion.2')]
   const [draft, setDraft] = useState('')
   const [sent, setSent] = useState<string[]>([])
 
@@ -21,45 +24,45 @@ export default function AskView() {
 
   return (
     <section className="view">
-      <Mock block label={LABEL}>
+      <Mock block label={label}>
         <div className="context-bar">
           <div className="left">
-            <span className="status-pill orange">● Manipulation detected (94% confidence)</span>
-            <h3>Source item: “Everyone knows these people are destroying our future...”</h3>
-            <p>This text uses emotionally charged language, unspecified outgroup s...</p>
+            <span className="status-pill orange">{t('ask.context.status', { confidence: percent(0.94) })}</span>
+            <h3>{t('ask.context.source')}</h3>
+            <p>{t('ask.context.summary')}</p>
           </div>
-          <Link className="btn-secondary" href="/history">← Back to summary</Link>
+          <Link className="btn-secondary" href="/history">{t('ask.back')}</Link>
         </div>
       </Mock>
 
       <div className="card chat-card">
         <div className="chat-head">
-          <h1>Ask VEIL <span className="badge-blue">Interactive Intelligence</span></h1>
-          <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Grounded in submitted text, wire reports &amp; fact-checks</span>
+          <h1>{t('ask.title')} <span className="badge-blue">{t('ask.badge')}</span></h1>
+          <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{t('ask.grounded')}</span>
         </div>
-        <p className="chat-prompt">Have a question about this source, rhetorical indicators, or corroborating reporting?</p>
+        <p className="chat-prompt">{t('ask.prompt')}</p>
 
-        <Mock block label={LABEL}>
-          <div className="chat-thread" role="log" aria-label="Conversation">
-            <div className="bubble-user">Why was this flagged as Appeal to Fear?</div>
+        <Mock block label={label}>
+          <div className="chat-thread" role="log" aria-label={t('ask.thread')}>
+            <div className="bubble-user">{t('ask.q1')}</div>
             <div className="bubble-ai">
               <div className="avatar-sm">V</div>
               <div className="content">
-                <p>The span “destroying our future… before it’s too late” matches catastrophizing + urgency patterns at a <strong>96% pattern match</strong> against the fear-appeal catalog.</p>
+                <p>{t('ask.a1_pre')}<strong>{t('ask.a1_match', { percent: percent(0.96) })}</strong>{t('ask.a1_post')}</p>
                 <div className="meta-chips">
-                  <span>{'{ }'} Corpus ref: #CAT-FEAR-449</span>
-                  <span>Weight: High (+0.42)</span>
+                  <span>{'{ }'} {t('ask.chip.corpus')}</span>
+                  <span>{t('ask.chip.weight')}</span>
                 </div>
               </div>
             </div>
-            <div className="bubble-user">How do other verified news sources cover this demographic?</div>
+            <div className="bubble-user">{t('ask.q2')}</div>
             <div className="bubble-ai">
               <div className="avatar-sm">V</div>
               <div className="content">
-                <p><strong>Financial Times</strong> and <strong>Reuters</strong> frame the same theme around grid resilience and attribution caution, without outgroup blame language.</p>
+                <p><strong>Financial Times</strong>{t('ask.a2_and')}<strong>Reuters</strong>{t('ask.a2_rest')}</p>
                 <div className="ref-cards">
-                  <Link className="ref-card" href="/explore">View 6 Related Wire Articles <span>↗</span></Link>
-                  <button type="button" className="ref-card">Reuters Fact-Check File <span>↗</span></button>
+                  <Link className="ref-card" href="/explore">{t('ask.ref.related', { n: formatNumber(6) })} <span>↗</span></Link>
+                  <button type="button" className="ref-card">{t('ask.ref.factcheck')} <span>↗</span></button>
                 </div>
               </div>
             </div>
@@ -67,17 +70,17 @@ export default function AskView() {
           </div>
         </Mock>
 
-        <Mock block label={LABEL}>
+        <Mock block label={label}>
           <div className="suggestions">
-            {SUGGESTIONS.map((s) => <button type="button" key={s} onClick={() => setDraft(s)}>{s}</button>)}
-            <Link className="accent" href="/explore">Explore coverage of this topic on World Map →</Link>
+            {suggestions.map((s) => <button type="button" key={s} onClick={() => setDraft(s)}>{s}</button>)}
+            <Link className="accent" href="/explore">{t('ask.suggestion.explore')}</Link>
           </div>
         </Mock>
 
-        <Mock block label={LABEL}>
+        <Mock block label={label}>
           <form className="chat-input" onSubmit={send}>
-            <input aria-label="Message" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Ask anything about this source, rhetorical markers, or wire context..." />
-            <button className="send-btn" type="submit" aria-label="Send">↑</button>
+            <input aria-label={t('ask.input_aria')} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('ask.input_placeholder')} />
+            <button className="send-btn" type="submit" aria-label={t('ask.send')}>↑</button>
           </form>
         </Mock>
       </div>

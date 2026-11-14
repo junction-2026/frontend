@@ -50,7 +50,7 @@ A dependency-free History-API router SHALL map `/` to Home, `/jobs/:id/live` to 
 - **THEN** the URL is unchanged and Home is rendered
 
 ### Requirement: Shell and navigation
-The top bar SHALL show the brand link "VEIL / Intelligence" to `/`, the nav "Analyze", "Explore", "History" (without a count), a language selector "English ▾", the button "+ New Analysis" to `/` and an account button (aria-label "Account") to `/settings`. The active nav item SHALL be Analyze for `/`, `/jobs/*`, `/ask` and `/states`; Explore for `/explore*`; History for `/history`; the active item has `aria-current="page"`.
+The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History (no count), the functional language selector (not wrapped in `Mock`), "+ New Analysis" to `/` and an account button to `/settings`, with texts from the active locale ("VEIL" is not translated). The active nav item is Analyze for `/`, `/jobs/*`, `/ask`, `/states`; Explore for `/explore*`; History for `/history`, with `aria-current="page"`.
 
 #### Scenario: Active state
 - **WHEN** the path is `/explore/region`
@@ -59,6 +59,14 @@ The top bar SHALL show the brand link "VEIL / Intelligence" to `/`, the nav "Ana
 #### Scenario: Job path
 - **WHEN** the path is `/jobs/abc`
 - **THEN** only the Analyze nav item is active
+
+#### Scenario: Selector markup
+- **WHEN** the top bar renders
+- **THEN** a native `<select class="lang-select">` named "Language" lists English, Français, العربية, Deutsch, Suomi with `lang` attributes and the active locale as value
+
+#### Scenario: Language selector
+- **WHEN** the user picks Deutsch in the selector
+- **THEN** the nav reads "Analysieren", "Entdecken", "Verlauf" without a reload
 
 ### Requirement: Backend health indicator
 The top bar SHALL call `checkHealth()` once on mount and show a status dot with the text "Backend online" on success; while pending, "Checking backend…" with `role="status"`; on failure, "Backend offline" with the checkHealth message as its tooltip (`title`) and `role="alert"`. The page "Hello, World!" SHALL no longer exist.
@@ -74,16 +82,16 @@ The top bar SHALL call `checkHealth()` once on mount and show a status dot with 
 - **WHEN** `<Mock label="Language">English</Mock>` is rendered
 - **THEN** the text "MOCK" is visible, the wrapper has `data-mock="true"`, a title containing "Mock data – not connected to the backend" and "Language", and an aria-label containing "mock"
 
-### Requirement: Mock register
-`docs/mock-areas.md` SHALL list every marked mock area by route and element; each screen task appends its rows. The language selector ("English ▾") in the top bar SHALL be marked mock and listed.
-
-#### Scenario: Language selector listed
-- **WHEN** a reader opens `docs/mock-areas.md`
-- **THEN** it has a row for the top-bar language selector
-
 ### Requirement: Stub views
 Each of `src/views/{Home,Analyzing,Results,Detail,History,Explore,Region,Ask,States,Settings}View.tsx` SHALL default-export a component rendering its page heading (`h1`), so that routes are testable before the screen tasks replace them.
 
 #### Scenario: Stub heading
 - **WHEN** the path is `/history`
 - **THEN** an h1 "History" is shown in the shell
+
+### Requirement: Mock areas register
+`docs/mock-areas.md` SHALL list every marked mock area by route and element; each screen task appends its rows. The top-bar language selector is functional and SHALL NOT be marked mock or listed.
+
+#### Scenario: Language selector not listed
+- **WHEN** a reader opens `docs/mock-areas.md`
+- **THEN** it has no row for the top-bar language selector or the Home language chip

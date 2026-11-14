@@ -26,5 +26,16 @@ const NAMES = new Map(COUNTRIES.flatMap((c) => (c.code ? [[c.code, c.name] as co
 /** Every interactive country, for the Country select. */
 export const SELECTABLE = [...NAMES].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name))
 export const bundledName = (code: string) => NAMES.get(code)
-export const countryName = (code: string, coverage: Coverage) => coverage[code]?.name ?? NAMES.get(code) ?? code
-export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+const displayNames = new Map<string, Intl.DisplayNames>()
+// The locale's own name of the country; without one (unknown code, no ICU data) the English name that came with the data.
+export function countryName(code: string, coverage: Coverage, locale = 'en'): string {
+  try {
+    let dn = displayNames.get(locale)
+    if (!dn) displayNames.set(locale, (dn = new Intl.DisplayNames(locale, { type: 'region' })))
+    const n = dn.of(code)
+    if (n && n !== code) return n
+  } catch {
+    /* Intl.DisplayNames missing or invalid code */
+  }
+  return coverage[code]?.name ?? NAMES.get(code) ?? code
+}

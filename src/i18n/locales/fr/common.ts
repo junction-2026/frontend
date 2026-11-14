@@ -1,0 +1,17 @@
+export default {
+  'mock.badge': 'MAQUETTE',
+  'mock.title': 'Données fictives – non connectées au serveur',
+  'mock.title_labeled': 'Données fictives – non connectées au serveur ({label})',
+  'errors.invalid_request': 'La requête n’est pas valide. Vérifiez la saisie et réessayez.',
+  'errors.validation_failed': 'Certains champs ne sont pas valides.',
+  'errors.validation_failed_fields': 'Certains champs ne sont pas valides : {fields}',
+  'errors.not_found': 'Introuvable. L’analyse a peut-être été supprimée.',
+  'errors.method_not_allowed': 'Cette action n’est pas prise en charge.',
+  'errors.payload_too_large': 'Le contenu dépasse 1 Mio',
+  'errors.internal_error': 'Une erreur est survenue sur le serveur. Veuillez réessayer plus tard.',
+  'errors.unknown_analyzer': 'Analyseur inconnu : {ids}.',
+  'errors.unknown_value': 'inconnu',
+  'errors.analyzer_not_selectable': 'Cet analyseur ne peut pas être sélectionné.',
+  'errors.job_finished': 'Cette analyse est déjà terminée.',
+  'errors.network_error': 'Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.',
+}

@@ -20,6 +20,9 @@ afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   window.history.replaceState(null, '', '/')
+  localStorage.clear()
+  document.documentElement.lang = 'en'
+  document.documentElement.dir = 'ltr'
 })
 
 describe('Explore and Region', () => {
@@ -134,5 +137,60 @@ describe('Settings', () => {
     const block = within(screen.getByRole('region', { name: 'Active AI analyzers & ensembles' }))
     await waitFor(() => expect(block.getByRole('alert')).toHaveTextContent('registry down'))
     expect(block.queryByRole('status')).toBeNull()
+  })
+})
+
+describe('Localized screens', () => {
+  it('keeps the Settings language block mock and non-functional under fr', () => {
+    localStorage.setItem('veil.locale', 'fr')
+    open('/settings')
+    expect(screen.getByRole('heading', { level: 1, name: 'Paramètres et méthodologie' })).toBeInTheDocument()
+    expect(mocked(screen.getByText('Langue de l’interface'))).not.toBeNull()
+    expect(mocked(screen.getByRole('button', { name: 'Conservation des données' }))).not.toBeNull()
+    const sw = screen.getByRole('switch', { name: 'Langue du texte analysé' })
+    expect(sw).toHaveAttribute('aria-disabled', 'true')
+    fireEvent.click(sw)
+    expect(sw).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('region', { name: 'Analyseurs IA et ensembles actifs' })).toBeInTheDocument()
+  })
+
+  it('shows localized analyzer texts and API error messages in Arabic', async () => {
+    localStorage.setItem('veil.locale', 'ar')
+    respond(() => json({ items: [analyzer({ id: 'x', name: 'Rhetoric', depends_on: ['y'] })] }))
+    open('/settings')
+    const row = (await screen.findByText('Rhetoric')).closest('.analyzer-row') as HTMLElement
+    expect(row).toHaveTextContent('الفئة: c · يعتمد على: y')
+    expect(within(row).getByText('مفعّل')).toBeInTheDocument()
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+  })
+
+  it('translates Region, with the country name from Intl.DisplayNames', () => {
+    localStorage.setItem('veil.locale', 'de')
+    open('/explore/region')
+    expect(screen.getByRole('heading', { level: 1, name: 'Entdecken Sie die Welt.' })).toBeInTheDocument()
+    expect(screen.getByText(/Finnland ausgewählt/)).toBeInTheDocument()
+    expect(screen.getByText('99,1 %')).toBeInTheDocument()
+    expect(mocked(screen.getByText('Regionalindex'))).toBeNull() // the breadcrumb is not a mock part
+    expect(screen.getByRole('link', { name: 'Auswahl aufheben ×' })).toBeInTheDocument()
+  })
+
+  it('translates Explore and the map labels in Finnish', () => {
+    localStorage.setItem('veil.locale', 'fi')
+    open('/explore')
+    expect(screen.getByRole('heading', { level: 1, name: 'Tutki maailmaa.' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Maailmankartta kattavuudesta' })).toBeInTheDocument()
+    expect(screen.getByText('Kattavuuden tiheys:')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Avaa historia →' })).toBeInTheDocument()
+  })
+
+  it('translates Ask, still all mock and without a request', () => {
+    localStorage.setItem('veil.locale', 'de')
+    open('/ask')
+    expect(screen.getByRole('heading', { level: 1, name: /^Ask VEIL/ })).toBeInTheDocument()
+    expect(mocked(screen.getByText('Warum wurde dies als Appell an die Angst markiert?'))).not.toBeNull()
+    fireEvent.click(screen.getByText('Welche weiteren Techniken wurden erkannt?'))
+    expect(screen.getByLabelText('Nachricht')).toHaveValue('Welche weiteren Techniken wurden erkannt?')
+    expect(screen.getByRole('button', { name: 'Senden' })).toBeInTheDocument()
+    expect(fetchMock.mock.calls.every((c) => String(c[0]).includes('health'))).toBe(true)
   })
 })

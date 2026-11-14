@@ -1,20 +1,21 @@
 import { verdictOf, type Job } from '../api/types'
 import { DetailedAnalysis } from '../job/DetailedAnalysis'
-import { VERDICT_UI } from '../job/read'
+import { useT } from '../i18n'
 import { WithJob } from '../job/WithJob'
 import { Link } from '../router'
 import '../job/results.css'
 
 function Detail({ job }: { job: Job }) {
+  const t = useT()
   const f = job.finalization
   const result = f?.status === 'completed' ? f.result : null
   return (
     <>
       {result && (
         <section className="card final-assessment">
-          <h2>Final assessment</h2>
-          <strong>{VERDICT_UI[verdictOf(result.verdict)].label}</strong>
-          {result.produced_by === 'orchestrator' && <> <span className="tag gray">Insufficient evidence</span></>}
+          <h2>{t('results.detail.final')}</h2>
+          <strong>{t(`results.verdict.label.${verdictOf(result.verdict)}`)}</strong>
+          {result.produced_by === 'orchestrator' && <> <span className="tag gray">{t('results.insufficient')}</span></>}
           <p>{result.user_text}</p>
         </section>
       )}
@@ -24,15 +25,16 @@ function Detail({ job }: { job: Job }) {
 }
 
 export default function DetailView({ id }: { id: string }) {
+  const t = useT()
   return (
     <section className="view">
       <div className="detail-top">
-        <Link className="btn-link" href={`/jobs/${encodeURIComponent(id)}`}>← Back to summary</Link>
-        <span className="detail-id">Detailed analysis · <strong>Job {id}</strong></span>
+        <Link className="btn-link" href={`/jobs/${encodeURIComponent(id)}`}>{t('results.detail.back')}</Link>
+        <span className="detail-id">{t('results.detail.label')} · <strong>{t('results.job', { id })}</strong></span>
       </div>
       <div className="page-head">
-        <h1>Detailed analysis</h1>
-        <p>Rhetorical techniques and claim units found in the submitted text, with the exact phrases that triggered them.</p>
+        <h1>{t('results.detail.title')}</h1>
+        <p>{t('results.detail.lede')}</p>
       </div>
       <WithJob id={id}>{(job) => <Detail job={job} />}</WithJob>
     </section>

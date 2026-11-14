@@ -1,0 +1,17 @@
+export default {
+  'mock.badge': 'تجريبي',
+  'mock.title': 'بيانات تجريبية – غير متصلة بالخادم',
+  'mock.title_labeled': 'بيانات تجريبية – غير متصلة بالخادم ({label})',
+  'errors.invalid_request': 'الطلب غير صالح. تحقق من المدخلات وحاول مرة أخرى.',
+  'errors.validation_failed': 'بعض الحقول غير صالحة.',
+  'errors.validation_failed_fields': 'بعض الحقول غير صالحة: {fields}',
+  'errors.not_found': 'غير موجود. ربما تمت إزالة التحليل.',
+  'errors.method_not_allowed': 'هذا الإجراء غير مدعوم.',
+  'errors.payload_too_large': 'المحتوى أكبر من 1 ميبي بايت',
+  'errors.internal_error': 'حدث خطأ في الخادم. يرجى المحاولة لاحقًا.',
+  'errors.unknown_analyzer': 'محلل غير معروف: {ids}.',
+  'errors.unknown_value': 'غير معروف',
+  'errors.analyzer_not_selectable': 'لا يمكن اختيار هذا المحلل.',
+  'errors.job_finished': 'انتهى هذا التحليل بالفعل.',
+  'errors.network_error': 'تعذر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى.',
+}

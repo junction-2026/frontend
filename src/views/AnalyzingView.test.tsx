@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ReactElement } from 'react'
+import { I18nProvider, useLocale, type Locale } from '../i18n'
 import AnalyzingView from './AnalyzingView'
 
 class FakeWebSocket {
@@ -37,7 +39,23 @@ afterEach(() => {
   fetchMock.mockReset()
   vi.unstubAllGlobals()
   vi.useRealTimers()
+  resetLocale()
 })
+
+// Renders under the real provider in a given locale (the choice is read from storage like on a reload).
+const inLocale = (lng: string, ui: ReactElement) => {
+  localStorage.setItem('veil.locale', lng)
+  return render(<I18nProvider>{ui}</I18nProvider>)
+}
+const Switch = ({ to }: { to: Locale }) => {
+  const { setLocale } = useLocale()
+  return <button onClick={() => setLocale(to)}>switch</button>
+}
+const resetLocale = () => {
+  localStorage.clear()
+  document.documentElement.lang = 'en'
+  document.documentElement.dir = 'ltr'
+}
 
 const run = (id: string, over: object = {}) => ({
   id, name: `Name ${id}`, category: 'c', depends_on: [], status: 'pending', reason: null, error: null, started_at: null,
@@ -271,5 +289,41 @@ describe('AnalyzingView cancel', () => {
     await click()
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong')
     expect(screen.getByRole('button', { name: /Cancel analysis/ })).toBeInTheDocument()
+  })
+})
+
+describe('AnalyzingView in another locale', () => {
+  it('renders German chrome, keeps API content unchanged, and re-renders on a language switch', () => {
+    inLocale('de', <><Switch to="fr" /><AnalyzingView id="j1" /></>)
+    snapshot({ status: 'weird_status' }, { activities: { translation: act1('translation', 'Translating the text <i>now</i>') }, progress: { done: 1, running: [], total: 4 } })
+    expect(screen.getByRole('heading', { name: 'Ihr Inhalt wird analysiert...' })).toBeInTheDocument()
+    expect(screen.getByText(/Auftrag j1/)).toBeInTheDocument()
+    expect(screen.getByText('Schritt 1 von 4 abgeschlossen')).toBeInTheDocument()
+    expect(screen.getByText('“Everyone knows <b>this</b>”')).toBeInTheDocument()
+    expect(screen.getByText('Translating the text <i>now</i>')).toBeInTheDocument() // activity text comes from the API
+    expect(within(rowOf('News search')).getByText('Ausstehend')).toBeInTheDocument()
+    expect(screen.getByText(/weird_status/)).toBeInTheDocument() // unknown enum value: raw
+    fireEvent.click(screen.getByRole('button', { name: 'switch' }))
+    expect(screen.getByRole('heading', { name: 'Analyse de votre contenu...' })).toBeInTheDocument()
+    expect(screen.getByText('“Everyone knows <b>this</b>”')).toBeInTheDocument()
+  })
+
+  it('maps a known job status to the catalog and formats counts and durations per locale', () => {
+    inLocale('de', <AnalyzingView id="j1" />)
+    snapshot({ status: 'finalizing' })
+    expect(screen.getByText(/wird abgeschlossen/)).toBeInTheDocument()
+    ws().emit('analyzer.succeeded', 5, { analyzer: run('translation', { status: 'succeeded', duration_ms: 1234 }), preview: { source_language: 'en', translated: true }, progress: { done: 1, running: [], total: 4 } })
+    expect(rowOf('Translation')).toHaveTextContent('übersetzt aus en')
+    expect(rowOf('Translation')).toHaveTextContent('1,2 s')
+  })
+
+  it('translates a cancel error at render, so a language switch re-translates it', async () => {
+    inLocale('de', <><Switch to="en" /><AnalyzingView id="j1" /></>)
+    snapshot()
+    fetchMock.mockImplementation(async () => err(500, 'internal_error'))
+    fireEvent.click(screen.getByRole('button', { name: /Analyse abbrechen/ }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Auf dem Server ist ein Fehler aufgetreten')
+    fireEvent.click(screen.getByRole('button', { name: 'switch' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong on the server')
   })
 })

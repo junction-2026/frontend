@@ -77,11 +77,11 @@ A non-201 response SHALL render an element with `role=alert` using the foundatio
 - **THEN** the alert lists `nope`
 
 ### Requirement: Home copy and mock marking
-The support note SHALL read "Supports Bluesky, Mastodon and web pages". The `Auto-detect (EN, FR, AR, DE, FI)` chip and the two feature cards ("Unbiased Dissection", "Provenance & Signals") SHALL be wrapped in `Mock`. Home SHALL NOT render a "Private by Architecture" card. The `Try:` sample buttons SHALL fill the textarea and SHALL NOT be marked.
+The support note SHALL read "Supports Bluesky, Mastodon and web pages" in English; all Home copy SHALL come from the `home` catalog in the active locale. Home SHALL NOT render a language chip ("Auto-detect (EN, FR, AR, DE, FI)"). The two feature cards ("Unbiased Dissection", "Provenance & Signals") SHALL be wrapped in `Mock`. Home SHALL NOT render a "Private by Architecture" card. The `Try:` sample buttons SHALL fill the textarea and SHALL NOT be marked.
 
 #### Scenario: Marked and unmarked elements
 - **WHEN** Home renders
-- **THEN** the chip and each feature card are inside `[data-mock]`, the sample buttons, count and support note are not, and no "Private by Architecture" text is present
+- **THEN** each feature card is inside `[data-mock]`, the sample buttons, count and support note are not, the Auto-detect chip is absent, and no "Private by Architecture" text is present
 
 ### Requirement: Live view state
 The analyzing view at `/jobs/:id/live` SHALL subscribe to the job's events, build its state from `job.snapshot` and later events, and unsubscribe on unmount. The quote banner SHALL show `input.content` (or the scrape URL while `input` is null) as plain text, the job id and the elapsed time computed client-side from `created_at` to `finished_at` or now. `Cluster: eu-west-alpha-2` and `Zero-retention ephemeral pipeline` SHALL be inside `Mock` or removed.
@@ -191,3 +191,39 @@ The Home feature row SHALL lay out its cards in as many equal-width columns as t
 #### Scenario: Wide viewport
 - **WHEN** the viewport is wider than 960px
 - **THEN** the two cards fill two equal columns
+
+### Requirement: Analyzing copy from the analysis catalog
+All fixed text of `/jobs/:id/live` (banner, heading, phase line, stage counter, progress toggle, cancel controls, scrape failure card, ledger title, ledger status pills and preview summaries) SHALL come from the `analysis` catalog in the active locale for en, fr, ar, de and fi. The English text quoted in the other Analyzing requirements of this capability is the `en` catalog value.
+
+#### Scenario: Another locale
+- **WHEN** the active locale is `de` and a snapshot with status `running` arrives
+- **THEN** the heading reads "Ihr Inhalt wird analysiert...", the counter reads "Schritt 0 von 4 abgeschlossen", a pending row reads "Ausstehend", and the content and activity text are the API strings unchanged
+
+#### Scenario: Language switch
+- **WHEN** the user switches the language while the page is open
+- **THEN** the page re-renders in the new language without a reload, including a cancel error already shown
+
+### Requirement: Analyzing enum labels and API strings
+Job status in the banner pill and analyzer status in a ledger pill SHALL map the enum value to a catalog key; a value the catalog does not know SHALL render as the raw value. API-provided strings (the submitted content, activity `text` and `detail`, analyzer names and notes, error `code` and `message`, the preview `label` and source language) SHALL be shown unchanged and SHALL NOT be passed through `t()`.
+
+#### Scenario: Unknown status
+- **WHEN** the job status is `weird_status`
+- **THEN** the banner pill shows `weird_status`
+
+#### Scenario: API text
+- **WHEN** an activity text arrives in English while the locale is `de`
+- **THEN** the ledger row shows that text unchanged
+
+### Requirement: Analyzing numbers and durations
+Counts (stage counter, preview counts), the row position, elapsed time and ledger durations SHALL be formatted with the active locale's number formatter; the unit text comes from the catalog (en: "1.2s"). Preview counts SHALL use the plural form keys of the locale, and a propaganda-detection score SHALL be shown as a whole percent with locale formatting.
+
+#### Scenario: German duration
+- **WHEN** the locale is `de` and a ledger row ran 1234 ms
+- **THEN** the row shows "1,2 s"
+
+### Requirement: Analyzing layout in right-to-left languages
+The Analyzing screen SHALL remain usable with `dir=rtl` (Arabic): the arrows inside Arabic strings sit on the side an RTL reader expects, and no part of the layout depends on physical left or right.
+
+#### Scenario: Arabic
+- **WHEN** the locale is `ar`
+- **THEN** the document direction is `rtl` and the headings and controls are Arabic

@@ -1,0 +1,17 @@
+export default {
+  'mock.badge': 'MOCK',
+  'mock.title': 'Mock data – not connected to the backend',
+  'mock.title_labeled': 'Mock data – not connected to the backend ({label})',
+  'errors.invalid_request': 'The request was not valid. Check the input and try again.',
+  'errors.validation_failed': 'Some fields are not valid.',
+  'errors.validation_failed_fields': 'Some fields are not valid: {fields}',
+  'errors.not_found': 'Not found. The analysis may have been removed.',
+  'errors.method_not_allowed': 'This action is not supported.',
+  'errors.payload_too_large': 'Content is larger than 1 MiB',
+  'errors.internal_error': 'Something went wrong on the server. Please try again later.',
+  'errors.unknown_analyzer': 'Unknown analyzer: {ids}.',
+  'errors.unknown_value': 'unknown',
+  'errors.analyzer_not_selectable': 'This analyzer cannot be selected.',
+  'errors.job_finished': 'This analysis has already finished.',
+  'errors.network_error': 'Could not reach the backend. Check your connection and try again.',
+}

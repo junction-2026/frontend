@@ -92,7 +92,7 @@
   width: 60%;
 }
 .history-right {
-  text-align: right;
+  text-align: end;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -125,7 +125,7 @@
   }
   .history-right {
     align-items: flex-start;
-    text-align: left;
+    text-align: start;
     flex-direction: row;
   }
 }

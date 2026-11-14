@@ -1,4 +1,6 @@
 import type { AnalyzerRun, Finalization, Job, JobEvent } from '../api/types'
+import { formatNumber, tActive as t } from '../i18n'
+import { percent } from '../job/text'
 
 export type PlanEntry = { id: string; name: string; activity_key: string; depends_on: string[]; phase: number }
 export type Activity = { key: string; text: string; detail: string | null; params: Record<string, unknown> }
@@ -123,32 +125,34 @@ export type Tone = 'gray' | 'blue' | 'green' | 'orange'
 export type Row = { id: string; title: string; detail: string | null; ms: number | null; tone: Tone; label: string }
 
 // One-line summary of a preview, from counts the server computed (analysis-job-events, Result preview).
+// Text comes from the `analysis` catalog in the active locale; ledgerRows runs at render, so a language switch re-translates it.
 export function previewSummary(key: string, p: Record<string, unknown> | undefined): string | null {
   if (!p) return null
-  const n = (v: unknown, one: string, many = `${one}s`) => (typeof v === 'number' ? `${v} ${v === 1 ? one : many}` : null)
+  const n = (v: unknown, name: string) => (typeof v === 'number' ? t(`analysis.preview.${name}`, { count: v, n: formatNumber(v) }) : null)
   const parts =
-    key === 'topic_extraction' ? [n(p.claims_total, 'claim'), n(p.topics_total, 'topic')]
-    : key === 'news_search' ? [n(p.articles, 'article')]
-    : key === 'fact_check' ? [n(p.fact_checks, 'fact check')]
-    : key === 'techniques' ? [n(p.detected_total, 'technique detected', 'techniques detected')]
-    : key === 'llm_techniques' ? [n(p.findings_total, 'finding')]
-    : key === 'translation' ? [p.translated === false ? 'not translated' : typeof p.source_language === 'string' ? `translated from ${p.source_language}` : null]
-    : key === 'propaganda_detection' ? [typeof p.label === 'string' ? (typeof p.score === 'number' && p.score >= 0 && p.score <= 1 ? `${p.label} · ${Math.round(p.score * 100)}% confidence` : p.label) : null]
+    key === 'topic_extraction' ? [n(p.claims_total, 'claims'), n(p.topics_total, 'topics')]
+    : key === 'news_search' ? [n(p.articles, 'articles')]
+    : key === 'fact_check' ? [n(p.fact_checks, 'fact_checks')]
+    : key === 'techniques' ? [n(p.detected_total, 'techniques')]
+    : key === 'llm_techniques' ? [n(p.findings_total, 'findings')]
+    : key === 'translation' ? [p.translated === false ? t('analysis.preview.not_translated') : typeof p.source_language === 'string' ? t('analysis.preview.translated_from', { lang: p.source_language }) : null]
+    : key === 'propaganda_detection' ? [typeof p.label === 'string' ? (typeof p.score === 'number' && p.score >= 0 && p.score <= 1 ? t('analysis.preview.confidence', { label: p.label, pct: percent(formatNumber, p.score) }) : p.label) : null]
     : []
   const text = parts.filter(Boolean).join(' · ')
   return text || null
 }
 
 const TIMEOUT = 'timeout'
+// Known statuses map to `analysis.row.*`; an unknown one renders raw (a newer API), an empty one reads as pending.
 function pill(status: string, error: { code: string } | null): { tone: Tone; label: string } {
   switch (status) {
-    case 'running': return { tone: 'blue', label: 'Running' }
+    case 'running': return { tone: 'blue', label: t('analysis.row.running') }
     case 'succeeded':
-    case 'completed': return { tone: 'green', label: 'Completed' }
-    case 'failed': return { tone: 'orange', label: error?.code === TIMEOUT ? 'Timed out' : (error?.code ?? 'Failed') }
-    case 'skipped': return { tone: 'gray', label: 'Skipped' }
-    case 'pending': return { tone: 'gray', label: 'Pending' }
-    default: return { tone: 'gray', label: status || 'Pending' }
+    case 'completed': return { tone: 'green', label: t('analysis.row.completed') }
+    case 'failed': return { tone: 'orange', label: error?.code === TIMEOUT ? t('analysis.row.timed_out') : (error?.code ?? t('analysis.row.failed')) }
+    case 'skipped': return { tone: 'gray', label: t('analysis.row.skipped') }
+    case 'pending': return { tone: 'gray', label: t('analysis.row.pending') }
+    default: return { tone: 'gray', label: status || t('analysis.row.pending') }
   }
 }
 
