@@ -591,15 +591,6 @@
   max-width: 36rem;
 }
 
-.select-fake {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fafafa;
-  min-width: 140px;
-  font-size: 0.88rem;
-}
-
 /* ——— Edge cases ——— */
 .edge-grid {
   display: grid;
