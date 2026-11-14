@@ -149,4 +149,36 @@ describe('Wikipedia lookup section', () => {
     expect(container.querySelector('.wiki-lookup h3')?.textContent).toBe('Wikipedia lookup')
     expect(container.querySelector('.wiki-lookup > .badge-soft, .wiki-lookup h3 + .badge-soft')).toBeNull()
   })
+
+  it.each([['null', null], ['missing', undefined], ['a string', 'x'], ['empty', []], ['non-objects', [null, 5]]])('discrepancy with %s differences shows the note without entries', (_n, diffs) => {
+    const { container } = show([claim({ cross_language: 'discrepancy', cross_language_differences: diffs })])
+    const c = cross(container) as HTMLElement
+    expect(c).toHaveTextContent('The two passages give different numbers or dates')
+    expect(c.querySelector(':scope > ul')).toBeNull()
+  })
+
+  it('malformed values of a difference do not crash', () => {
+    const { container } = show([claim({
+      cross_language: 'discrepancy',
+      cross_language_differences: [{ language: 'de', url: DE, values: 'x' }, { language: 'en', url: EN, values: [null, { kind: 'number', value: '1' }] }],
+    })])
+    const items = (cross(container) as HTMLElement).querySelectorAll(':scope > ul > li')
+    expect(items).toHaveLength(2)
+    expect(items[0]).toHaveTextContent('No value of its own')
+    expect(items[1].querySelectorAll('.wiki-values li')).toHaveLength(1) // entry without text: empty quote
+  })
+
+  it.each([
+    ['de', 'Beide Ausgaben nennen dieselben Zahlen und Daten', 'Wikipedia (Englisch)'],
+    ['fr', 'Les deux éditions donnent les mêmes nombres et dates', 'Wikipédia (anglais)'],
+    ['fi', 'Molemmat laitokset antavat samat luvut ja päivämäärät', 'Wikipedia (englanti)'],
+    ['ar', 'تذكر النسختان الأرقام والتواريخ نفسها', 'ويكيبيديا (الإنجليزية)'],
+  ])('%s UI shows the localized copy and keeps the passage isolated', (lng, agree, edition) => {
+    localStorage.setItem('veil.locale', lng)
+    const { container } = show([claim({ cross_language: 'agree' })])
+    expect(cross(container)).toHaveTextContent(agree)
+    expect(container.querySelectorAll('.wiki-edition')[1]).toHaveTextContent(edition)
+    expect(container.querySelector('.wiki-passage')).toHaveAttribute('dir', 'auto')
+    expect(container.querySelector('.wiki-passage')).toHaveTextContent('Passage de')
+  })
 })
