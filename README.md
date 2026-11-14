@@ -1,8 +1,27 @@
 # frontend
 
-React + TypeScript + Vite app. The page calls the backend `GET /healthz` once on load and shows
-**Hello, World!** only when it returns `200` with a JSON body whose `status` is `"ok"`. While waiting it shows
-"Loading…"; on any failure (non-2xx, network error, 5000 ms timeout, unexpected body) it shows an error message.
+React + TypeScript + Vite app that ports the Figma design in `UI_DESIGN/` and talks to the analysis backend.
+The top bar calls the backend `GET /healthz` once on load and shows **Backend online**, **Checking backend…** or
+**Backend offline** (the failure message is the tooltip).
+
+## Routes
+
+Client-side History-API router (no dependency); an unknown path shows Home. `/?job=<id>` redirects to `/jobs/<id>`.
+
+| Path | View |
+| --- | --- |
+| `/` | Home (Analyze) |
+| `/jobs/:id/live` | Analyzing |
+| `/jobs/:id` | Results |
+| `/jobs/:id/detail` | Detail |
+| `/history` | History |
+| `/explore`, `/explore/region` | Explore, Region |
+| `/ask` | Ask |
+| `/settings` | Settings |
+| `/states` | States (mock edge cases) |
+
+Areas not connected to the backend carry a visible `MOCK` badge and are listed in `docs/mock-areas.md`.
+Fonts (Newsreader, Plus Jakarta Sans) are bundled via `@fontsource`; nothing is loaded from Google.
 
 ## Commands
 
@@ -18,8 +37,10 @@ Node version: see `.nvmrc` (22).
 
 ## Backend URL and same-origin proxy
 
-The browser always calls the relative path `/healthz` on its own origin, and a proxy forwards it to the
-backend, so the backend needs **no CORS**. The proxy target is `BACKEND_URL`:
+The browser always calls relative paths (`/healthz`, `/api/v1/...`) on its own origin, and a proxy forwards them to
+the backend, so the backend needs **no CORS**. The job event stream is a WebSocket,
+`ws(s)://<host>/api/v1/jobs/{id}/events`, which the proxy upgrades too (Vite `ws: true`; nginx has a dedicated
+location with `Upgrade` headers and a 120 s read timeout, other `/api/` routes keep 5 s). The proxy target is `BACKEND_URL`:
 
 - Dev server / `vite preview`: Vite proxy, default `http://localhost:8080`.
   Example: `BACKEND_URL=http://localhost:9000 npm run dev`.
