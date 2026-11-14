@@ -15,7 +15,6 @@ const SAMPLES: [string, string][] = [
 const FEATURES: [string, string, string][] = [
   ['Unbiased Dissection', 'Separates verified factual premises from manipulative rhetoric, tonal priming, and selective omission.', 'M12 3v18M5 8h4l2 8h2l2-8h4'],
   ['Provenance & Signals', 'Audits circular citations, origin attribution timelines, and automated coordination amplification patterns.', 'M8 10.8 10.3 7.7M13.7 7.7 16 10.8M6 12h.01M12 6h.01M18 12h.01'],
-  ['Private by Architecture', 'Zero training on submitted artifacts. Ephemeral runtime adhering strictly to EU AI Act Art. 52 obligations.', 'M5 11h14v9H5zM8 11V8a4 4 0 0 1 8 0v3'],
 ]
 
 const MAX_URL = 2048
