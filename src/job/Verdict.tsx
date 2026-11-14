@@ -6,6 +6,9 @@ import { readTechniques, techniqueName, timedOut, VERDICT_UI } from './read'
 
 type Card = { tone: 'orange' | 'green' | 'purple' | 'blue' | 'gray'; pill: string; headline: string; sub?: string; verdict?: keyof typeof VERDICT_UI; insufficient?: boolean }
 
+// Banner colour per verdict; History keeps its own tag tones in VERDICT_UI.
+const BANNER = { detected: 'red', uncertain: 'orange', not_detected: 'green' } as const
+
 const SKIPPED: Record<string, string> = {
   not_configured: 'No final assessment configured',
   disabled_by_request: 'Final assessment turned off for this job',
@@ -26,7 +29,7 @@ function cardOf(job: Job): Card {
   const r = f?.result
   if (f?.status === 'completed' && r) {
     const verdict = verdictOf(r.verdict)
-    return { tone: VERDICT_UI[verdict].tone, pill: VERDICT_UI[verdict].label, headline: text(r.user_text), verdict, insufficient: r.produced_by === 'orchestrator' }
+    return { tone: 'gray', pill: '', headline: VERDICT_UI[verdict].label, verdict, insufficient: r.produced_by === 'orchestrator' }
   }
   if (f?.status === 'skipped')
     return { tone: 'gray', pill: 'Final assessment skipped', headline: SKIPPED[text(f.reason)] ?? 'No final assessment was made.' }
@@ -48,10 +51,12 @@ export function Verdict({ job }: { job: Job }) {
       <article className="card verdict-card">
         <div className="verdict-top">
           <div>
-            <span className={`status-pill ${card.tone}`}>
-              <span aria-hidden="true">●</span>
-              {card.pill}
-            </span>
+            {!card.verdict && (
+              <span className={`status-pill ${card.tone}`}>
+                <span aria-hidden="true">●</span>
+                {card.pill}
+              </span>
+            )}
             <div className="verdict-sub">
               {card.insufficient && <span className="tag gray">Insufficient evidence</span>}
               {card.verdict === 'detected' && !card.insufficient && (
@@ -60,7 +65,13 @@ export function Verdict({ job }: { job: Job }) {
             </div>
           </div>
         </div>
-        <h2>{card.headline}</h2>
+        {card.verdict ? (
+          <div className={`verdict-banner ${BANNER[card.verdict]}`}>
+            <h2>{card.headline}</h2>
+          </div>
+        ) : (
+          <h2>{card.headline}</h2>
+        )}
         {card.sub && <p className="verdict-body">{card.sub}</p>}
         {card.verdict && (
           <Mock block label="Polarity / Intensity">
