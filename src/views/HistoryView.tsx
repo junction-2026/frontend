@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { verdictOf, type ApiError, type JobSummary } from '../api/types'
-import { useLocale, useT } from '../i18n'
+import { formatLanguageName, useLocale, useT } from '../i18n'
 import { download, fetchAllJobs, toCsv } from '../history/exportCsv'
 import { dayLabel, excerpt, relativeTime } from '../history/format'
 import { useHistory } from '../history/useHistory'
@@ -17,6 +17,19 @@ const FILTERS = [
   { key: 'failed', status: 'failed' },
   { key: 'cancelled', status: 'cancelled' },
 ] as const
+
+// The fixed language choices; `unknown` is the server's value for jobs without a detected language.
+export const LANGUAGES = ['en', 'de', 'fr', 'es', 'it', 'ru', 'uk', 'pl', 'ro', 'nl', 'pt', 'ar', 'zh']
+const UNKNOWN = 'unknown'
+
+// The filters kept in the /history URL; a value that is not one of the choices is ignored.
+function readUrl() {
+  const p = new URLSearchParams(window.location.search)
+  const status = FILTERS.find((f) => f.status !== undefined && f.status === p.get('status'))?.status
+  const lang = p.get('language') ?? ''
+  const language = LANGUAGES.includes(lang) || lang === UNKNOWN ? lang : undefined
+  return { status: status as string | undefined, q: (p.get('q') ?? '').trim(), language }
+}
 
 const STATUSES = ['pending', 'running', 'completed', 'failed', 'cancelled', 'skipped']
 
@@ -49,6 +62,7 @@ function Item({ job, now }: { job: JobSummary; now: number }) {
           </Link>
         </h3>
         <div className="tags">
+          <span className="tag gray">{t('history.language.item', { language: job.language ? (formatLanguageName(job.language, locale) ?? job.language) : t('history.language.unknown') })}</span>
           {v ? <span className={`tag ${v.tone}`}>{t(`history.verdict.${kind}`)}</span> : <span className="tag gray">{t('history.final_assessment', { status: job.finalization?.status ? status(job.finalization.status) : t('history.status.unknown') })}</span>}
         </div>
       </div>
@@ -63,13 +77,25 @@ function Item({ job, now }: { job: JobSummary; now: number }) {
 export default function HistoryView() {
   const t = useT()
   const { locale } = useLocale()
-  const [status, setStatus] = useState<string | undefined>(undefined)
+  const [initial] = useState(readUrl)
+  const [status, setStatus] = useState<string | undefined>(initial.status)
+  const [language, setLanguage] = useState<string | undefined>(initial.language)
   const [now] = useState(Date.now) // relative times are as of page load
-  const [text, setText] = useState('')
-  const [q, setQ] = useState('') // the trimmed search the list is for
+  const [text, setText] = useState(initial.q)
+  const [q, setQ] = useState(initial.q) // the trimmed search the list is for
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<ApiError | null>(null)
-  const h = useHistory(status, q)
+  const h = useHistory(status, q, language)
+
+  // Keep the filters in the URL (replace, not push: a filter change is not a page).
+  useEffect(() => {
+    const p = new URLSearchParams()
+    if (status) p.set('status', status)
+    if (q) p.set('q', q)
+    if (language) p.set('language', language)
+    const qs = p.toString()
+    window.history.replaceState(window.history.state, '', window.location.pathname + (qs ? `?${qs}` : ''))
+  }, [status, q, language])
 
   useEffect(() => {
     const id = setTimeout(() => setQ(text.trim()), DEBOUNCE_MS)
@@ -79,10 +105,17 @@ export default function HistoryView() {
   async function exportCsv() {
     setExporting(true)
     setExportError(null)
-    const r = await fetchAllJobs(status, q)
+    const r = await fetchAllJobs(status, q, language)
     if (r.ok) download(toCsv(r.data))
     else setExportError(r.error)
     setExporting(false)
+  }
+
+  function clearFilters() {
+    setText('')
+    setQ('')
+    setStatus(undefined)
+    setLanguage(undefined)
   }
 
   // Items arrive newest first, so equal days are adjacent.
@@ -121,11 +154,23 @@ export default function HistoryView() {
         ))}
       </div>
 
+      <label className="language-filter">
+        <span>{t('history.language.label')}</span>
+        <select value={language ?? ''} onChange={(e) => setLanguage(e.target.value || undefined)}>
+          <option value="">{t('history.language.all')}</option>
+          {LANGUAGES.map((c) => <option key={c} value={c}>{formatLanguageName(c, locale) ?? c}</option>)}
+          <option value={UNKNOWN}>{t('history.language.unknown')}</option>
+        </select>
+      </label>
+
       {h.loading && <Skeleton />}
       {h.error && <ErrorAlert error={h.error} />}
       {!h.loading && !h.error && h.items.length === 0 && (
-        q !== '' ? (
-          <div className="card history-empty"><h3>{t('history.empty.search', { query: q })}</h3></div>
+        q !== '' || language ? (
+          <div className="card history-empty">
+            <h3>{q !== '' ? t('history.empty.search', { query: q }) : t('history.empty.language')}</h3>
+            <button type="button" className="btn-secondary" onClick={clearFilters}>{t('history.clear_filters')}</button>
+          </div>
         ) : status === undefined ? (
           <div className="card history-empty">
             <h3>{t('history.empty.title')}</h3>

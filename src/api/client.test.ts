@@ -76,6 +76,24 @@ describe('listJobs', () => {
     await listJobs()
     expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/jobs')
   })
+
+  it('sends language only when set, together with status and q and the cursor', async () => {
+    fetchMock.mockResolvedValue(json({ items: [], next_cursor: null }))
+    await listJobs({ limit: 20, status: 'failed', q: 'x', language: 'unknown' })
+    await listJobs({ limit: 20, cursor: 'c1', language: 'de' })
+    await listJobs({ limit: 20, language: '' })
+    expect(fetchMock.mock.calls.map((c) => c[0])).toEqual([
+      '/api/v1/jobs?limit=20&status=failed&q=x&language=unknown',
+      '/api/v1/jobs?limit=20&cursor=c1&language=de',
+      '/api/v1/jobs?limit=20',
+    ])
+  })
+
+  it('returns items with a language, null or a missing member; a missing one reads as null', async () => {
+    fetchMock.mockResolvedValue(json({ items: [{ id: 'a', language: 'de' }, { id: 'b', language: null }, { id: 'c' }], next_cursor: null }))
+    const r = await listJobs()
+    expect(r.ok && r.data.items.map((j) => j.language ?? null)).toEqual(['de', null, null])
+  })
 })
 
 describe('type helpers', () => {
