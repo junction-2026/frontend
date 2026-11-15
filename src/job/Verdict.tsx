@@ -5,6 +5,7 @@ import { userTextEntry, useLoc, useLocalizedText } from './localize'
 import { timedOut } from './read'
 import { summaryOf } from './summary'
 import { percent } from './text'
+import { botTextOf } from './botText'
 import { cardsOf } from './verdictCards'
 
 type Card = { tone: 'orange' | 'gray' | 'blue'; pill: string; headline: string; sub?: string }
@@ -66,6 +67,34 @@ function ConfidenceInfo() {
   )
 }
 
+// Small neutral pill: does this one text look generated? The score is P(bot_or_generated), so it only appears in the tooltip.
+function OriginMarker({ origin }: { origin: NonNullable<ReturnType<typeof botTextOf>> }) {
+  const t = useT()
+  const { formatNumber } = useFormat()
+  const id = useId()
+  const [open, setOpen] = useState(false)
+  const label = t(`results.origin.${origin.label}`)
+  const tip = t('results.origin.tip', { pct: percent(formatNumber, origin.score) })
+  return (
+    <span className="confidence-info">
+      <button
+        type="button"
+        className="verdict-origin"
+        aria-label={`${label}. ${tip}`}
+        aria-describedby={open ? id : undefined}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+      >
+        {label}
+      </button>
+      {open && <span role="tooltip" id={id} className="confidence-tip">{tip}</span>}
+    </span>
+  )
+}
+
 // The summary sentence (with the localization note) and the "Read full explanation" disclosure with the complete text,
 // which only exists when the text says more than the summary.
 function useExplanation(original: string, fallback: string) {
@@ -103,6 +132,7 @@ function Result({ job, r }: { job: Job; r: NonNullable<ReturnType<typeof resultO
   const partial = job.coverage?.failed > 0 || job.analyzers?.some((a) => a.status === 'failed')
   const cards = cardsOf(job, verdict, locale, t, formatNumber)
   const { summary, disclosure } = useExplanation(text(r.user_text), t(`results.verdict.${verdict}.body`))
+  const origin = botTextOf(job)
   const insufficient = verdict === 'uncertain' && r.produced_by === 'orchestrator'
   return (
     <section className="verdict" data-verdict={verdict}>
@@ -114,6 +144,7 @@ function Result({ job, r }: { job: Job; r: NonNullable<ReturnType<typeof resultO
         <p className="verdict-confidence">
           <span>{confidenceText(r.confidence, t, formatNumber)}</span>
           <ConfidenceInfo />
+          {origin && <OriginMarker origin={origin} />}
         </p>
       </div>
       <h2>{t(`results.verdict.${verdict}.heading`)}</h2>
