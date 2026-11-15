@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { coverage, json } from '../job/fixtures'
 import { I18nProvider, formatDate, useLocale } from '../i18n'
 import HistoryView from './HistoryView'
+import HomeView from './HomeView'
+import ExploreView from './ExploreView'
 import { readFileSync } from 'node:fs'
 
 const fetchMock = vi.fn()
@@ -461,6 +463,48 @@ describe('History', () => {
       expect(screen.getAllByText('vor 1 Stunde')).toHaveLength(2)
       expect(screen.getByText('2 Analysen')).toBeInTheDocument()
       expect(listUrls()).toHaveLength(1) // no reload of the list
+    })
+  })
+
+  describe('archive backdrop', () => {
+    const expectBackdrop = (container: HTMLElement) => {
+      expect(container.querySelectorAll('.archive-bg')).toHaveLength(1)
+      const view = container.querySelector('section.view')
+      expect(view).not.toBeNull()
+      expect(container.querySelector('.archive-bg')!.nextElementSibling).toBe(view)
+      expect(container.querySelector('.view .archive-bg')).toBeNull()
+      expect(container.querySelector('.ambient-bg')).toBeNull()
+    }
+
+    it('precedes section.view while loading and when loaded', async () => {
+      route(() => page([summary('a')]))
+      const { container } = render(<HistoryView />)
+      expectBackdrop(container)
+      await screen.findByText('Today')
+      expectBackdrop(container)
+    })
+
+    it('precedes section.view when empty', async () => {
+      route(() => page([]))
+      const { container } = render(<HistoryView />)
+      await screen.findByRole('heading', { level: 3 })
+      expectBackdrop(container)
+    })
+
+    it('precedes section.view on error', async () => {
+      route(() => json({ error: { code: 'internal', message: 'boom' } }, 500))
+      const { container } = render(<HistoryView />)
+      await screen.findByRole('alert')
+      expectBackdrop(container)
+    })
+
+    it('is not rendered by HomeView or ExploreView', () => {
+      fetchMock.mockImplementation(() => new Promise(() => {}))
+      for (const el of [<HomeView key="h" />, <ExploreView key="e" />]) {
+        const { container, unmount } = render(el)
+        expect(container.querySelector('.archive-bg')).toBeNull()
+        unmount()
+      }
     })
   })
 })
