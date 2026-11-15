@@ -30,49 +30,6 @@ The "Inspect wire feeds →" link in the Explore country panel SHALL navigate to
 - **WHEN** `/states` is rendered
 - **THEN** the heading is inside a mock element labelled "Example states", every link targets `/`, `/history` or `/ask`, and the Retry Wire Retrieval button is disabled and marked
 
-### Requirement: Settings screen
-`/settings` SHALL render an `<h1>` "Settings & Methodology", the tabs (Interface & Language, Analyzers & Ensembles, Accessibility, Epistemic Framework, Data Retention) wrapped in `Mock`, the analyzers block, the "View edge-case states →" link to `/states` and the "Return to Analyze" link to `/`. It SHALL NOT render a language block, fake select, "Recommended" badge or `role="switch"` element.
-
-#### Scenario: Mock settings
-- **WHEN** `/settings` is rendered
-- **THEN** the tabs are inside a mock element, and no language block or `role="switch"` element is present
-
-### Requirement: Settings analyzers block
-The "Active AI analyzers & ensembles" block SHALL call `GET /api/v1/analyzers` once and list its items, and SHALL NOT be wrapped in `Mock`. The header SHALL show the pill "● <enabled> of <total> analyzers enabled".
-
-#### Scenario: Request and no mark
-- **WHEN** `/settings` is rendered
-- **THEN** `GET /api/v1/analyzers` is requested and the block is not inside a mock element
-
-### Requirement: Settings analyzer rows
-Each analyzer row SHALL show the `name`, the `id` as a badge, the `category`, the `depends_on` when non-empty, a "Final assessment" tag when `trigger` is `after_all_analyzers_settled`, a "Not selectable" tag when `selectable` is false, and a read-only status pill "Enabled" or "Disabled" (no toggle).
-
-#### Scenario: Items listed
-- **WHEN** the response holds an enabled analyzer, a disabled analyzer with `depends_on` and a finalizer with `trigger: after_all_analyzers_settled`
-- **THEN** rows show "Enabled", "Disabled" and the "Final assessment" tag respectively, and the header reads "● 2 of 3 analyzers enabled"
-
-### Requirement: Settings analyzers tolerant reader
-The analyzers block SHALL render only `id`, `name`, `category`, `enabled`, `depends_on`, `trigger` and `selectable` of an item and ignore any other member.
-
-#### Scenario: Unknown member ignored
-- **WHEN** an item has an extra member `extra`
-- **THEN** its value appears nowhere on the page
-
-### Requirement: Settings analyzers states
-While the analyzers request is pending the block SHALL show text with `role="status"`; on failure it SHALL show the error message from the API error envelope (via `errorMessage`) with `role="alert"`; an empty list SHALL show "No analyzers are configured.".
-
-#### Scenario: Loading
-- **WHEN** the request has not completed
-- **THEN** the block shows "Loading analyzers…" with `role="status"`, unmarked
-
-#### Scenario: Empty list
-- **WHEN** the response is `{"items": []}`
-- **THEN** "No analyzers are configured." and "● 0 of 0 analyzers enabled" are shown
-
-#### Scenario: Error envelope
-- **WHEN** the request fails with an error envelope whose code is unknown to the client
-- **THEN** an element with `role="alert"` shows the envelope's `message` and no loading status remains in the block
-
 ### Requirement: World map component
 `WorldMap({ coverage, selected, onSelect, interactive })` SHALL render the world in an Equal Earth projection fitted to its container, in an SVG with a `viewBox` that scales responsively. `coverage` SHALL be `Record<alpha-2 upper case, { name?, articles, publishers, level: 'low'|'medium'|'high' }>`, `selected` an alpha-2 code or null and `onSelect(code|null)` optional. The component SHALL contain no hardcoded statistics.
 
@@ -176,7 +133,7 @@ The map card and filters SHALL NOT overflow horizontally at a 360px viewport wid
 - **THEN** the page has no horizontal scrollbar caused by the map card or filters
 
 ### Requirement: Secondary screens localization
-All fixed text of Explore (including the world map labels, tooltip and legend), Region, Ask and Settings (including the analyzers block) SHALL come from the `explore`, `ask` and `settings` catalogs in the active locale; every English text quoted in this capability is the `en` catalog value. API-provided strings (analyzer names and categories, article titles, API error messages) SHALL NOT be translated. Switching language SHALL re-render these screens without reload.
+All fixed text of Explore (including the world map labels, tooltip and legend), Region and Ask SHALL come from the `explore` and `ask` catalogs in the active locale; every English text quoted in this capability is the `en` catalog value. API-provided strings (article titles, API error messages) SHALL NOT be translated. Switching language SHALL re-render these screens without reload.
 
 #### Scenario: Finnish Explore
 - **WHEN** the locale is `fi` and `/explore` is rendered
@@ -189,26 +146,27 @@ Country names SHALL be shown with `Intl.DisplayNames` (region) in the active loc
 - **WHEN** the locale is `de` and `/explore/region` is rendered
 - **THEN** the selected region reads "Finnland" and the index coverage reads "99,1 %"
 
-### Requirement: Settings mock under every locale
-The Settings tabs SHALL keep their `Mock` wrapper in every locale; only their text is translated, and no locale SHALL render the removed language block.
-
-#### Scenario: French Settings stays mock
-- **WHEN** the locale is `fr` and `/settings` is rendered
-- **THEN** it shows "Paramètres et méthodologie", the "Conservation des données" tab inside a mock element, the "Analyseurs IA et ensembles actifs" region, and no "Langue de l’interface" text or switch
-
 ### Requirement: Secondary screens right-to-left layout
 `secondary.css` SHALL use logical properties so the screens mirror under `dir=rtl`; the map SVG SHALL NOT be mirrored.
 
 #### Scenario: Arabic Settings
-- **WHEN** the locale is `ar`
-- **THEN** the document direction is rtl and the analyzer rows show Arabic labels
+- **WHEN** the locale is `ar` and `/settings` is requested
+- **THEN** Home is rendered (the page no longer exists) with the document direction rtl
 
-### Requirement: Settings and Region without literals
-The Settings screen and the Region mock (stat cards, wire sources, tags) SHALL take every static string, including proper-noun outlet names, from the catalogs in all five locales. Percentages and outlet names SHALL be isolated with `<bdi>`. Directional glyphs (↗, ⌕) SHALL mirror under `[dir=rtl]`.
+#### Scenario: Arabic Region
+- **WHEN** the locale is `ar` and `/explore/region` is rendered
+- **THEN** the document direction is rtl and the labels are Arabic
+
+### Requirement: Region without literals
+The Region mock (stat cards, wire sources, tags) SHALL take every static string, including proper-noun outlet names, from the catalogs in all six locales. Percentages and outlet names SHALL be isolated with `<bdi>`. Directional glyphs (↗, ⌕) SHALL mirror under `[dir=rtl]`.
 
 #### Scenario: Settings in Arabic
-- **WHEN** Settings is rendered in ar
-- **THEN** dir is rtl and no static Latin-script text other than the brand and analyzer ids from the API appears
+- **WHEN** `/settings` is requested in ar
+- **THEN** Home is rendered with dir rtl and no Settings text
+
+#### Scenario: Region in Arabic
+- **WHEN** Region is rendered in ar
+- **THEN** dir is rtl and no static Latin-script text other than the brand appears
 
 ### Requirement: World map customization
 `WorldMap` SHALL accept optional `fillFor(code)`, `renderTooltip(code)` and `focusable` props. `fillFor` returns the base fill of a country (undefined keeps the default coverage fill). `renderTooltip` returns the tooltip content shown on hover and focus. When the props are omitted, fills, tooltip and behaviour SHALL be exactly as before, including country paths that are not tab stops.
