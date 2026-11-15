@@ -36,6 +36,7 @@ export default {
   'focus.select': 'Спросить о: {label}',
   'focus.choose': 'Выбрать элементы результата',
   'focus.clear': 'Сбросить выбор',
+  'focus.select_all': 'Выбрать все',
   'focus.remove': 'Убрать: {label}',
   'focus.limit': 'Можно выбрать не больше {max} элементов.',
   'focus.hint': 'Ваш вопрос относится ко всему анализу.',
