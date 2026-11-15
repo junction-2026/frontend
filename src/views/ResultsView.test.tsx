@@ -422,6 +422,18 @@ describe('Results: page chrome, mock parts and polling', () => {
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument()
   })
 
+  it('keeps both summary actions as anchors with URL-encoded ids and a titled copy button', async () => {
+    await show(job({ id: 'j 1' }))
+    toggle()
+    const summary = document.querySelector('.card.detailed-summary') as HTMLElement
+    for (const [name, href] of [['Explore coverage', '/explore?job=j%201'], ['Open detailed analysis page', '/jobs/j%201/detail']]) {
+      const link = within(summary).getByRole('link', { name })
+      expect(link.tagName).toBe('A')
+      expect(link).toHaveAttribute('href', href)
+    }
+    expect(within(summary).getByRole('button', { name: 'Copy' })).toHaveAttribute('title')
+  })
+
   it('polls every 2000 ms while not done, shows the live link, then stops', async () => {
     vi.useFakeTimers()
     fetchMock

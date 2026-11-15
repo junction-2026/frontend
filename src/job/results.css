@@ -88,6 +88,40 @@
   color: var(--muted);
 }
 
+/* Detailed summary card: padded like the other result cards, actions styled as secondary buttons */
+.card.detailed-summary {
+  padding: 1rem 1.15rem;
+}
+.detailed-summary .tags {
+  margin-block-start: 0;
+}
+.detailed-summary .verdict-actions {
+  align-items: center;
+}
+.detailed-summary .verdict-actions .btn-link {
+  justify-content: center;
+  min-height: 44px;
+  padding-block: 0;
+  padding-inline: 1.2rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.detailed-summary .verdict-actions .btn-link:hover {
+  background: var(--bg-soft);
+  border-color: var(--ink-2);
+}
+.detailed-summary .verdict-actions .btn-link:active {
+  background: var(--line);
+}
+.detailed-summary .verdict-actions .btn-link:focus-visible,
+.detailed-summary .icon-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 /* Coverage and analyzer rows */
 .coverage-card {
   padding: 1rem 1.15rem;
@@ -462,6 +496,9 @@
     flex-direction: column;
     align-items: stretch;
   }
+  .detailed-summary .verdict-actions .btn-link {
+    flex: 1 1 100%;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .verdict,
@@ -476,5 +513,8 @@
   }
   .results-actions .btn-primary:hover {
     transform: none;
+  }
+  .detailed-summary .verdict-actions .btn-link {
+    transition: none;
   }
 }

@@ -71,7 +71,7 @@ describe('global propaganda map', () => {
   it('keeps /explore?job=<id> on the job view and never requests the map', async () => {
     window.history.replaceState(null, '', '/explore?job=j1')
     render(<App />)
-    await screen.findByLabelText('Search topic text')
+    await screen.findByRole('img', { name: 'World coverage map' })
     expect(urls().every((u) => u.startsWith('/api/v1/jobs/'))).toBe(true)
     expect(screen.queryByRole('group', { name: 'Analyses per country:' })).toBeNull()
   })
