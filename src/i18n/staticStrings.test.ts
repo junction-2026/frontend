@@ -16,7 +16,8 @@ const files = import.meta.glob(
 
 const ATTRS = new Set(['placeholder', 'title', 'aria-label', 'aria-description', 'alt', 'label'])
 // Brand, the avatar initial of the Ask mock, and the keycap of the search shortcut: not translatable.
-const ALLOWED = new Set(['VEIL', 'V', '⌘ K'])
+// 'Decode the Noise' is a fixed brand phrase, identical in every locale (decorative NoiseHeadline).
+const ALLOWED = new Set(['VEIL', 'V', '⌘ K', 'Decode the Noise'])
 const LETTER = /\p{L}/u
 
 export function literals(name: string, source: string): string[] {
