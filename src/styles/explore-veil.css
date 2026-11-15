@@ -1,16 +1,12 @@
-/* Decorative cloth veil behind the Explore page: translucent swaying panels that part now and then to show a soft glow.
-   Transform and opacity only; the body stays a solid var(--bg). */
+/* Decorative veil behind the Explore page: a WebGL silk cloth (canvas) or a static CSS fabric (fallback) over a pure white base.
+   Neutral palette only: #FFFFFF base, #F4F1EC off-white, #E9E5DE beige, #DCD8D1 light grey; every channel stays >= 0xD0. */
 .explore-veil {
-  --flip: 1; /* -1 in RTL: panels part toward the inline-start / inline-end side */
   position: fixed;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-}
-
-[dir='rtl'] .explore-veil {
-  --flip: -1;
+  background: #FFFFFF;
 }
 
 /* Lifts the Explore view above the layer; the sticky topbar (z-index 40) stays above both. */
@@ -19,153 +15,40 @@
   z-index: 1;
 }
 
-/* The "truth": a static glow, covered by the closed panels. */
-.explore-veil-truth {
+.explore-veil-canvas {
+  display: block;
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 55%, #FFFFFFE6 0%, #BFDBFEB3 25%, #DDD6FE66 55%, #DDD6FE00 80%);
-  opacity: 0.5;
+  width: 100%;
+  height: 100%;
 }
 
-/* The panel carries the reveal (translate + opacity); its ::before carries the cloth and the sway. */
-.explore-veil-panel {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 56%;
-  opacity: 0.3;
-  will-change: transform;
-}
-
-.explore-veil-panel::before {
-  content: '';
+/* Static fabric: soft vertical folds from layered gradients, no animation. */
+.explore-veil-fallback {
   position: absolute;
   inset: 0;
-  will-change: transform;
-  transform-origin: 50% 0;
   background:
-    linear-gradient(180deg, #FFFFFF00 0%, #FFFFFF59 50%, #FFFFFF00 100%),
+    radial-gradient(ellipse at 50% 30%, #F4F1EC99 0%, #F4F1EC00 70%),
     linear-gradient(
       90deg,
-      #FFFFFF00 0%,
-      #DDD6FEE6 10%,
-      #FFFFFF99 22%,
-      #BFDBFEE6 35%,
-      #FFFFFF99 47%,
-      #DDD6FEE6 60%,
-      #FFFFFF99 72%,
-      #BFDBFEE6 85%,
-      #FFFFFF00 100%
-    );
-}
-
-.explore-veil-panel-1 {
-  inset-inline-start: -6%;
-  animation: explore-veil-reveal-1 19s ease-in-out infinite;
-}
-
-.explore-veil-panel-2 {
-  inset-inline-start: 22%;
-  animation: explore-veil-reveal-2 27s ease-in-out infinite;
-}
-
-.explore-veil-panel-3 {
-  inset-inline-end: -6%;
-  animation: explore-veil-reveal-3 23s ease-in-out infinite;
-}
-
-.explore-veil-panel-1::before {
-  animation: explore-veil-sway-1 9s ease-in-out infinite;
-}
-
-.explore-veil-panel-2::before {
-  animation: explore-veil-sway-2 12s ease-in-out infinite;
-}
-
-.explore-veil-panel-3::before {
-  animation: explore-veil-sway-3 15s ease-in-out infinite;
-}
-
-/* ---- Sway: a gentle continuous drift, identical at 0% and 100% ---- */
-@keyframes explore-veil-sway-1 {
-  0%,
-  100% {
-    transform: translate(0, 0) skewX(0deg) scaleY(1);
-  }
-  50% {
-    transform: translate(1.5%, -0.6%) skewX(-2deg) scaleY(1.02);
-  }
-}
-
-@keyframes explore-veil-sway-2 {
-  0%,
-  100% {
-    transform: translate(0, 0) skewX(0deg) scaleY(1);
-  }
-  50% {
-    transform: translate(-1%, 0.8%) skewX(2.5deg) scaleY(0.98);
-  }
-}
-
-@keyframes explore-veil-sway-3 {
-  0%,
-  100% {
-    transform: translate(0, 0) skewX(0deg) scaleY(1);
-  }
-  50% {
-    transform: translate(-1.5%, -0.5%) skewX(1.5deg) scaleY(1.03);
-  }
-}
-
-/* ---- Reveal: closed for most of the cycle, parts for about 5s, then returns to the rest frame ---- */
-@keyframes explore-veil-reveal-1 {
-  0%,
-  60%,
-  86%,
-  100% {
-    transform: translate(0, 0);
-    opacity: 0.3;
-  }
-  70%,
-  78% {
-    transform: translate(calc(-40% * var(--flip)), 0);
-    opacity: 0.08;
-  }
-}
-
-@keyframes explore-veil-reveal-2 {
-  0%,
-  62%,
-  82%,
-  100% {
-    transform: translate(0, 0);
-    opacity: 0.3;
-  }
-  70%,
-  76% {
-    transform: translate(0, -35%);
-    opacity: 0.06;
-  }
-}
-
-@keyframes explore-veil-reveal-3 {
-  0%,
-  58%,
-  84%,
-  100% {
-    transform: translate(0, 0);
-    opacity: 0.3;
-  }
-  68%,
-  76% {
-    transform: translate(calc(40% * var(--flip)), 0);
-    opacity: 0.08;
-  }
+      #E9E5DE80 0%,
+      #F4F1EC66 8%,
+      #DCD8D180 17%,
+      #F4F1EC66 27%,
+      #E9E5DE80 36%,
+      #F4F1EC66 46%,
+      #DCD8D180 56%,
+      #F4F1EC66 66%,
+      #E9E5DE80 77%,
+      #F4F1EC66 87%,
+      #DCD8D180 100%
+    ),
+    linear-gradient(180deg, #F4F1EC59 0%, #E9E5DE40 60%, #F4F1EC59 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .explore-veil-panel,
-  .explore-veil-panel::before {
+  .explore-veil * {
     animation: none;
+    transition: none;
   }
 }
