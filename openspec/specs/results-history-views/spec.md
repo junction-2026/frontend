@@ -739,13 +739,16 @@ Each item SHALL show a tag with `history.language.item` and the language: its `I
 - **WHEN** items have `language` `de`, `zz`, null and no member
 - **THEN** they show "Language: German", "Language: zz", "Language: Unknown" and "Language: Unknown"
 
-### Requirement: History backdrop mounting
-`HistoryView` SHALL render `<ArchiveBackground />` as the sibling directly preceding its `<section className="view">` (not inside `.view`, whose `rise` transform would capture the fixed layer) in every state (loading, loaded, empty, error). No other view SHALL render `.archive-bg`, and the requirement that `HistoryView` renders no `.ambient-bg` stays satisfied.
+### Requirement: History solid background
+`HistoryView` SHALL render no decorative backdrop layer (no `.archive-bg`, no inline bookshelf SVG, no scrim) in any state (loading, loaded, empty, error), so the page shows the body's solid `var(--bg)`. It SHALL NOT render `.ambient-bg`; the ambient background stays `HomeView`-only and unchanged.
 
 #### Scenario: All states
 - **WHEN** `HistoryView` is rendered while loading, loaded, empty and in error
-- **THEN** exactly one `.archive-bg` exists and it directly precedes `section.view`
+- **THEN** `section.view` is its only top-level element, and no `.archive-bg`, `.ambient-bg`, `<canvas>` or decorative `<svg>` exists outside it
 
-#### Scenario: Other views
-- **WHEN** `HomeView` or `ExploreView` is rendered
-- **THEN** no `.archive-bg` exists
+### Requirement: History stacking and contrast
+Removing the former `.archive-bg + .view` rule SHALL NOT change the visible stacking of the sticky topbar or the hosting badge relative to the page content. Body text on History SHALL keep at least 4.5:1 contrast against `var(--bg)`.
+
+#### Scenario: Chrome keeps stacking
+- **WHEN** the History page is scrolled
+- **THEN** the sticky topbar and the hosting badge stay above the page content
