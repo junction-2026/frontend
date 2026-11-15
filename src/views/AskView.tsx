@@ -1,11 +1,16 @@
+import { useRef, useState } from 'react'
 import { verdictOf, type Job } from '../api/types'
 import { Chat } from '../ask/Chat'
-import { useT } from '../i18n'
+import { FocusPanel } from '../ask/FocusPanel'
+import { focusItemsOf, MAX_FOCUS } from '../ask/focusItems'
+import { useChat } from '../ask/useChat'
+import { useLocale, useT } from '../i18n'
 import { resultOf } from '../job/Verdict'
 import { Skeleton, ErrorAlert } from '../job/WithJob'
 import { useJob } from '../job/useJob'
 import { Link } from '../router'
 import '../secondary/secondary.css'
+import '../ask/ask.css'
 
 const TITLE_LEN = 120
 const TONE = { detected: 'orange', not_detected: 'green', uncertain: 'purple' } as const
@@ -40,17 +45,40 @@ function ContextBar({ job }: { job: Job }) {
 
 function JobChat({ id }: { id: string }) {
   const t = useT()
+  const { locale } = useLocale()
   const result = useJob(id)
+  const chat = useChat(id, locale)
+  const [chosen, setChosen] = useState<string[]>([]) // element keys; component state only, not kept across reloads
+  const heading = useRef<HTMLHeadingElement>(null)
+  const job = result?.ok ? result.data : null
+  const items = job ? focusItemsOf(job, locale, t) : []
+  const picked = new Set(chosen)
+  const focus = items.filter((i) => picked.has(i.key)).slice(0, MAX_FOCUS) // panel order; keys of vanished elements drop out
+  const toggle = (key: string) => setChosen((c) => (c.includes(key) ? c.filter((k) => k !== key) : [...c, key]))
+  const choose = () => {
+    heading.current?.scrollIntoView?.({ block: 'start' }) // absent in jsdom
+    heading.current?.focus()
+  }
+  const completed = job?.status === 'completed'
+  const disabled = !completed || (chat.conflict ?? job?.status) !== 'completed'
   return (
-    <>
-      {result?.ok && <ContextBar job={result.data} />}
-      <div className="card chat-card">
-        <ChatHead />
-        {!result && <Skeleton />}
-        {result && !result.ok && <ErrorAlert error={result.error} notFound={t('results.job_not_found')} />}
-        {result?.ok && <Chat id={id} status={result.data.status} done={result.data.done === true} />}
+    <div className={job ? 'ask-split' : undefined}>
+      <div className="ask-chat">
+        {job && <ContextBar job={job} />}
+        <div className="card chat-card">
+          <ChatHead />
+          {!result && <Skeleton />}
+          {result && !result.ok && <ErrorAlert error={result.error} notFound={t('results.job_not_found')} />}
+          {job && <Chat id={id} status={job.status} done={job.done === true} chat={chat} focus={focus} onRemove={toggle} onChoose={choose} />}
+        </div>
       </div>
-    </>
+      {job && (
+        <FocusPanel
+          items={items} selected={new Set(focus.map((f) => f.key))} completed={completed} disabled={disabled}
+          headingRef={heading} onToggle={toggle} onClear={() => setChosen([])}
+        />
+      )}
+    </div>
   )
 }
 
