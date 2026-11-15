@@ -147,44 +147,21 @@
   text-underline-offset: 3px;
   font-weight: 500;
   overflow-wrap: anywhere;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  text-align: center;
 }
 
-.try-row .try-shuffle {
-  text-decoration: none;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  padding: 0.1rem 0.7rem;
-}
-
-.try-row button[data-expectation] {
-  border: 1px solid;
-  border-radius: 999px;
-  padding: 0.15rem 0.7rem;
-  text-decoration: none;
-  text-align: start;
-}
-
-.try-row button[data-expectation]:focus-visible {
+.try-row button:focus-visible {
   outline: 2px solid var(--ink-2);
   outline-offset: 2px;
 }
 
-.try-row button[data-expectation='detected'] {
-  background: var(--verdict-detected-bg);
-  border-color: var(--verdict-detected-border);
-  color: var(--verdict-detected-pill-text);
-}
-
-.try-row button[data-expectation='not_detected'] {
-  background: var(--verdict-not-detected-bg);
-  border-color: var(--verdict-not-detected-border);
-  color: var(--verdict-not-detected-pill-text);
-}
-
-.try-row button[data-expectation='uncertain'] {
-  background: var(--verdict-uncertain-bg);
-  border-color: var(--verdict-uncertain-border);
-  color: var(--verdict-uncertain-pill-text);
+.try-row .try-shuffle {
+  text-decoration: none;
+  padding: 0 0.25rem;
 }
 
 .try-info {

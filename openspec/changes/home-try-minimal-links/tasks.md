@@ -1,0 +1,5 @@
+- [x] 1. HomeView: fixed samples until Shuffle, `·` separators, no `data-expectation`, always-on `.try-info`
+- [x] 2. analyze.css: plain underlined link style, remove `button[data-expectation]` rules
+- [x] 3. New `home.try.info` copy in en, fr, de, fi, ar, ru
+- [x] 4. Update HomeView.test.tsx for the new behavior
+- [x] 5. Run npm test, lint, build and scripts/validate-openspec.sh

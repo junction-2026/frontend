@@ -362,62 +362,117 @@ describe('HomeView try-out corpus', () => {
     statement: `Statement number ${i}`,
     expectation: (['detected', 'not_detected', 'uncertain'] as const)[i % 3],
   }))
-  const chipButtons = () => screen.getByText('Try:').parentElement!.querySelectorAll<HTMLButtonElement>('button:not(.try-shuffle)')
+  const FIXED = ['Viral social claim on energy grid', 'Breaking news rhetoric', 'Editorial framing comparison', 'Political rhetoric: Trump on Springfield (quote)']
+  const row = () => screen.getByText('Try:').parentElement as HTMLElement
+  const chipButtons = () => row().querySelectorAll<HTMLButtonElement>('button:not(.try-shuffle)')
+  const labels = () => [...chipButtons()].map((c) => c.textContent)
+  const seps = () => [...row().querySelectorAll('span[aria-hidden="true"]')]
   const info = () => document.querySelector('.try-info') as HTMLElement
+  // Waits until the corpus has been processed (loaded) so the Shuffle button is there.
   const withCorpus = async (items: unknown = ITEMS) => {
     loadRaw.mockResolvedValue(items)
     render(<HomeView />)
     await screen.findByRole('button', { name: 'Shuffle' })
   }
+  const shuffle = () => fireEvent.click(screen.getByRole('button', { name: 'Shuffle' }))
 
-  it('renders five distinct chips, none marked as mock', async () => {
-    await withCorpus()
-    const chips = [...chipButtons()]
-    expect(chips).toHaveLength(5)
-    expect(new Set(chips.map((c) => c.textContent)).size).toBe(5)
-    expect(chips.every((c) => c.closest('[data-mock]') === null)).toBe(true)
-    expect(screen.getByRole('button', { name: 'Shuffle' }).closest('[data-mock]')).toBeNull()
+  it('shows the four fixed samples in order before and after the corpus loads', async () => {
+    loadRaw.mockResolvedValue(ITEMS)
+    render(<HomeView />)
+    expect(labels()).toEqual(FIXED)
+    await screen.findByRole('button', { name: 'Shuffle' })
+    expect(labels()).toEqual(FIXED)
   })
 
-  it('Shuffle redraws the chips and keeps the explainer', async () => {
+  it('separates examples with aria-hidden "·": count = examples - 1, none at the edges', async () => {
+    await withCorpus()
+    for (const n of [4, 5]) {
+      expect(chipButtons()).toHaveLength(n)
+      expect(seps()).toHaveLength(n - 1)
+      for (const sep of seps()) expect(sep).toHaveTextContent(/^·$/)
+      const kids = [...row().children].filter((c) => !c.classList.contains('sr-only'))
+      expect(kids[0]).toHaveTextContent('Try:')
+      expect(kids[1].tagName).toBe('BUTTON')
+      expect(kids.at(-1)).toHaveClass('try-shuffle')
+      expect(kids.at(-2)!.tagName).toBe('BUTTON')
+      shuffle()
+    }
+  })
+
+  it('no example carries data-expectation and none is marked as mock', async () => {
+    await withCorpus()
+    for (const state of ['fixed', 'drawn']) {
+      expect(document.querySelector('[data-expectation]'), state).toBeNull()
+      expect([...chipButtons()].every((c) => c.closest('[data-mock]') === null)).toBe(true)
+      expect(screen.getByRole('button', { name: 'Shuffle' }).closest('[data-mock]')).toBeNull()
+      shuffle()
+    }
+  })
+
+  it('Shuffle replaces the row with 5 distinct corpus statements and redraws on each press', async () => {
     const rnd = vi.spyOn(Math, 'random')
     rnd.mockReturnValue(0)
     await withCorpus()
-    const before = [...chipButtons()].map((c) => c.textContent)
+    shuffle()
+    const first = labels()
+    expect(first).toHaveLength(5)
+    expect(new Set(first).size).toBe(5)
+    expect(first.every((l) => ITEMS.some((x) => x.statement === l))).toBe(true)
     rnd.mockReturnValue(0.99)
-    fireEvent.click(screen.getByRole('button', { name: 'Shuffle' }))
-    expect([...chipButtons()].map((c) => c.textContent)).not.toEqual(before)
+    shuffle()
+    expect(labels()).not.toEqual(first)
+    expect(labels()).toHaveLength(5)
     expect(info()).toHaveTextContent(CATALOGS.en['home.try.info'])
     rnd.mockRestore()
   })
 
+  it('Shuffle is a native button: Enter and Space activate it via click', async () => {
+    await withCorpus()
+    const btn = screen.getByRole('button', { name: 'Shuffle' })
+    expect(btn.tagName).toBe('BUTTON')
+    expect(btn).toHaveAttribute('type', 'button')
+    btn.focus()
+    expect(btn).toHaveFocus()
+    // jsdom does not synthesize click from keys; a native button does it in browsers, so assert the activation path.
+    fireEvent.click(btn)
+    expect(labels()).not.toEqual(FIXED)
+  })
+
   const VALUE_LABEL = { detected: 'Detected', not_detected: 'Not detected', uncertain: 'Uncertain' } as const
 
-  it('each chip carries its expectation as attribute, title and description', async () => {
+  it('corpus examples carry title, aria-label and a hidden description', async () => {
     await withCorpus(ITEMS.slice(0, 5))
+    shuffle()
     for (const chip of chipButtons()) {
       const item = ITEMS.find((x) => chip.textContent === x.statement)!
       const note = `Expected result predicted by the LLM: ${VALUE_LABEL[item.expectation]}`
-      expect(chip).toHaveAttribute('data-expectation', item.expectation)
       expect(chip).toHaveAttribute('title', `${item.statement}\n${note}`)
+      expect(chip).toHaveAttribute('aria-label', item.statement)
       expect(chip).toHaveAccessibleDescription(note)
       const desc = document.getElementById(chip.getAttribute('aria-describedby')!)!
       expect(desc).toHaveTextContent(note)
+      expect(desc).toHaveClass('sr-only')
       expect(desc.closest('[data-mock]')).toBeNull()
     }
   })
 
-  it('explainer copy: exact en text and no parenthetical in any locale', () => {
-    expect(CATALOGS.en['home.try.info']).toBe(
-      "These try-out statements were collected from the web, and their expected results were predicted by the Grok LLM. Pick one and read the statement yourself first. Then check the result the LLM predicted and decide whether you agree. Next, run the analysis and see our engine's result. Did you agree with the LLM? If not, did our engine confirm your own judgement?",
-    )
-    for (const c of Object.values(CATALOGS)) expect(c['home.try.info']).not.toContain('(')
+  it('explainer copy: exact en text, no old text, no parenthetical in any locale', () => {
+    expect(CATALOGS.en['home.try.info']).toBe('Explore real-world statements, compare your judgment with AI, and discover what VEIL detects.')
+    for (const c of Object.values(CATALOGS)) {
+      expect(c['home.try.info']).not.toContain('(')
+      expect(c['home.try.info']).not.toMatch(/Grok|غروك|Гро/)
+    }
+    expect(new Set(Object.values(CATALOGS).map((c) => c['home.try.info'])).size).toBe(6)
   })
 
-  it('the explainer is permanent: unchanged after chip click, Shuffle, clearing and link mode', async () => {
+  it('the explainer is always shown, in fallback and corpus mode, before and after Shuffle', async () => {
+    loadRaw.mockRejectedValue(new Error('x'))
+    const { unmount } = render(<HomeView />)
+    expect(info()).toHaveTextContent(CATALOGS.en['home.try.info'])
+    expect(info().previousElementSibling).toHaveClass('try-row')
+    unmount()
     await withCorpus(ITEMS.slice(0, 5))
     const text = CATALOGS.en['home.try.info']
-    expect(info()).toHaveTextContent(text)
     expect(info()).not.toHaveAttribute('role')
     expect(info()).not.toHaveAttribute('aria-live')
     expect(info().closest('[data-mock]')).toBeNull()
@@ -426,40 +481,54 @@ describe('HomeView try-out corpus', () => {
       expect(document.querySelectorAll('.try-info')).toHaveLength(1)
       expect(info().textContent).toBe(text)
     }
+    same()
     fireEvent.click(chipButtons()[0]); same()
-    fireEvent.click(screen.getByRole('button', { name: 'Shuffle' })); same()
+    shuffle(); same()
+    fireEvent.click(chipButtons()[0]); same()
     type('x'); type(''); same()
     fireEvent.click(screen.getByRole('tab', { name: 'Social Link' })); same()
-    expect(document.querySelector('[role=status][data-expectation]')).toBeNull()
-    expect(document.body).not.toHaveTextContent('Expected for this demo:')
+    expect(document.body).not.toHaveTextContent(/Grok|LLM explainer/)
   })
 
-  it('a chip click fills the statement in text mode without submitting', async () => {
+  it('a fixed example click fills the text without submitting', async () => {
+    await withCorpus()
+    fireEvent.click(screen.getByRole('tab', { name: 'Social Link' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Breaking news rhetoric' }))
+    expect(screen.getByRole('tab', { name: 'Text' })).toHaveAttribute('aria-selected', 'true')
+    expect(box()).toHaveValue(CATALOGS.en['home.sample.breaking.text'])
+    expect(posts()).toHaveLength(0)
+  })
+
+  it('a corpus example click fills the statement in text mode without submitting', async () => {
     await withCorpus(ITEMS.slice(0, 5))
+    shuffle()
     fireEvent.click(screen.getByRole('tab', { name: 'Social Link' }))
     fireEvent.click(chipButtons()[1])
     expect(screen.getByRole('tab', { name: 'Text' })).toHaveAttribute('aria-selected', 'true')
     expect(box()).toHaveValue(chipButtons()[1].textContent)
-    expect(document.querySelector('[role=status][data-expectation]')).toBeNull()
     expect(posts()).toHaveLength(0)
   })
 
-  it('maps each data-expectation value to its verdict tokens in analyze.css', async () => {
+  it('styles the Try row as plain underlined links with no verdict tint', async () => {
     const { readFileSync } = await import('node:fs')
     const css = readFileSync('src/styles/analyze.css', 'utf8')
-    for (const [v, tok] of [['detected', 'detected'], ['not_detected', 'not-detected'], ['uncertain', 'uncertain']]) {
-      const rule = css.match(new RegExp(`button\\[data-expectation='${v}'\\]\\s*\\{([^}]*)\\}`))![1]
-      expect(rule).toContain(`background: var(--verdict-${tok}-bg)`)
-      expect(rule).toContain(`border-color: var(--verdict-${tok}-border)`)
-      expect(rule).toContain(`color: var(--verdict-${tok}-pill-text)`)
-    }
-    expect(css).toContain('button[data-expectation]:focus-visible')
-    expect(css).not.toContain('.try-expectation')
+    expect(css).not.toContain('data-expectation')
+    const row = css.match(/\.try-row button \{([^}]*)\}/)![1]
+    expect(row).toContain('text-decoration: underline')
+    expect(row).toContain('background: transparent')
+    expect(row).toContain('border: 0')
+    expect(row).toContain('border-radius: 0')
+    expect(row).not.toContain('font-family') // base.css gives buttons font: inherit (Inter)
+    expect(css).toContain('.try-row button:focus-visible')
+    const tryCss = css.slice(css.indexOf('.try-row {'), css.indexOf('/* ——— Analyzing'))
+    expect(tryCss).not.toContain('--verdict-')
+    expect(tryCss).not.toContain('999px')
   })
 
   it('truncates long labels to 60 code points but keeps the full statement', async () => {
     const long = '😀'.repeat(70) + 'x'.repeat(1730)
     await withCorpus([{ statement: long, expectation: 'detected' }, ...ITEMS.slice(0, 4)])
+    shuffle()
     const chip = [...chipButtons()].find((c) => c.textContent!.startsWith('😀'))!
     expect(chip).toHaveAttribute('title', `${long}\nExpected result predicted by the LLM: Detected`)
     expect(chip.textContent).toBe('😀'.repeat(60) + '…')
@@ -473,25 +542,26 @@ describe('HomeView try-out corpus', () => {
     ['load rejection', () => loadRaw.mockRejectedValue(new Error('x'))],
     ['invalid payload', () => loadRaw.mockResolvedValue([...ITEMS.slice(0, 4), { statement: ' ', expectation: 'detected' }, { statement: 'q', expectation: 'bad' }])],
     ['non-array payload', () => loadRaw.mockResolvedValue({ a: 1 })],
-  ])('falls back to the four samples on %s, with no tint, no explainer and no Shuffle', async (_n, setup) => {
+  ])('shows only the four fixed samples on %s, with no Shuffle, and keeps the explainer', async (_n, setup) => {
     setup()
     render(<HomeView />)
     await waitFor(() => expect(loadRaw).toHaveBeenCalled())
     await new Promise((r) => setTimeout(r, 0))
     expect(screen.queryByRole('button', { name: 'Shuffle' })).toBeNull()
+    expect(labels()).toEqual(FIXED)
     fireEvent.click(screen.getByRole('button', { name: 'Breaking news rhetoric' }))
     expect(box()).toHaveValue(CATALOGS.en['home.sample.breaking.text'])
     expect(document.querySelector('[data-expectation]')).toBeNull()
-    expect(document.querySelector('.try-info')).toBeNull()
+    expect(info()).toHaveTextContent(CATALOGS.en['home.try.info'])
   })
 
-  it('has the new keys in every locale, with no Latin letters in ar', () => {
+  it('has the keys in every locale, with no Latin letters in ar (except the product name)', () => {
     const keys = ['shuffle', 'info', 'chip_expectation', 'expectation.detected', 'expectation.not_detected', 'expectation.uncertain']
     for (const [l, c] of Object.entries(CATALOGS))
       for (const k of keys) {
         const v = c[`home.try.${k}`]
         expect(v, `${l} ${k}`).toBeTruthy()
-        if (l === 'ar') expect(v.replace(/\{\w+\}/g, '')).not.toMatch(/\p{Script=Latin}/u) // {placeholders} are interpolation syntax
+        if (l === 'ar') expect(v.replace(/\{\w+\}/g, '').replace(/VEIL/g, '')).not.toMatch(/\p{Script=Latin}/u) // {placeholders} are interpolation syntax; VEIL follows the ar catalog convention
       }
     for (const [l, c] of Object.entries(CATALOGS))
       for (const k of ['expectation.prefix', 'expectation.note']) expect(c, `${l} ${k}`).not.toHaveProperty(`home.try.${k}`)
