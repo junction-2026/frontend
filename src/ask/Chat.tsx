@@ -17,11 +17,12 @@ type Props = {
   id: string; status: string; done: boolean
   chat: ReturnType<typeof useChat> // owned by the page: the result panel needs `conflict` too
   focus: FocusEntry[] // the selected result elements, in panel order
+  total: number // how many elements can be selected; a selection of all of them reads as the whole analysis
   onRemove: (key: string) => void
   onChoose: () => void // narrow layout: move to the result panel
 }
 
-export function Chat({ id, status, done, chat, focus, onRemove, onChoose }: Props) {
+export function Chat({ id, status, done, chat, focus, total, onRemove, onChoose }: Props) {
   const t = useT()
   const { dir } = useLocale()
   const { formatNumber } = useFormat()
@@ -93,7 +94,7 @@ export function Chat({ id, status, done, chat, focus, onRemove, onChoose }: Prop
 
       {!blocked && (
         <div className="focus-bar">
-          {focus.length === 0 ? (
+          {focus.length === 0 || focus.length === total ? (
             <p className="chat-note">{t('ask.focus.hint')}</p>
           ) : (
             <ul className="focus-chips" aria-label={t('ask.focus.selected')}>
