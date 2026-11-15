@@ -22,6 +22,7 @@ const showMetric = (r: unknown, lng = 'en') => {
 }
 const section = () => document.querySelector('.risk') as HTMLElement
 const chip = () => document.querySelector('.risk-chip') as HTMLElement
+const openDrivers = () => fireEvent.click(screen.getByRole('button', { name: /Main drivers/ }))
 const openCaveats = () => fireEvent.click(screen.getByRole('button', { name: /Caveats/ }))
 const unavailable = (extra: Record<string, unknown> = {}) =>
   risk({ status: 'unavailable', reason: 'no_content_signals', score: null, raw_score: null, band: null, drivers: [], techniques: [], ...extra,
@@ -38,8 +39,8 @@ describe('RiskScore: scored', () => {
     expect(meters.map((m) => [m.getAttribute('aria-label'), m.getAttribute('aria-valuenow')])).toEqual([['Intensity', '42'], ['Confirmation', '80'], ['Amplification', '90']])
     const rows = section().querySelectorAll('.risk-techniques li')
     expect([...rows].map((r) => r.textContent)).toEqual(['Appeal to fear90%High impact', 'Loaded language70%High impact', 'Doubt35%Lower impact'])
-    expect(screen.getByText('The source shows signs of artificial amplification.')).toBeInTheDocument()
-    expect(screen.getByText('The writing follows patterns typical of propaganda.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Main drivers (2)' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('The source shows signs of artificial amplification.')).toBeNull()
     expect(screen.getByRole('button', { name: /Caveats/ })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByText('This rating describes the content, not whether a reader will be manipulated.')).toBeNull()
   })
@@ -52,12 +53,14 @@ describe('RiskScore: scored', () => {
 
   it('names a technique driver with the technique name', () => {
     show(risk({ drivers: [{ kind: 'technique', dimension: 'intensity', technique: 'Loaded_Language', contribution: 0.2, text: 'srv' }] }))
+    openDrivers()
     expect(screen.getByText('Manipulative technique in the text: Loaded language.')).toBeInTheDocument()
     expect(section().querySelector('.risk-summary')).toHaveTextContent('Main signal: Loaded language.')
   })
 
   it('shows the no-signal sentence for kind none', () => {
     show(risk({ score: 0.02, band: 'low', drivers: [{ kind: 'none', dimension: null, technique: null, contribution: 0, text: 'x' }] }))
+    openDrivers()
     expect(screen.getAllByText('No clear signs of manipulation were found.').length).toBeGreaterThan(0)
     expect(section().querySelector('.risk-summary')).toHaveTextContent('Few signs of manipulation were found. No single signal stands out.')
   })
@@ -80,7 +83,7 @@ describe('RiskScore: degraded', () => {
 
   it.each([['analyzer_unavailable', 'this check was not available'], ['no_bot_score', 'no usable signal'], ['something_new', 'the input was not available']])('explains amplification reason %s', (reason, text) => {
     show(risk({ dimensions: { ...risk().dimensions, amplification: { available: false, score: null, reason } } }))
-    expect(section().querySelector('.risk-note')).toHaveTextContent(text)
+    expect(section().querySelector('.risk-dim-note .sr-only')).toHaveTextContent(text)
   })
 
   it('explains unavailable intensity and shows no technique rows', () => {
@@ -149,6 +152,47 @@ describe('RiskScore: degraded', () => {
   })
 })
 
+describe('RiskScore: dimensions and techniques structure', () => {
+  const noAmp = { amplification: { available: false, score: null, reason: 'no_author_context' } }
+
+  it('unavailable amplification: n/a, short reason, decorative track, no meter, full sentence for screen readers', () => {
+    show(risk({ dimensions: { ...risk().dimensions, ...noAmp } }))
+    const cell = section().querySelectorAll('.risk-dim')[2]
+    expect(cell.querySelector('.risk-dim-value')).toHaveTextContent('n/a')
+    expect(cell.querySelector('.risk-dim-note')).toHaveTextContent('No author information')
+    expect(cell.querySelector('.risk-dim-note')).toHaveAttribute('title', 'No author information')
+    expect(cell.querySelector('.risk-meter')).toHaveAttribute('aria-hidden', 'true')
+    expect(cell.querySelector('[role=meter]')).toBeNull()
+    expect(cell.querySelector('.sr-only')).toHaveTextContent('Amplification: no author information was available.')
+  })
+
+  it('unknown reason uses the unknown short reason', () => {
+    show(risk({ dimensions: { ...risk().dimensions, amplification: { available: false, score: null, reason: 'something_new' } } }))
+    expect(section().querySelectorAll('.risk-dim-note')[2]).toHaveTextContent('Input not available')
+  })
+
+  it('scored, low-confidence and unavailable cells share one row structure', () => {
+    show(risk({ dimensions: { intensity: { available: true, score: 0.4, confidence: 'low' }, confirmation: { available: true, score: 0.8, confidence: 'normal' }, ...noAmp } }))
+    const cells = [...section().querySelectorAll('.risk-dim')]
+    expect(cells).toHaveLength(3)
+    for (const c of cells) {
+      expect([...c.children].map((e) => e.className.split(' ')[0])).toEqual(['risk-dim-row', 'risk-meter', 'risk-dim-note'])
+      expect(c.querySelector('.risk-dim-label')).toBeInTheDocument()
+      expect(c.querySelector('.risk-dim-value')).toBeInTheDocument()
+    }
+    expect(cells[0].querySelector('.risk-low')).toHaveTextContent('Low confidence')
+    expect(cells[1].querySelector('.risk-low')).toBeNull()
+    expect(cells[1].querySelector('.risk-dim-note')).toBeEmptyDOMElement()
+  })
+
+  it('a technique row holds name, percentage and impact badge in that order', () => {
+    show(risk())
+    const row = section().querySelector('.risk-techniques li') as HTMLElement
+    expect([...row.children].map((e) => e.className)).toEqual(['risk-tech-name', 'risk-tech-pct', 'risk-tech-impact'])
+    expect([...row.children].map((e) => e.textContent)).toEqual(['Appeal to fear', '90%', 'High impact'])
+  })
+})
+
 describe('RiskScore: unknown ids and plain text', () => {
   it('unknown band: moderate colours, the id and the server summary', () => {
     showMetric(risk({ band: 'extreme' }))
@@ -162,6 +206,7 @@ describe('RiskScore: unknown ids and plain text', () => {
   it('unknown driver kind and caveat id use the server text, as plain text', () => {
     show(risk({ drivers: [{ kind: 'novel', technique: null, text: '<b>driver</b>' }], caveats: [{ id: 'content_not_reader', text: 'x' }, { id: 'novel', text: '<b>caveat</b>' }] }))
     openCaveats()
+    openDrivers()
     expect(screen.getByText('<b>driver</b>')).toBeInTheDocument()
     expect(screen.getByText('<b>caveat</b>')).toBeInTheDocument()
     expect(section().querySelector('b')).toBeNull()
@@ -238,14 +283,29 @@ describe('RiskScore: interaction', () => {
     expect(list()).toHaveLength(3)
   })
 
-  it('shows 3 drivers with a toggle and no toggle for 3 or fewer entries', () => {
-    show(risk({ drivers }))
-    expect(section().querySelectorAll('.risk-drivers li')).toHaveLength(3)
-    fireEvent.click(screen.getByRole('button', { name: 'Show all (4)' }))
-    expect(section().querySelectorAll('.risk-drivers li')).toHaveLength(4)
-    cleanup()
-    show(risk())
+  it('Main drivers: collapsed, count in the label, lists all drivers without Show all, collapses again', () => {
+    show(risk({ drivers: [...drivers, { kind: 'c', technique: null, text: 'driver c' }] }))
+    const btn = screen.getByRole('button', { name: 'Main drivers (5)' })
+    expect(btn).toHaveAttribute('aria-expanded', 'false')
+    expect(btn).toHaveAttribute('aria-controls')
+    expect(screen.queryByRole('region', { name: 'Main drivers' })).toBeNull()
+    fireEvent.click(btn)
+    expect(btn).toHaveAttribute('aria-expanded', 'true')
+    const region = within(section()).getByRole('region', { name: 'Main drivers' })
+    expect(region.id).toBe(btn.getAttribute('aria-controls'))
+    expect(region.querySelectorAll('li')).toHaveLength(5)
     expect(screen.queryByRole('button', { name: /Show all/ })).toBeNull()
+    fireEvent.click(btn)
+    expect(screen.queryByRole('region', { name: 'Main drivers' })).toBeNull()
+  })
+
+  it('Caveats and Main drivers share the .risk-toggle class; unavailable has no drivers disclosure', () => {
+    show(risk())
+    expect(screen.getByRole('button', { name: 'Main drivers (2)' })).toHaveClass('risk-toggle')
+    expect(screen.getByRole('button', { name: /Caveats/ })).toHaveClass('risk-toggle')
+    cleanup()
+    show(unavailable())
+    expect(screen.queryByRole('button', { name: /Main drivers/ })).toBeNull()
   })
 })
 
@@ -280,6 +340,18 @@ describe('risk texts in every locale', () => {
     cleanup()
     show(risk(), 'ar')
     expect(section().textContent).not.toContain('…')
+    const keys = ['na', 'reason_short.no_author_context', 'reason_short.analyzer_unavailable', 'reason_short.no_bot_score', 'reason_short.no_scores', 'reason_short.unknown', 'drivers_count']
+    for (const k of keys) expect(CATALOGS.ar[`results.risk.${k}`], k).toBeTruthy()
+    expect(section().querySelector('.risk-toggle')).toHaveTextContent(CATALOGS.ar['results.risk.drivers_count'].replace('({n})', '(2)'))
+    cleanup()
+    show(risk({ dimensions: { ...risk().dimensions, amplification: { available: false, score: null, reason: 'no_author_context' } } }), 'ar')
+    expect(section().querySelector('.risk-dim-na')).toHaveTextContent(CATALOGS.ar['results.risk.na'])
+    expect(section().querySelectorAll('.risk-dim-note')[2]).toHaveTextContent(CATALOGS.ar['results.risk.reason_short.no_author_context'])
+  })
+  it.each(Object.keys(CATALOGS))('%s has every new risk key', (lng) => {
+    for (const k of ['na', 'reason_short.no_author_context', 'reason_short.analyzer_unavailable', 'reason_short.no_bot_score', 'reason_short.no_scores', 'reason_short.unknown', 'drivers_count'])
+      expect(CATALOGS[lng][`results.risk.${k}`], `${lng} ${k}`).toBeTruthy()
+    expect(CATALOGS[lng]['results.risk.drivers_count']).toContain('{n}')
   })
 })
 
@@ -292,7 +364,12 @@ describe('risk styling', () => {
   it.each(['low', 'moderate', 'high', 'critical'])('%s chip text reaches 4.5:1', (band) => {
     expect(contrast(token(`risk-${band}-text`), token(`risk-${band}-bg`))).toBeGreaterThanOrEqual(4.5)
   })
+  const riskCss = readFileSync('src/job/riskScore.css', 'utf8')
+  it('uses no colour literals and no font-weight above 600', () => {
+    expect(riskCss).not.toMatch(/#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|oklch|hwb)\(/i)
+    expect(riskCss).not.toMatch(/var\(--fw-extrabold\)|font-weight:\s*([7-9]\d\d|bold)/)
+  })
   it('uses logical properties only', () => {
-    expect(readFileSync('src/job/riskScore.css', 'utf8')).not.toMatch(/(margin|padding|border)-(left|right)|(^|[\s{;])(left|right)\s*:|text-align:\s*(left|right)|[^-]width:|[^-]height:/m)
+    expect(riskCss).not.toMatch(/(margin|padding|border)-(left|right)|(^|[\s{;])(left|right)\s*:|text-align:\s*(left|right)|[^-]width:|[^-]height:/m)
   })
 })

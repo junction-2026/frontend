@@ -36,23 +36,19 @@ function RiskInfo() {
   )
 }
 
-function Caveats({ risk }: { risk: RiskView }) {
-  const t = useT()
+// Shared disclosure of Main drivers and Caveats: one collapsed-by-default button with the section-heading style.
+function Disclosure({ label, region, items }: { label: string; region: string; items: ReactNode[] }) {
   const id = useId()
   const [open, setOpen] = useState(false)
   return (
     <div className="risk-block">
       <button type="button" className="risk-toggle" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
-        {t('results.risk.caveats')}
-        <span aria-hidden="true" className="risk-chevron">{open ? '▾' : '▸'}</span>
+        {label}
+        <span aria-hidden="true" className="risk-chevron mirror-rtl">{open ? '▾' : '▸'}</span>
       </button>
       {open && (
-        <div id={id} role="region" aria-label={t('results.risk.caveats')}>
-          <ul className="risk-list">
-            {risk.caveats.map((c) => (
-              <li key={c.id}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}</li>
-            ))}
-          </ul>
+        <div id={id} role="region" aria-label={region}>
+          <ul className="risk-list">{items}</ul>
         </div>
       )}
     </div>
@@ -117,22 +113,26 @@ export function RiskSection({ risk }: { risk: RiskView }) {
           {risk.dimensions.map((d) => {
             const label = t(`results.risk.dim.${d.key}`)
             const pct = d.score === null ? 0 : Math.round(d.score * 100)
+            const reason = known(`results.risk.reason.${d.reason}`) ? d.reason : 'unknown'
+            const short = d.available ? '' : t(`results.risk.reason_short.${known(`results.risk.reason_short.${d.reason}`) ? d.reason : 'unknown'}`)
             return (
-              <li key={d.key}>
+              <li key={d.key} className="risk-dim">
                 <div className="risk-dim-row">
                   <span className="risk-dim-label">{label}</span>
                   {d.available && d.low && <span className="risk-low">{t('results.risk.low_confidence')}</span>}
-                  {d.available && <span className="risk-dim-value">{percent(fmt, pct / 100)}</span>}
+                  <span className={d.available ? 'risk-dim-value' : 'risk-dim-value risk-dim-na'}>{d.available ? percent(fmt, pct / 100) : t('results.risk.na')}</span>
                 </div>
                 {d.available ? (
                   <div className="risk-meter" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-valuetext={percent(fmt, pct / 100)}>
                     <span style={{ inlineSize: `${pct}%` }} />
                   </div>
                 ) : (
-                  <p className="risk-note">
-                    {t(known(`results.risk.reason.${d.reason}`) ? `results.risk.reason.${d.reason}` : 'results.risk.reason.unknown', { dimension: label })}
-                  </p>
+                  <div className="risk-meter" aria-hidden="true"><span style={{ inlineSize: 0 }} /></div>
                 )}
+                <p className="risk-dim-note" title={short || undefined}>
+                  {short && <span aria-hidden="true">{short}</span>}
+                  {!d.available && <span className="sr-only">{t(`results.risk.reason.${reason}`, { dimension: label })}</span>}
+                </p>
               </li>
             )
           })}
@@ -161,13 +161,18 @@ export function RiskSection({ risk }: { risk: RiskView }) {
       )}
 
       {risk.scored && (
-        <div className="risk-block">
-          <h3 className="risk-subtitle">{t('results.risk.drivers')}</h3>
-          <Collapsible className="risk-drivers" items={risk.drivers.map((d, i) => <li key={i}>{sentence(d)}</li>)} />
-        </div>
+        <Disclosure
+          label={t('results.risk.drivers_count', { n: fmt(risk.drivers.length) })}
+          region={t('results.risk.drivers')}
+          items={risk.drivers.map((d, i) => <li key={i}>{sentence(d)}</li>)}
+        />
       )}
 
-      <Caveats risk={risk} />
+      <Disclosure
+        label={t('results.risk.caveats')}
+        region={t('results.risk.caveats')}
+        items={risk.caveats.map((c) => <li key={c.id}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}</li>)}
+      />
     </section>
   )
 }
