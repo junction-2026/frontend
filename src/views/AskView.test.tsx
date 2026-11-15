@@ -470,20 +470,38 @@ describe('result pane', () => {
     expect(chats()[0].body.focus).toHaveLength(20)
   })
 
-  it('clears the selection from the pane header and through chips', async () => {
+  it('clears through chips and never shows a Clear selection button', async () => {
     await showNone()
-    expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
+    const noClear = () => {
+      expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
+      expect(document.querySelector('.focus-clear')).toBeNull()
+    }
+    noClear()
     fireEvent.click(toggle('Doubt'))
     fireEvent.click(toggle('Everyone knows'))
+    noClear()
     fireEvent.click(screen.getByRole('button', { name: 'Remove Everyone knows' }))
     expect(toggle('Everyone knows')).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(toggle('Everyone knows'))
-    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }))
-    expect(toggles().filter((b) => b.getAttribute('aria-pressed') === 'true')).toHaveLength(0)
-    expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Doubt' }))
+    expect(pressed()).toHaveLength(0)
+    noClear()
     await ask('q')
     await screen.findByText('An answer.')
     expect(chats()[0].body).not.toHaveProperty('focus')
+  })
+
+  it('shows no Clear selection button by default, after Select all, or with a partial selection', async () => {
+    await show()
+    const noClear = () => expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
+    expect(pressed()).toHaveLength(15)
+    noClear()
+    expect(document.querySelector('.focus-clear')).toBeNull()
+    fireEvent.click(toggle('Doubt'))
+    noClear()
+    fireEvent.click(selectAll())
+    expect(pressed()).toHaveLength(15)
+    noClear()
+    expect(document.querySelector('.focus-clear')).toBeNull()
   })
 
   it('keeps the original focus on Retry and leaves earlier bubbles alone', async () => {
@@ -602,7 +620,7 @@ describe('result pane', () => {
     fireEvent.click(selectAll())
     expect(pressed()).toHaveLength(15)
     expect(selectAll()).toBeChecked()
-    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }))
+    fireEvent.click(selectAll())
     expect(selectAll().indeterminate).toBe(false)
     fireEvent.click(selectAll())
     expect(pressed()).toHaveLength(15)
@@ -655,7 +673,7 @@ describe('result pane', () => {
     const split = document.querySelector('.ask-split') as HTMLElement
     expect(split.children[0]).toHaveClass('ask-chat')
     fireEvent.click(within(split.children[1] as HTMLElement).getAllByRole('button', { name: /^اسأل عن / })[0])
-    const statics = [...split.querySelectorAll('.ask-result-head h2, .ask-result-head .chat-note, .focus-all, .focus-clear, .focus-toggle')].map((e) => e.textContent ?? '')
+    const statics = [...split.querySelectorAll('.ask-result-head h2, .ask-result-head .chat-note, .focus-all, .focus-toggle')].map((e) => e.textContent ?? '')
     statics.push((document.querySelector('.ask-result') as HTMLElement).getAttribute('aria-label') ?? '')
     expect(statics.join(' ').replace(/VEIL/g, '')).not.toMatch(/[A-Za-z]/)
     expect(statics.length).toBeGreaterThan(4)

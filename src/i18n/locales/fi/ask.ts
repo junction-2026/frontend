@@ -33,7 +33,6 @@ export default {
   'focus.help': 'Valitse alla olevien osioiden +-painikkeilla, mitä seuraava kysymyksesi koskee.',
   'focus.select': 'Kysy kohteesta {label}',
   'focus.choose': 'Valitse tuloksen osia',
-  'focus.clear': 'Tyhjennä valinta',
   'focus.select_all': 'Valitse kaikki',
   'focus.remove': 'Poista {label}',
   'focus.limit': 'Voit valita enintään {max} osaa.',

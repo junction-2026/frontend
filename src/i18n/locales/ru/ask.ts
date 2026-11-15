@@ -35,7 +35,6 @@ export default {
   'focus.help': 'Кнопками + в разделах ниже выберите, к чему относится ваш следующий вопрос.',
   'focus.select': 'Спросить о: {label}',
   'focus.choose': 'Выбрать элементы результата',
-  'focus.clear': 'Сбросить выбор',
   'focus.select_all': 'Выбрать все',
   'focus.remove': 'Убрать: {label}',
   'focus.limit': 'Можно выбрать не больше {max} элементов.',
