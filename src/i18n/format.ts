@@ -26,7 +26,6 @@ export const formatPercent = (ratio: number, options?: Intl.NumberFormatOptions,
 export { pluralCategory } from './translate'
 
 const displayNames = new Map<string, Intl.DisplayNames>()
-// The locale's own name of an ISO 3166-1 alpha-2 country; without one (no ICU data, unknown code) the given fallback.
 // The locale's own name of an ISO 639-1 language; null when it has none (no ICU data, unknown code).
 export function formatLanguageName(code: string, locale: string = activeLocale()): string | null {
   try {
@@ -38,6 +37,7 @@ export function formatLanguageName(code: string, locale: string = activeLocale()
   return null
 }
 
+// The locale's own name of an ISO 3166-1 alpha-2 country; without one (no ICU data, unknown code) the given fallback.
 export function formatCountryName(code: string, fallback: string, locale: string = activeLocale()): string {
   try {
     let dn = displayNames.get(locale)
