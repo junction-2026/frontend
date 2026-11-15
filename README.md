@@ -17,7 +17,6 @@ Client-side History-API router (no dependency); an unknown path shows Home. `/?j
 | `/history` | History |
 | `/explore`, `/explore/region` | Explore, Region |
 | `/ask` | Ask |
-| `/settings` | Settings |
 | `/states` | States (mock edge cases) |
 
 Areas not connected to the backend carry a visible `MOCK` badge and are listed in `docs/mock-areas.md`.
