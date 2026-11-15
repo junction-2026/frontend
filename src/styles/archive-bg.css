@@ -1,0 +1,128 @@
+/* Decorative archive backdrop behind the History page: softly blurred paper sheets, folders, a file stack and an archive box
+   under a white veil. Shapes are plain boxes (solid colours, no images); motion is a slow transform-only drift. */
+.archive-bg {
+  --flip: 1; /* -1 in RTL: stack offset and tilt mirror with the writing direction */
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[dir='rtl'] .archive-bg {
+  --flip: -1;
+}
+
+/* Lifts the History view above the layer; the sticky topbar (z-index 40) stays above both. */
+.archive-bg + .view {
+  position: relative;
+  z-index: 1;
+}
+
+.archive-docs {
+  position: absolute;
+  inset: 0;
+}
+
+.archive-doc {
+  --w: 170px;
+  --h: 220px;
+  --r: 0deg;
+  --c: #FFFFFF;
+  position: absolute;
+  width: var(--w);
+  height: var(--h);
+  background: var(--c);
+  border: 1px solid #DDD6FE;
+  border-radius: var(--radius-sm);
+  opacity: 0.45;
+  filter: blur(1.5px);
+  rotate: calc(var(--r) * var(--flip));
+  will-change: transform;
+}
+
+.archive-line {
+  position: absolute;
+  inset-inline: 14px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--line, #DDD6FE);
+}
+
+.archive-line:nth-child(1) { top: 22px; }
+.archive-line:nth-child(2) { top: 40px; }
+.archive-line:nth-child(3) { top: 58px; inset-inline-end: 44px; }
+
+/* Folder: a tab above the body. */
+.archive-folder::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  inset-inline-start: 12px;
+  width: 38%;
+  height: 14px;
+  background: var(--c);
+  border-radius: 6px 6px 0 0;
+}
+
+/* Stacked files: two sheets peeking out behind via shadows. */
+.archive-stack {
+  box-shadow: calc(10px * var(--flip)) -8px 0 #DDD6FE, calc(20px * var(--flip)) -16px 0 #BFDBFE;
+}
+
+/* Archive box: a lid and a label. */
+.archive-box::before {
+  content: '';
+  position: absolute;
+  top: -16px;
+  inset-inline: -6px;
+  height: 18px;
+  background: #DDD6FE;
+  border-radius: var(--radius-sm);
+}
+
+.archive-box::after {
+  content: '';
+  position: absolute;
+  top: 30%;
+  inset-inline: 30%;
+  height: 22px;
+  background: #FFFFFF;
+  border-radius: 4px;
+}
+
+.archive-doc-1 { top: 8%; inset-inline-start: 4%; --r: -4deg; animation: archive-drift-a 41s ease-in-out infinite; }
+.archive-doc-2 { --w: 220px; --h: 150px; --c: #BFDBFE; top: 14%; inset-inline-end: 6%; --r: 3deg; animation: archive-drift-b 53s ease-in-out infinite; }
+.archive-doc-3 { --w: 160px; --h: 200px; --c: #D1FAE5; top: 52%; inset-inline-start: 10%; --r: 2deg; animation: archive-drift-b 47s ease-in-out infinite; }
+.archive-doc-4 { --w: 200px; --h: 150px; --c: #FFE4D6; top: 58%; inset-inline-end: 12%; --r: -2deg; animation: archive-drift-a 59s ease-in-out infinite; }
+.archive-doc-5 { --w: 150px; --h: 200px; --c: #DDD6FE; --line: #FFFFFFCC; top: 32%; inset-inline-start: 42%; --r: 5deg; animation: archive-drift-a 35s ease-in-out infinite; }
+.archive-doc-6 { --w: 210px; --h: 140px; --c: #FFE4D6; top: 80%; inset-inline-start: 46%; --r: -3deg; animation: archive-drift-b 38s ease-in-out infinite; }
+
+/* The veil keeps the real UI readable over the documents. */
+.archive-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #FFFFFFB3 0%, #FFFFFF66 50%, #FFFFFFB3 100%);
+}
+
+@keyframes archive-drift-a {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(14px, -18px) rotate(2deg); }
+}
+
+@keyframes archive-drift-b {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-12px, 16px) rotate(-2deg); }
+}
+
+@media (max-width: 640px) {
+  .archive-doc { scale: 0.65; }
+  .archive-doc:nth-child(n + 4) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .archive-bg,
+  .archive-bg * {
+    animation: none;
+  }
+}
