@@ -24,11 +24,15 @@ Colours, radii, shadows, spacing and the type scale SHALL be CSS custom properti
 - **THEN** the value is defined in `src/styles/tokens.css`
 
 ### Requirement: Routing
-A dependency-free History-API router SHALL map `/` to Home, `/jobs/:id/live` to Analyzing, `/jobs/:id` to Results, `/jobs/:id/detail` to Detail, `/jobs/:id/ask` to Ask, `/history`, `/explore`, `/explore/region`, `/ask` and `/states` to their views. It SHALL NOT map `/settings`, and `RouteName` and `navFor` SHALL have no settings case. An unknown path SHALL render Home. Plain left clicks on links SHALL navigate client-side and scroll to the top.
+A dependency-free History-API router SHALL map `/` to Home, `/jobs/:id/live` to Analyzing, `/jobs/:id` to Results, `/jobs/:id/ask` to Ask, `/history`, `/explore`, `/explore/region`, `/ask` and `/states` to their views. It SHALL NOT map `/settings`, and `RouteName` and `navFor` SHALL have no settings case. An unknown path SHALL render Home. Plain left clicks on links SHALL navigate client-side and scroll to the top.
 
 #### Scenario: Known route
+- **WHEN** the path is `/jobs/abc`
+- **THEN** the Results view is rendered inside the shell with job id `abc`
+
+#### Scenario: Old detail URL
 - **WHEN** the path is `/jobs/abc/detail`
-- **THEN** the Detail view is rendered inside the shell with job id `abc`
+- **THEN** the URL is replaced by `/jobs/abc` and the Results view is rendered; the router has no Detail route
 
 #### Scenario: Ask route
 - **WHEN** the path is `/jobs/abc/ask`
@@ -110,7 +114,7 @@ Each of `src/views/{Home,Analyzing,Results,Detail,History,Explore,Region,Ask,Sta
 - **THEN** an h1 "History" is shown in the shell
 
 ### Requirement: Mock areas register
-`docs/mock-areas.md` SHALL list every marked mock area by route and element, and SHALL NOT list the top-bar language selector or any element removed from a screen: the `/jobs/:id` Polarity / Intensity, bias factor and Share items, the `/jobs/:id/detail` metrics bar, and the `/jobs/:id/live` ledger caption "Synchronous consensus pool".
+`docs/mock-areas.md` SHALL list every marked mock area by route and element, and SHALL NOT list the top-bar language selector or any element removed from a screen: the `/jobs/:id` Polarity / Intensity, bias factor and Share items, the detailed-region metrics bar, and the `/jobs/:id/live` ledger caption "Synchronous consensus pool".
 
 #### Scenario: Language selector not listed
 - **WHEN** a reader opens `docs/mock-areas.md`
@@ -118,7 +122,7 @@ Each of `src/views/{Home,Analyzing,Results,Detail,History,Explore,Region,Ask,Sta
 
 #### Scenario: Removed Results items not listed
 - **WHEN** a reader opens `docs/mock-areas.md`
-- **THEN** it has no row for Polarity / Intensity, the bias factor, the Share button or the `/jobs/:id/detail` metrics bar
+- **THEN** it has no row for Polarity / Intensity, the bias factor, the Share button or the detailed-region metrics bar
 
 #### Scenario: Removed ledger caption not listed
 - **WHEN** a reader opens `docs/mock-areas.md`

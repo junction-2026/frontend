@@ -92,7 +92,7 @@ The detailed analysis region SHALL contain a section showing `coverage` as `succ
 - **THEN** they are listed only inside a "Not run" disclosure
 
 ### Requirement: Detail metrics
-The Detail screen SHALL show a metrics bar with Patterns (detected techniques of the `succeeded` `techniques` run, else "—"), Claims (`claims` of a `succeeded` `topic_extraction` run, else "—"), Risk (real percentage and band chip, else "—", not in `Mock`) and Latency. Latency follows 'Detail metrics Latency'. Technique entries SHALL show `Detection.name` as ID badge and no match percentage; confidence SHALL NOT be shown.
+The Detail metrics bar in the detailed region of `/jobs/:id` SHALL show Patterns (detected techniques of the `succeeded` `techniques` run, else "—"), Claims (`claims` of a `succeeded` `topic_extraction` run, else "—"), Risk (real percentage and band chip, else "—", not in `Mock`) and Latency. Latency follows 'Detail metrics Latency'. Technique entries SHALL show `Detection.name` as ID badge and no match percentage; confidence SHALL NOT be shown.
 
 #### Scenario: Metrics
 - **WHEN** two techniques were detected and `topic_extraction` succeeded with three claims
@@ -142,17 +142,6 @@ Loading SHALL show a skeleton with `role="status"`. An empty history SHALL show 
 #### Scenario: Empty history
 - **WHEN** `listJobs` returns no items
 - **THEN** "No previous analyses yet" and a "Start first analysis" link to `/` are shown
-
-### Requirement: Detail verdict text
-The Detail screen (`/jobs/:id/detail`) SHALL show a "Final assessment" section with the verdict label and `finalization.result.user_text` as a plain text node (no HTML, Markdown or links) when `finalization.status` is `completed` with a `result`, and SHALL omit the section otherwise. A result with `produced_by` `orchestrator` SHALL show the "Insufficient evidence" tag in that section. No confidence or score number SHALL be shown.
-
-#### Scenario: Markup in user text
-- **WHEN** `user_text` is `<b>fake</b> [click](https://example.com)`
-- **THEN** exactly those characters are shown and no `b` or `a` element is created from them
-
-#### Scenario: No completed result
-- **WHEN** the finalization is `skipped`
-- **THEN** no "Final assessment" section is shown
 
 ### Requirement: Verdict component presentation
 The verdict card SHALL have a 2px solid border in `var(--v-border)`, a border radius of `var(--radius-verdict)` (30px), padding `clamp(20px, 4vw, 36px)`, a shadow of at most `0 1px 2px rgba(0,0,0,.04)` and no gradient or decorative graphic. It SHALL appear with a fade and rise of at most 300ms, disabled under `prefers-reduced-motion`. Logical CSS properties mirror it in RTL; all states share one layout. Results SHALL NOT use `VERDICT_UI` labels.
@@ -235,14 +224,14 @@ Below the verdict card the Results screen SHALL show a primary `<button class="b
 - **THEN** `aria-expanded` is false, true, false and the region is present only while expanded
 
 ### Requirement: Detailed analysis region content
-The detailed region SHALL contain the analyzed excerpt (first 400 characters), the technique tags, "Explore coverage", "Open detailed analysis page" and the Copy button, followed by the Detail metrics bar, the JobView and the Coverage section.
+The detailed region SHALL contain the analyzed excerpt (first 400 characters), the technique tags, "Explore coverage" and the Copy button, followed by the Detail metrics bar, the JobView and the Coverage section. It SHALL NOT contain a link to a separate detail page.
 
 #### Scenario: Expanded content
 - **WHEN** the region is expanded
-- **THEN** it shows the excerpt, technique tags, coverage and the link to `/jobs/:id/detail`
+- **THEN** it shows the excerpt, technique tags, "Explore coverage", the Copy button and coverage, and has no link to a detail page
 
-### Requirement: Shared detail body
-The Detail metrics bar (Patterns, Claims, Risk and Latency, all real values) and the full JobView (title, highlighted text, technique list, risk overview, why region, notes, LLM-assessed group) SHALL be one component shared by `/jobs/:id/detail` and the detailed region of `/jobs/:id`; `/jobs/:id/detail` SHALL render as before apart from the Risk cell and the overview.
+### Requirement: Detail body
+The Detail metrics bar (Patterns, Claims, Risk and Latency, all real values) and the full JobView (title, highlighted text, technique list, risk overview, why region, notes, LLM-assessed group) SHALL be one component (DetailedAnalysis) rendered in the detailed region of `/jobs/:id`.
 
 #### Scenario: Metrics in the region
 - **WHEN** two techniques were detected and the region is expanded
@@ -263,15 +252,19 @@ History verdict tags SHALL keep "Manipulation detected" (orange), "No manipulati
 - **THEN** the tag labels and tones are those above
 
 ### Requirement: Results and Detail copy from the results catalog
-All fixed text of `/jobs/:id` and `/jobs/:id/detail` (meta row, verdict headings and bodies, confidence line and tooltip, state cards, actions, Detail heading, back link and final assessment) and of `/states` SHALL come from the `results` catalog in the active locale for en, fr, ar, de and fi. The English text quoted in the Results and Detail requirements of this capability is the `en` catalog value.
+All fixed text of `/jobs/:id` (meta row, verdict headings and bodies, confidence line and tooltip, state cards, actions) and of `/states` SHALL come from the `results` catalog in the active locale for en, fr, ar, de and fi. The English text quoted in the Results requirements of this capability is the `en` catalog value.
 
 #### Scenario: Another locale
 - **WHEN** the locale is `de` and the verdict is `detected`
-- **THEN** the Results heading reads "Ja, Propaganda erkannt.", the Detail label reads "Manipulation erkannt", and `user_text` is shown unchanged
+- **THEN** the Results heading reads "Ja, Propaganda erkannt." and `user_text` is shown unchanged
 
 #### Scenario: Language switch
 - **WHEN** the user switches the language while Results is open
 - **THEN** the page re-renders in the new language without a reload
+
+#### Scenario: Removed detail strings
+- **WHEN** the `results` catalog of any locale is read
+- **THEN** it has no `open_detail`, `detail.back`, `detail.label`, `detail.title`, `detail.lede` or `detail.final` key
 
 ### Requirement: Results enum labels and API strings
 The verdict label on Detail SHALL map the verdict enum to `results.verdict.label.*`; an unknown verdict keeps reading as uncertain. The finalization skip reason SHALL map to a catalog key, any other reason reads "No final assessment was made." in the locale. API-provided strings (`user_text`, the scrape error `message` and `code`, the finalization error `code`) SHALL be shown unchanged and SHALL NOT be passed through `t()`. History verdict labels stay as they are in this change.
@@ -292,7 +285,7 @@ The confidence SHALL be shown as a whole percent formatted with the active local
 - **THEN** the meta row shows "Dauer 3,2 s"
 
 ### Requirement: Results layout in right-to-left languages
-Results, Detail and States SHALL remain usable with `dir=rtl` (Arabic): the verdict, the detailed region, the highlighted text and the "why" region lay out without physical left or right.
+Results (`/jobs/:id`) and States SHALL remain usable with `dir=rtl` (Arabic): the verdict, the detailed region, the highlighted text and the "why" region lay out without physical left or right.
 
 #### Scenario: Arabic
 - **WHEN** the locale is `ar`
@@ -328,7 +321,7 @@ All fixed text of the History screen (title, filter chips, group counts, status 
 - **THEN** it contains no `left`/`right` text alignment, margin, padding, border or offset
 
 ### Requirement: Mock-only parts of the Results screen
-The detailed analysis region SHALL NOT render a Polarity/Intensity signal row, a "High rhetorical bias factor" line or a Share button. Copy SHALL copy the page URL to the clipboard without `Mock`. "Explore coverage" SHALL link to `/explore?job=<encoded job id>` and "Open detailed analysis page" to `/jobs/:id/detail`.
+The detailed analysis region SHALL NOT render a Polarity/Intensity signal row, a "High rhetorical bias factor" line or a Share button. Copy SHALL copy the page URL to the clipboard without `Mock`. "Explore coverage" SHALL link to `/explore?job=<encoded job id>`.
 
 #### Scenario: Removed items
 - **WHEN** the detailed region of a job with a `detected` verdict is expanded
@@ -665,7 +658,7 @@ Keys `results.origin.bot_or_generated`, `results.origin.human` and `results.orig
 - **THEN** its label and tooltip are localized with no raw key or `{pct}`
 
 ### Requirement: Detailed summary card presentation
-The `.card.detailed-summary` in the expanded detailed region SHALL have inner padding of at least 1rem block and 1.15rem inline, in LTR and RTL, so its content never touches the border. "Explore coverage" and "Open detailed analysis page" SHALL stay anchor links with unchanged labels and hrefs, styled as secondary buttons scoped to `.detailed-summary`. The copy icon button SHALL keep its aria-label, title and behaviour and stay at the inline end.
+The `.card.detailed-summary` in the expanded detailed region SHALL have inner padding of at least 1rem block and 1.15rem inline, in LTR and RTL, so its content never touches the border. "Explore coverage" SHALL stay an anchor link styled as a secondary button scoped to `.detailed-summary`. The copy icon button SHALL keep its aria-label, title and behaviour and stay at the inline end.
 
 #### Scenario: Card padding
 - **WHEN** the detailed region is expanded
@@ -673,14 +666,14 @@ The `.card.detailed-summary` in the expanded detailed region SHALL have inner pa
 
 #### Scenario: Links keep their meaning
 - **WHEN** the detailed region is expanded for job `j 1`
-- **THEN** "Explore coverage" is an `<a>` with href `/explore?job=j%201` and "Open detailed analysis page" is an `<a>` with href `/jobs/j%201/detail`
+- **THEN** "Explore coverage" is an `<a>` with href `/explore?job=j%201` and the card has no "Open detailed analysis page" link and no anchor whose href ends in `/detail`
 
 #### Scenario: Button styling
-- **WHEN** the links are rendered
-- **THEN** each has a 1px border, a background, horizontal padding, a minimum height of 44px and a pill radius, and under 640px the two links MAY wrap to full width
+- **WHEN** the link is rendered
+- **THEN** it has a 1px border, a background, horizontal padding, a minimum height of 44px and a pill radius, and under 640px the link MAY wrap to full width
 
 #### Scenario: Button states
-- **WHEN** a link has keyboard focus, is hovered or is pressed
+- **WHEN** the link has keyboard focus, is hovered or is pressed
 - **THEN** it shows a focus ring of at least 2px with at least 3:1 contrast, a distinct hover background and a distinct active background, transitions last at most 150ms and none run under `prefers-reduced-motion`
 
 ### Requirement: History export button sizing
