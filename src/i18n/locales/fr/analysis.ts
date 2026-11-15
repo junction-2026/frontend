@@ -5,8 +5,6 @@ export default {
   'elapsed': 'Écoulé : {time}',
   'time.s': '{v} s',
   'time.m': '{v} min',
-  'mock.pool': 'Description du pool',
-  'pool': 'Pool de consensus synchrone',
   'fault.pill': 'Erreur de saisie · {code}',
   'fault.title': 'Impossible de récupérer la publication',
   'fault.switch': 'Passer à la saisie de texte →',

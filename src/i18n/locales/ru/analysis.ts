@@ -5,8 +5,6 @@ export default {
   'elapsed': 'Прошло: {time}',
   'time.s': '{v} с',
   'time.m': '{v} мин',
-  'mock.pool': 'Описание пула',
-  'pool': 'Синхронный пул консенсуса',
   'fault.pill': 'Ошибка ввода · {code}',
   'fault.title': 'Не удалось получить пост',
   'fault.switch': 'Перейти к вводу текста →',
