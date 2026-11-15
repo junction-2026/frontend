@@ -45,9 +45,9 @@ export default function HomeView() {
   const [listError, setListError] = useState<ApiError | null>(null)
   const [isPublic, setIsPublic] = useState(true)
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set())
-  // null corpus = loading or failed (no Shuffle). null drawn = the four fixed samples show until Shuffle is first pressed.
+  // null corpus = loading or failed: the four fallback samples show.
   const [corpus, setCorpus] = useState<TryItem[] | null>(null)
-  const [drawn, setDrawn] = useState<TryItem[] | null>(null)
+  const [chips, setChips] = useState<TryItem[]>([])
 
   useEffect(() => {
     let stale = false
@@ -56,6 +56,7 @@ export default function HomeView() {
       .then((items) => {
         if (stale || items.length < 5) return
         setCorpus(items)
+        setChips(draw(items, 5))
       })
       .catch(() => {})
     return () => {
@@ -105,29 +106,6 @@ export default function HomeView() {
     })
 
   const shown = problem && describe(problem, t)
-
-  const examples = drawn
-    ? drawn.map((c, i) => {
-        const note = t('home.try.chip_expectation', { value: t(`home.try.expectation.${c.expectation}`) })
-        return (
-          <Fragment key={i}>
-            <button
-              type="button"
-              dir="auto"
-              title={`${c.statement}\n${note}`}
-              aria-label={truncate(c.statement, 300)}
-              aria-describedby={`try-exp-${i}`}
-              onClick={() => { setMode('text'); setValue(c.statement) }}
-            >
-              {truncate(c.statement, 60)}
-            </button>
-            <span className="sr-only" id={`try-exp-${i}`}>{note}</span>
-          </Fragment>
-        )
-      })
-    : SAMPLES.map((s) => (
-        <button key={s} type="button" onClick={() => { setMode('text'); setValue(t(`home.sample.${s}.text`)) }}>{t(`home.sample.${s}.label`)}</button>
-      ))
 
   return (
     <>
@@ -220,12 +198,34 @@ export default function HomeView() {
 
         <div className="try-row">
           <span>{t('home.try')}</span>
-          {examples.flatMap((ex, i) => (i ? [<span key={`sep-${i}`} aria-hidden="true">·</span>, ex] : [ex]))}
+          {corpus
+            ? chips.map((c, i) => {
+                const note = t('home.try.chip_expectation', { value: t(`home.try.expectation.${c.expectation}`) })
+                return (
+                  <Fragment key={i}>
+                    <button
+                      type="button"
+                      dir="auto"
+                      data-expectation={c.expectation}
+                      title={`${c.statement}\n${note}`}
+                      aria-label={truncate(c.statement, 300)}
+                      aria-describedby={`try-exp-${i}`}
+                      onClick={() => { setMode('text'); setValue(c.statement) }}
+                    >
+                      {truncate(c.statement, 60)}
+                    </button>
+                    <span className="sr-only" id={`try-exp-${i}`}>{note}</span>
+                  </Fragment>
+                )
+              })
+            : SAMPLES.map((s) => (
+                <button key={s} type="button" onClick={() => { setMode('text'); setValue(t(`home.sample.${s}.text`)) }}>{t(`home.sample.${s}.label`)}</button>
+              ))}
           {corpus && (
-            <button type="button" className="try-shuffle" onClick={() => setDrawn(draw(corpus, 5))}>{t('home.try.shuffle')}</button>
+            <button type="button" className="try-shuffle" onClick={() => setChips(draw(corpus, 5))}>{t('home.try.shuffle')}</button>
           )}
         </div>
-        <p className="try-info">{t('home.try.info')}</p>
+        {corpus && <p className="try-info">{t('home.try.info')}</p>}
       </div>
 
     </section>
