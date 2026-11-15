@@ -7,7 +7,7 @@ import { navigate } from '../router'
 import { AmbientBackground } from '../ui/AmbientBackground'
 import '../styles/analyze.css'
 
-const SAMPLES = ['energy', 'breaking', 'editorial']
+const SAMPLES = ['energy', 'breaking', 'editorial', 'springfield']
 
 const MAX_URL = 2048
 type UrlProblem = 'home.url_too_long' | 'home.url_invalid'

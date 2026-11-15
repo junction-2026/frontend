@@ -23,6 +23,8 @@ export default {
   'sample.breaking.text': 'Urgent : les autorités s’affolent alors que la crise s’aggrave — selon nos sources, le public est tenu dans l’ignorance depuis des mois.',
   'sample.editorial.label': 'Comparaison de cadrages éditoriaux',
   'sample.editorial.text': 'Alors que les critiques jugent la réforme urgente, un examen attentif des chiffres raconte une histoire plus nuancée sur les incitations et le cadrage.',
+  'sample.springfield.label': 'Rhétorique politique : Trump sur Springfield (citation)',
+  'sample.springfield.text': "In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.",
   'url_too_long': 'Le lien dépasse {max} caractères.',
   'url_invalid': 'Saisissez un lien complet commençant par http:// ou https://.',
 }

@@ -24,6 +24,8 @@ export default {
   'sample.breaking.text': 'Срочно: чиновники в панике, кризис нарастает — по данным источников, общественность месяцами держали в неведении.',
   'sample.editorial.label': 'Сравнение редакционной подачи',
   'sample.editorial.text': 'Критики утверждают, что реформа необходима, но внимательный взгляд на цифры рассказывает более тихую историю о стимулах и подаче.',
+  'sample.springfield.label': 'Политическая риторика: Трамп о Спрингфилде (цитата)',
+  'sample.springfield.text': "In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.",
   'url_too_long': 'Ссылка длиннее {max} символов.',
   'url_invalid': 'Введите полную ссылку, начинающуюся с http:// или https://.',
 }

@@ -22,6 +22,8 @@ export default {
   'sample.breaking.text': 'Eilmeldung: Behörden geraten in Bedrängnis, während sich die Krise verschärft – Quellen zufolge wurde die Öffentlichkeit monatelang im Dunkeln gelassen.',
   'sample.editorial.label': 'Vergleich redaktioneller Rahmung',
   'sample.editorial.text': 'Während Kritiker die Reform für dringend halten, erzählt ein genauerer Blick auf die Zahlen eine leisere Geschichte über Anreize und Rahmung.',
+  'sample.springfield.label': 'Politische Rhetorik: Trump zu Springfield (Zitat)',
+  'sample.springfield.text': "In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.",
   'url_too_long': 'Der Link ist länger als {max} Zeichen.',
   'url_invalid': 'Geben Sie einen vollständigen Link ein, der mit http:// oder https:// beginnt.',
 }
