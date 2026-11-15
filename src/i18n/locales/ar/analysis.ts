@@ -5,8 +5,6 @@ export default {
   'elapsed': 'الوقت المنقضي: {time}',
   'time.s': '{v} ث',
   'time.m': '{v} د',
-  'mock.pool': 'وصف المجموعة',
-  'pool': 'مجموعة إجماع متزامنة',
   'fault.pill': 'خطأ في الإدخال · {code}',
   'fault.title': 'تعذّر جلب المنشور',
   'fault.switch': '← التبديل إلى إدخال النص',

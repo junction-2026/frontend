@@ -5,8 +5,6 @@ export default {
   'elapsed': 'Elapsed: {time}',
   'time.s': '{v}s',
   'time.m': '{v}m',
-  'mock.pool': 'Pool description',
-  'pool': 'Synchronous consensus pool',
   'fault.pill': 'Input Fault · {code}',
   'fault.title': 'Unable to retrieve social post',
   'fault.switch': 'Switch to Text Input →',

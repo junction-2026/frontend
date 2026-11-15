@@ -5,8 +5,6 @@ export default {
   'elapsed': 'Kulunut: {time}',
   'time.s': '{v} s',
   'time.m': '{v} min',
-  'mock.pool': 'Poolin kuvaus',
-  'pool': 'Synkroninen konsensuspooli',
   'fault.pill': 'Syötteen virhe · {code}',
   'fault.title': 'Somejulkaisun hakeminen epäonnistui',
   'fault.switch': 'Vaihda tekstisyötteeseen →',

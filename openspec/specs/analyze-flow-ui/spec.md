@@ -330,11 +330,11 @@ The heading SHALL use weight 600, about 1.5rem and letter-spacing about -0.02em;
 - **THEN** the bar track is `var(--progress-track)` and its fill `var(--progress-active)`
 
 ### Requirement: Ledger header
-The ledger header SHALL be a light grey band with a small uppercase, letter-spaced pool label at the inline end.
+The ledger header SHALL be a light grey band containing only the ledger title (h3 with icon). It SHALL NOT render a pool label or any Mock-marked element. The `analysis` namespace in every locale SHALL NOT define the keys `pool` or `mock.pool`, and locale key sets stay identical. The `.ledger-head` layout (flex band, padding, bottom border) is otherwise unchanged.
 
 #### Scenario: Header band
 - **WHEN** the ledger is shown
-- **THEN** its header has the light band and the pool label at the inline end
+- **THEN** its header has the light band, the title, no "Synchronous consensus pool" text and no `[data-mock]` descendant
 
 ### Requirement: Home sample statements
 The Home Try row SHALL render the samples energy, breaking, editorial and springfield, in that order, each as a button whose label comes from `home.sample.<key>.label`, only in fallback mode (corpus loading, failed, or under five valid items). A sample button SHALL select text mode, set the textarea to `home.sample.<key>.text` and show no indicator. The sample buttons SHALL stay unmarked (not inside `[data-mock]`).

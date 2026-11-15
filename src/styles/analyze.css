@@ -342,14 +342,6 @@
   gap: 0.45rem;
 }
 
-.ledger-head span {
-  color: var(--faint);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .ledger-item {
   display: grid;
   grid-template-columns: auto 1fr auto;

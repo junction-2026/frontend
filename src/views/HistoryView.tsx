@@ -7,6 +7,7 @@ import { useHistory } from '../history/useHistory'
 import { VERDICT_UI } from '../job/read'
 import { ErrorAlert, Skeleton } from '../job/WithJob'
 import { Link } from '../router'
+import { ArchiveBackground } from '../ui/ArchiveBackground'
 import '../job/results.css'
 import '../history/history.css'
 
@@ -127,71 +128,74 @@ export default function HistoryView() {
   }
 
   return (
-    <section className="view">
-      <div className="page-head">
-        <div className="toolbar">
-          <div>
-            <h1>{t('history.title')}</h1>
-            <p>{t('history.lede')}</p>
+    <>
+      <ArchiveBackground />
+      <section className="view">
+        <div className="page-head">
+          <div className="toolbar">
+            <div>
+              <h1>{t('history.title')}</h1>
+              <p>{t('history.lede')}</p>
+            </div>
+            <button type="button" className="btn-secondary" disabled={exporting} aria-busy={exporting} title={t('history.export_hint')} aria-description={t('history.export_hint')} onClick={() => void exportCsv()}>
+              {exporting ? t('history.exporting') : t('history.export')}
+            </button>
           </div>
-          <button type="button" className="btn-secondary" disabled={exporting} aria-busy={exporting} title={t('history.export_hint')} aria-description={t('history.export_hint')} onClick={() => void exportCsv()}>
-            {exporting ? t('history.exporting') : t('history.export')}
-          </button>
         </div>
-      </div>
 
-      <label className="search-lg">
-        <span aria-hidden="true" className="mirror-rtl">⌕</span>
-        <input type="search" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') setQ(text.trim()) }} placeholder={t('history.search_placeholder')} aria-label={t('history.search_aria')} />
-      </label>
-      {exportError && <ErrorAlert error={exportError} />}
+        <label className="search-lg">
+          <span aria-hidden="true" className="mirror-rtl">⌕</span>
+          <input type="search" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') setQ(text.trim()) }} placeholder={t('history.search_placeholder')} aria-label={t('history.search_aria')} />
+        </label>
+        {exportError && <ErrorAlert error={exportError} />}
 
-      <div className="filter-row" role="group" aria-label={t('history.filter.label')}>
-        {FILTERS.map((f) => (
-          <button key={f.key} type="button" className={f.status === status ? 'active' : undefined} aria-pressed={f.status === status} onClick={() => setStatus(f.status)}>
-            {t(`history.filter.${f.key}`)}
-          </button>
+        <div className="filter-row" role="group" aria-label={t('history.filter.label')}>
+          {FILTERS.map((f) => (
+            <button key={f.key} type="button" className={f.status === status ? 'active' : undefined} aria-pressed={f.status === status} onClick={() => setStatus(f.status)}>
+              {t(`history.filter.${f.key}`)}
+            </button>
+          ))}
+        </div>
+
+        <label className="language-filter">
+          <span>{t('history.language.label')}</span>
+          <select value={language ?? ''} onChange={(e) => setLanguage(e.target.value || undefined)}>
+            <option value="">{t('history.language.all')}</option>
+            {LANGUAGES.map((c) => <option key={c} value={c}>{formatLanguageName(c, locale) ?? c}</option>)}
+            <option value={UNKNOWN}>{t('history.language.unknown')}</option>
+          </select>
+        </label>
+
+        {h.loading && <Skeleton />}
+        {h.error && <ErrorAlert error={h.error} />}
+        {!h.loading && !h.error && h.items.length === 0 && (
+          q !== '' || language ? (
+            <div className="card history-empty">
+              <h3>{q !== '' ? t('history.empty.search', { query: q }) : t('history.empty.language')}</h3>
+              <button type="button" className="btn-secondary" onClick={clearFilters}>{t('history.clear_filters')}</button>
+            </div>
+          ) : status === undefined ? (
+            <div className="card history-empty">
+              <h3>{t('history.empty.title')}</h3>
+              <p>{t('history.empty.text')}</p>
+              <Link className="btn-primary" href="/">{t('history.empty.start')}</Link>
+            </div>
+          ) : (
+            <div className="card history-empty"><h3>{t('history.empty.filtered')}</h3></div>
+          )
+        )}
+        {groups.map((g) => (
+          <div key={g.label}>
+            <div className="day-label"><span>{g.label}</span><span>{t('history.analyses', { count: g.items.length })}</span></div>
+            {g.items.map((j) => <Item key={j.id} job={j} now={now} />)}
+          </div>
         ))}
-      </div>
-
-      <label className="language-filter">
-        <span>{t('history.language.label')}</span>
-        <select value={language ?? ''} onChange={(e) => setLanguage(e.target.value || undefined)}>
-          <option value="">{t('history.language.all')}</option>
-          {LANGUAGES.map((c) => <option key={c} value={c}>{formatLanguageName(c, locale) ?? c}</option>)}
-          <option value={UNKNOWN}>{t('history.language.unknown')}</option>
-        </select>
-      </label>
-
-      {h.loading && <Skeleton />}
-      {h.error && <ErrorAlert error={h.error} />}
-      {!h.loading && !h.error && h.items.length === 0 && (
-        q !== '' || language ? (
-          <div className="card history-empty">
-            <h3>{q !== '' ? t('history.empty.search', { query: q }) : t('history.empty.language')}</h3>
-            <button type="button" className="btn-secondary" onClick={clearFilters}>{t('history.clear_filters')}</button>
-          </div>
-        ) : status === undefined ? (
-          <div className="card history-empty">
-            <h3>{t('history.empty.title')}</h3>
-            <p>{t('history.empty.text')}</p>
-            <Link className="btn-primary" href="/">{t('history.empty.start')}</Link>
-          </div>
-        ) : (
-          <div className="card history-empty"><h3>{t('history.empty.filtered')}</h3></div>
-        )
-      )}
-      {groups.map((g) => (
-        <div key={g.label}>
-          <div className="day-label"><span>{g.label}</span><span>{t('history.analyses', { count: g.items.length })}</span></div>
-          {g.items.map((j) => <Item key={j.id} job={j} now={now} />)}
-        </div>
-      ))}
-      {h.next && (
-        <button type="button" className="btn-secondary load-more" disabled={h.more} onClick={h.loadMore}>
-          {h.more ? t('history.loading') : t('history.load_more')}
-        </button>
-      )}
-    </section>
+        {h.next && (
+          <button type="button" className="btn-secondary load-more" disabled={h.more} onClick={h.loadMore}>
+            {h.more ? t('history.loading') : t('history.load_more')}
+          </button>
+        )}
+      </section>
+    </>
   )
 }
