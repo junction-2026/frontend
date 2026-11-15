@@ -1,0 +1,47 @@
+/* Desktop-only "Powered by Hostinger" credit; shown from 961px, just above the shell's 960px mobile breakpoint. */
+.hosting-badge {
+  display: none;
+  position: fixed;
+  inset-block-end: 12px;
+  inset-inline-end: 12px;
+  z-index: 30; /* above ambient (0) and explore veil (1), below the sticky topbar (40) */
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+
+.hosting-badge img {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+}
+
+.hosting-badge:hover {
+  color: var(--ink);
+}
+
+.hosting-badge:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+@media (min-width: 961px) {
+  .hosting-badge {
+    display: inline-flex;
+  }
+
+  /* keep the end of every page clear of the fixed badge */
+  .app-shell {
+    padding-block-end: 64px;
+  }
+}
