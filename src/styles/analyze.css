@@ -147,21 +147,44 @@
   text-underline-offset: 3px;
   font-weight: 500;
   overflow-wrap: anywhere;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-  text-align: center;
-}
-
-.try-row button:focus-visible {
-  outline: 2px solid var(--ink-2);
-  outline-offset: 2px;
 }
 
 .try-row .try-shuffle {
   text-decoration: none;
-  padding: 0 0.25rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
+}
+
+.try-row button[data-expectation] {
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  text-decoration: none;
+  text-align: start;
+}
+
+.try-row button[data-expectation]:focus-visible {
+  outline: 2px solid var(--ink-2);
+  outline-offset: 2px;
+}
+
+.try-row button[data-expectation='detected'] {
+  background: var(--try-detected-bg);
+  border-color: var(--try-detected-border);
+  color: var(--try-detected-text);
+}
+
+.try-row button[data-expectation='not_detected'] {
+  background: var(--try-not-detected-bg);
+  border-color: var(--try-not-detected-border);
+  color: var(--try-not-detected-text);
+}
+
+.try-row button[data-expectation='uncertain'] {
+  background: var(--try-uncertain-bg);
+  border-color: var(--try-uncertain-border);
+  color: var(--try-uncertain-text);
 }
 
 .try-info {

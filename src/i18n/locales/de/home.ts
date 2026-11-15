@@ -23,7 +23,7 @@ export default {
   'analyzer_depends_on': 'Abhängig von: {ids}',
   'try': 'Probieren Sie:',
   'try.shuffle': 'Mischen',
-  'try.info': "Entdecken Sie Aussagen aus der realen Welt, vergleichen Sie Ihr Urteil mit der KI und erfahren Sie, was VEIL erkennt.",
+  'try.info': "Diese Aussagen wurden im Web gesammelt; das Grok-LLM hat ihre erwarteten Ergebnisse vorhergesagt. Lesen Sie eine selbst, entscheiden Sie, ob Sie dem LLM zustimmen, starten Sie dann die Analyse und vergleichen Sie sie mit dem Ergebnis unserer Engine.",
   'try.chip_expectation': 'Vom LLM vorhergesagtes erwartetes Ergebnis: {value}',
   'try.expectation.detected': 'Erkannt',
   'try.expectation.not_detected': 'Nicht erkannt',

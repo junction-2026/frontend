@@ -24,7 +24,7 @@ export default {
   'analyzer_depends_on': 'Dépend de : {ids}',
   'try': 'Essayez :',
   'try.shuffle': 'Mélanger',
-  'try.info': "Explorez des énoncés issus du monde réel, comparez votre jugement à celui de l'IA et découvrez ce que VEIL détecte.",
+  'try.info': "Ces énoncés ont été collectés sur le web ; le LLM Grok a prédit leurs résultats attendus. Lisez-en un vous-même, décidez si vous êtes d'accord avec le LLM, puis lancez l'analyse et comparez-la au résultat de notre moteur.",
   'try.chip_expectation': 'Résultat attendu prédit par le LLM : {value}',
   'try.expectation.detected': 'Détecté',
   'try.expectation.not_detected': 'Non détecté',

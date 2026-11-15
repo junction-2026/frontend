@@ -23,7 +23,7 @@ export default {
   'analyzer_depends_on': 'Riippuu: {ids}',
   'try': 'Kokeile:',
   'try.shuffle': 'Sekoita',
-  'try.info': "Tutustu tosielämän väitteisiin, vertaa arviotasi tekoälyn arvioon ja selvitä, mitä VEIL havaitsee.",
+  'try.info': "Nämä väitteet on kerätty verkosta; Grok-kielimalli ennusti niiden odotetut tulokset. Lue yksi itse, päätä oletko kielimallin kanssa samaa mieltä, suorita sitten analyysi ja vertaa sitä moottorimme tulokseen.",
   'try.chip_expectation': 'Kielimallin ennustama odotettu tulos: {value}',
   'try.expectation.detected': 'Havaittu',
   'try.expectation.not_detected': 'Ei havaittu',

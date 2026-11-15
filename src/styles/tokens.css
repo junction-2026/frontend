@@ -46,6 +46,16 @@
   --verdict-not-detected-text: #246b45;
   --verdict-not-detected-pill-bg: #e5f7ec;
   --verdict-not-detected-pill-text: #246b45;
+  /* Try-out chip tints: lighter than the matching --verdict-* backgrounds/borders. */
+  --try-detected-bg: #fef3f3;
+  --try-detected-border: #f9d3d3;
+  --try-detected-text: #8b2525;
+  --try-not-detected-bg: #f1fbf5;
+  --try-not-detected-border: #c9eedb;
+  --try-not-detected-text: #246b45;
+  --try-uncertain-bg: #fff8ec;
+  --try-uncertain-border: #f7e3bd;
+  --try-uncertain-text: #8a5a18;
   --risk-low-bg: #e5f7ec;
   --risk-low-text: #246b45;
   --risk-low-border: #a8e4bf;
