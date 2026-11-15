@@ -3,8 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { coverage, json } from '../job/fixtures'
 import { I18nProvider, formatDate, useLocale } from '../i18n'
 import HistoryView from './HistoryView'
-import HomeView from './HomeView'
-import ExploreView from './ExploreView'
 import { readFileSync } from 'node:fs'
 
 const fetchMock = vi.fn()
@@ -466,52 +464,34 @@ describe('History', () => {
     })
   })
 
-  describe('archive backdrop', () => {
-    const expectBackdrop = (container: HTMLElement) => {
-      expect(container.querySelectorAll('.archive-bg')).toHaveLength(1)
-      const view = container.querySelector('section.view')
-      expect(view).not.toBeNull()
-      expect(container.querySelector('.archive-bg')!.nextElementSibling).toBe(view)
-      expect(container.querySelector('.view .archive-bg')).toBeNull()
+  describe('solid background', () => {
+    const expectNoBackdrop = (container: HTMLElement) => {
+      expect(container.children).toHaveLength(1) // only section.view: no sibling backdrop, scrim or svg
+      expect(container.firstElementChild).toBe(container.querySelector('section.view'))
       expect(container.querySelector('.ambient-bg')).toBeNull()
-      // the backdrop leaves the History UI inside .view as it was
-      const ui = within(view as HTMLElement)
-      expect(ui.getByRole('heading', { level: 1, name: 'Analysis History' })).toBeInTheDocument()
-      expect(ui.getByText('Browse and reopen your analysis jobs, newest first.')).toBeInTheDocument()
-      const group = ui.getByRole('group', { name: 'Filter by status' })
-      expect(within(group).getByRole('button', { name: 'All', pressed: true })).toBeInTheDocument()
-      for (const name of ['Running', 'Completed']) expect(within(group).getByRole('button', { name, pressed: false })).toBeInTheDocument()
+      expect(container.querySelector('canvas')).toBeNull()
     }
 
-    it('precedes section.view while loading and when loaded', async () => {
+    it('renders no backdrop while loading and when loaded', async () => {
       route(() => page([summary('a')]))
       const { container } = render(<HistoryView />)
-      expectBackdrop(container)
+      expectNoBackdrop(container)
       await screen.findByText('Today')
-      expectBackdrop(container)
+      expectNoBackdrop(container)
     })
 
-    it('precedes section.view when empty', async () => {
+    it('renders no backdrop when empty', async () => {
       route(() => page([]))
       const { container } = render(<HistoryView />)
       await screen.findByRole('heading', { level: 3 })
-      expectBackdrop(container)
+      expectNoBackdrop(container)
     })
 
-    it('precedes section.view on error', async () => {
+    it('renders no backdrop on error', async () => {
       route(() => json({ error: { code: 'internal', message: 'boom' } }, 500))
       const { container } = render(<HistoryView />)
       await screen.findByRole('alert')
-      expectBackdrop(container)
-    })
-
-    it('is not rendered by HomeView or ExploreView', () => {
-      fetchMock.mockImplementation(() => new Promise(() => {}))
-      for (const el of [<HomeView key="h" />, <ExploreView key="e" />]) {
-        const { container, unmount } = render(el)
-        expect(container.querySelector('.archive-bg')).toBeNull()
-        unmount()
-      }
+      expectNoBackdrop(container)
     })
   })
 })

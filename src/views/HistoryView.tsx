@@ -7,7 +7,6 @@ import { useHistory } from '../history/useHistory'
 import { VERDICT_UI } from '../job/read'
 import { ErrorAlert, Skeleton } from '../job/WithJob'
 import { Link } from '../router'
-import { ArchiveBackground } from '../ui/ArchiveBackground'
 import '../job/results.css'
 import '../history/history.css'
 
@@ -129,7 +128,6 @@ export default function HistoryView() {
 
   return (
     <>
-      <ArchiveBackground />
       <section className="view">
         <div className="page-head">
           <div className="toolbar">
