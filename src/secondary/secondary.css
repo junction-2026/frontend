@@ -175,41 +175,6 @@
 }
 
 /* ——— Explore ——— */
-.filters {
-  display: grid;
-  grid-template-columns: 1.6fr repeat(3, 1fr) auto;
-  gap: 0.55rem;
-  margin-bottom: 1rem;
-}
-
-.field {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.7rem 0.85rem;
-  background: var(--bg-soft);
-  border-radius: 12px;
-  color: var(--ink-2);
-  font-size: 0.9rem;
-}
-
-.field input {
-  border: none;
-  outline: none;
-  background: transparent;
-  width: 100%;
-}
-
-.verified-chip {
-  padding: 0.7rem 0.9rem;
-  border-radius: 12px;
-  background: var(--green-soft);
-  color: var(--green);
-  font-weight: 600;
-  font-size: 0.84rem;
-  white-space: nowrap;
-}
-
 .map-card {
   padding: 1.1rem;
   position: relative;
@@ -341,24 +306,6 @@
   display: flex;
   gap: 1rem;
   margin-inline-start: auto;
-}
-
-.field select {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-}
-
-.filters > * { min-width: 0; }
-
-.field-clear {
-  color: var(--muted);
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 .map-legend {
@@ -689,21 +636,14 @@
 }
 
 @media (max-width: 960px) {
-  .filters,
   .explore-split,
   .stat-grid,
   .edge-grid,
   .ref-cards {
     grid-template-columns: 1fr;
   }
-  .filters,
   .stat-grid {
     grid-template-columns: 1fr 1fr;
-  }
-}
-@media (max-width: 640px) {
-  .filters {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -718,7 +658,6 @@
 .pipeline-grid .skip { color: var(--orange); }
 .edge-note { color: var(--muted); font-size: 0.8rem; }
 .edge-meta { color: var(--faint); font-size: 0.8rem; }
-.field { border: none; text-align: start; }
 .region-link { cursor: pointer; }
 .country-panel a { color: var(--blue); font-size: 0.82rem; font-weight: 600; }
 .chat-head h1 { margin: 0; display: inline-flex; align-items: center; gap: 0.55rem; font-size: 1.2rem; }
@@ -733,10 +672,6 @@
 .explore-topics { font-size: 0.88rem; }
 .explore-topics a, .explore-note a { color: var(--blue); font-weight: 600; }
 .country-headlines { margin: 0; padding-inline-start: 1.1rem; flex-basis: 100%; font-size: 0.84rem; }
-.verified-chip input { margin-inline-end: 0.3rem; }
-.field:disabled, .field input:disabled, .field select:disabled { opacity: 0.55; cursor: not-allowed; }
-.multi { position: relative; display: block; cursor: pointer; }
-.multi-list { position: absolute; z-index: 5; inset-inline-start: 0; top: 100%; min-width: 100%; max-height: 16rem; overflow: auto; display: grid; gap: 0.35rem; padding: 0.6rem; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
 .related { margin-top: 1rem; padding: 1.1rem; }
 .related-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
 .related-card { padding: 0.8rem 0.9rem; border-radius: 12px; background: var(--bg-soft); overflow-wrap: anywhere; }

@@ -151,11 +151,11 @@ describe('Explore analyzer states', () => {
 describe('Explore data', () => {
   it('renders items, subtitle and topics from the job, with no mock marks', async () => {
     await show()
-    expect(cards()).toHaveLength(4)
+    expect(cards()).toHaveLength(5)
     expect(screen.getByText('3 publishers across 2 countries · 1 article with country unknown')).toBeInTheDocument()
     expect(screen.getByText(whole(/Searched topics: Topic one · Topic two ·/), { selector: 'p' })).toBeInTheDocument()
     expect(document.querySelector('.view [data-mock]')).toBeNull()
-    expect(screen.getByText('4 articles · 4 publishers')).toBeInTheDocument()
+    expect(screen.getByText('5 articles · 5 publishers')).toBeInTheDocument()
     const first = within(cards()[0])
     expect(first.getByText('Grid outage in Helsinki')).toBeInTheDocument()
     expect(first.getByText('Helsingin Sanomat')).toBeInTheDocument() // outlet name beats Article.source
@@ -191,12 +191,12 @@ describe('Explore data', () => {
     expect(screen.getByRole('tooltip')).not.toHaveTextContent(/\d/)
   })
 
-  it('selects a country from the map, filters the list and panel, and clears without a refetch', async () => {
+  it('selects a country from the map, narrows the list and panel, and clears without a refetch', async () => {
     await show()
     const fetches = fetchMock.mock.calls.length
+    expect(cards()).toHaveLength(5) // 4 articles and 1 fact-check
     fireEvent.click(path('FI'))
     expect(path('FI')).toHaveAttribute('data-selected', 'true')
-    expect(screen.getByLabelText('Country')).toHaveValue('FI')
     const panel = within(document.querySelector<HTMLElement>('.country-panel')!)
     expect(panel.getByText('2 articles · 2 publishers')).toBeInTheDocument()
     expect(panel.getByText(whole('Languages: EN, FI'))).toBeInTheDocument()
@@ -206,10 +206,10 @@ describe('Explore data', () => {
     expect(cards()).toHaveLength(2)
     expect(path('DE')).toHaveAttribute('fill', '#BFD9F4') // other countries stay shaded
     fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }))
-    expect(cards()).toHaveLength(4)
+    expect(cards()).toHaveLength(5)
     expect(document.querySelector('.country-panel')).toBeNull()
     expect(fetchMock.mock.calls.length).toBe(fetches)
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'FR' } })
+    fireEvent.click(path('FR'))
     expect(screen.getByText('No verified publisher data for France')).toBeInTheDocument()
     expect(cards()).toHaveLength(0)
     expect(screen.getByText('No items match the current filters.')).toBeInTheDocument()
@@ -222,69 +222,45 @@ describe('Explore data', () => {
     expect(window.location.pathname).toBe('/explore/region')
   })
 
-  it('applies topic, text, language and publisher filters to map, tooltip, list and counts alike', async () => {
+  it('renders no filter controls', async () => {
     await show()
-    const count = () => cards().length
-    fireEvent.change(screen.getByLabelText('Topic'), { target: { value: 'Topic two' } })
-    expect(count()).toBe(1)
-    expect(screen.getByText('1 article · 1 publisher')).toBeInTheDocument()
-    expect(screen.getByText('1 publisher across 1 country')).toBeInTheDocument()
-    expect(path('DE')).toHaveAttribute('fill', '#E9EDF2')
-    fireEvent.pointerEnter(path('FI'))
-    expect(screen.getByRole('tooltip')).toHaveTextContent('1 article · 1 publisher')
-    fireEvent.pointerLeave(path('FI'))
-    fireEvent.change(screen.getByLabelText('Topic'), { target: { value: '' } })
-    fireEvent.change(screen.getByLabelText('Search topic text'), { target: { value: 'helsinki' } })
-    expect(count()).toBe(1)
-    fireEvent.change(screen.getByLabelText('Search topic text'), { target: { value: '' } })
-    fireEvent.click(screen.getByLabelText('DE (1)'))
-    expect(count()).toBe(1)
-    expect(path('FI')).toHaveAttribute('fill', '#E9EDF2')
-    fireEvent.click(screen.getByLabelText('DE (1)'))
-    fireEvent.click(screen.getByLabelText('Yle (1)'))
-    expect(count()).toBe(1)
-    expect(screen.getByRole('link', { name: 'Headline 2' })).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.queryByRole('searchbox')).toBeNull()
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(screen.queryByRole('checkbox')).toBeNull()
+    for (const name of [/Search/, 'Topic', 'Country', 'Languages', 'Publishers', 'Clear country', /Verified fact-checks only/])
+      expect(screen.queryByLabelText(name)).toBeNull()
+    expect(screen.queryByRole('button', { name: /Languages|Publishers/ })).toBeNull()
+    expect(document.querySelector('.filters, .field, .verified-chip, .multi')).toBeNull()
   })
 
-  it('enables Verified fact-checks only with a fact-check and lists only FactChecks when on', async () => {
+  it('lists articles and fact-checks together in Related Coverage and the counts', async () => {
     await show()
-    const box = screen.getByLabelText('Verified fact-checks only')
-    expect(box).toBeEnabled()
-    fireEvent.click(box)
-    expect(cards()).toHaveLength(1)
+    expect(screen.getByRole('link', { name: 'Check title' })).toHaveAttribute('href', 'https://fc.example/check')
+    expect(screen.getByRole('link', { name: 'Grid outage in Helsinki' })).toBeInTheDocument()
     // the reviewed claim differs from the extracted one: it must not read as a check of it
     expect(screen.getByText(whole('Similar claim reviewed: Claim'))).toBeInTheDocument()
     expect(screen.getByText(whole('Found for: Claim text'))).toBeInTheDocument()
     expect(screen.queryByText(/Fact-check of/)).toBeNull()
-    expect(within(cards()[0]).getByText('False')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Check title' })).toHaveAttribute('href', 'https://fc.example/check')
-    expect(screen.queryByText('Headline 1')).toBeNull()
-    expect(screen.getByText('1 fact-check · 1 publisher')).toBeInTheDocument()
+    expect(screen.getByText('False')).toBeInTheDocument()
+    expect(screen.getByText('5 articles · 5 publishers')).toBeInTheDocument()
+  })
+
+  it('keeps an article and a FactCheck for the same URL as two separate items', async () => {
+    await show(exploreJob({ articles: [article(1)], checks: [factCheck({ url: 'https://site1.example/a1' })] }))
+    expect(cards()).toHaveLength(2)
   })
 
   it('calls a fact-check "Fact-check of" only when the reviewed claim equals the extracted one', async () => {
     await show(exploreJob({ articles: [article(1)], checks: [factCheck({ claim: '  claim TEXT ' }), factCheck({ url: 'https://fc.example/2', claim: null })] }))
-    fireEvent.click(screen.getByLabelText('Verified fact-checks only'))
     expect(screen.getByText(whole('Fact-check of: Claim text'))).toBeInTheDocument()
     expect(screen.getAllByText(whole('Found for: Claim text'))).toHaveLength(1) // no claim sent: cannot confirm, so not "Fact-check of"
     expect(screen.queryByText(/Similar claim reviewed/)).toBeNull()
   })
-
-  it('disables the fact-check filter without fact-checks, and filters without values', async () => {
-    await show(exploreJob({ articles: [article(1, { language: null })], checks: [] }))
-    expect(screen.getByLabelText('Verified fact-checks only')).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Languages: No data' })).toBeDisabled()
-    expect(screen.getByLabelText('Topic')).toBeEnabled()
-  })
-
-  it('labels the Topic select "No data" when there are no queries', async () => {
-    await show(exploreJob({ articles: [article(1)], queries: [] }))
-    expect(screen.getByLabelText('Topic')).toBeDisabled()
-  })
 })
 
 describe('Explore live updates', () => {
-  it('fills in the map and list as news_search and source_info settle, keeping filters and selection', async () => {
+  it('fills in the map and list as news_search and source_info settle, keeping the country selection', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const base = (extra: Record<string, unknown>, analyzers: unknown[]) => ({ ...exploreJob({ extra }), analyzers })
     const news = (r: unknown) => run('news_search', 'succeeded', { result: { queries: [query('q one', 'Topic one')], articles: [arts[0], arts[1]], ...(r as object) } })
@@ -300,11 +276,10 @@ describe('Explore live updates', () => {
     await act(() => vi.advanceTimersByTimeAsync(2000))
     expect(await status('Matching publishers…')).toBeInTheDocument()
     expect(cards()).toHaveLength(2)
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'FI' } }) // selected before FI has any item
+    fireEvent.click(path('FI')) // selected before FI has any item
     expect(screen.getByText('No verified publisher data for Finland')).toBeInTheDocument()
     await act(() => vi.advanceTimersByTimeAsync(2000))
     await waitFor(() => expect(screen.queryByText('Matching publishers…')).toBeNull())
-    expect(screen.getByLabelText('Country')).toHaveValue('FI')
     expect(screen.getByText('2 articles · 2 publishers', { selector: '.country-panel span' })).toBeInTheDocument()
     expect(path('FI')).toHaveAttribute('data-selected', 'true')
     expect(cards()).toHaveLength(2)
