@@ -2,14 +2,14 @@ import { listJobs } from '../api/client'
 import type { ApiResult, JobSummary } from '../api/types'
 
 export const EXPORT_PAGE = 100
-const HEADER = ['id', 'created_at', 'status', 'finalization_status', 'verdict', 'excerpt']
+const HEADER = ['id', 'created_at', 'status', 'finalization_status', 'verdict', 'excerpt', 'language']
 
-// Pages through the whole list for one (status, q) until next_cursor is null.
-export async function fetchAllJobs(status: string | undefined, q: string): Promise<ApiResult<JobSummary[]>> {
+// Pages through the whole list for one (status, q, language) until next_cursor is null.
+export async function fetchAllJobs(status: string | undefined, q: string, language?: string): Promise<ApiResult<JobSummary[]>> {
   const items: JobSummary[] = []
   let cursor: string | undefined
   do {
-    const r = await listJobs({ limit: EXPORT_PAGE, status, q, cursor })
+    const r = await listJobs({ limit: EXPORT_PAGE, status, q, language, cursor })
     if (!r.ok) return r
     items.push(...r.data.items)
     cursor = r.data.next_cursor ?? undefined
@@ -26,7 +26,7 @@ function cell(v: unknown): string {
 }
 
 export function toCsv(items: JobSummary[]): string {
-  const rows = items.map((j) => [j.id, j.created_at, j.status, j.finalization?.status, j.finalization?.verdict, j.excerpt])
+  const rows = items.map((j) => [j.id, j.created_at, j.status, j.finalization?.status, j.finalization?.verdict, j.excerpt, j.language])
   return [HEADER, ...rows].map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n'
 }
 
