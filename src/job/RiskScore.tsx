@@ -152,7 +152,7 @@ export function RiskSection({ risk }: { risk: RiskView }) {
               <li key={x.label}>
                 <span className="risk-tech-name">{techniqueText(x.label, locale, 'en', { name: x.display || undefined }).name}</span>
                 <span className="risk-tech-pct">{percent(fmt, x.probability)}</span>
-                <span className="risk-tech-impact">{enumLabel(t, 'results.risk.impact', x.impact)}</span>
+                {x.impact && <span className="risk-tech-impact">{enumLabel(t, 'results.risk.impact', x.impact)}</span>}
               </li>
             ))}
           />

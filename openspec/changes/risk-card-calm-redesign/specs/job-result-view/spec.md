@@ -84,6 +84,10 @@ The technique list SHALL be a grid with the columns `minmax(0,1fr) auto auto` (n
 - **WHEN** a technique has an impact group
 - **THEN** the label is a pill badge (border 1px `var(--line-strong)`, `var(--radius-pill)`, 0.75rem, `var(--ink-2)`) of the same style for every group, and an unknown group shows its id
 
+#### Scenario: Missing impact group
+- **WHEN** a technique has no impact group
+- **THEN** no impact badge is rendered for that row, and its name and percentage stay in their columns
+
 ### Requirement: Risk drivers
 For a scored risk, Main drivers SHALL be a disclosure button labelled `results.risk.drivers_count` with the driver count, styled like the Caveats toggle, collapsed initially, with `aria-expanded` and `aria-controls` pointing to a region with `aria-label` `results.risk.drivers`. Expanded, it lists every driver with no Show all toggle.
 

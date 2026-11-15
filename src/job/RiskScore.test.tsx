@@ -185,6 +185,13 @@ describe('RiskScore: dimensions and techniques structure', () => {
     expect(cells[1].querySelector('.risk-dim-note')).toBeEmptyDOMElement()
   })
 
+  it('a technique without an impact group shows no empty badge and keeps name and percentage', () => {
+    show(risk({ techniques: [{ label: 'New_Tech', display: 'New', probability: 0.5 }] }))
+    const row = section().querySelector('.risk-techniques li') as HTMLElement
+    expect([...row.children].map((e) => e.className)).toEqual(['risk-tech-name', 'risk-tech-pct'])
+    expect(row).toHaveTextContent('New50%')
+  })
+
   it('a technique row holds name, percentage and impact badge in that order', () => {
     show(risk())
     const row = section().querySelector('.risk-techniques li') as HTMLElement
