@@ -37,7 +37,6 @@ export default {
   'focus.help': 'استخدم أزرار + في الأقسام أدناه لاختيار ما يتناوله سؤالك التالي.',
   'focus.select': 'اسأل عن {label}',
   'focus.choose': 'اختيار عناصر النتيجة',
-  'focus.clear': 'مسح التحديد',
   'focus.select_all': 'تحديد الكل',
   'focus.remove': 'إزالة {label}',
   'focus.limit': 'يمكنك اختيار {max} عنصراً على الأكثر.',

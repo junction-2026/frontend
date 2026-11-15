@@ -33,7 +33,6 @@ export default {
   'focus.help': 'Use the + buttons on the sections below to choose what your next question is about.',
   'focus.select': 'Ask about {label}',
   'focus.choose': 'Choose result elements',
-  'focus.clear': 'Clear selection',
   'focus.select_all': 'Select all',
   'focus.remove': 'Remove {label}',
   'focus.limit': 'You can choose at most {max} elements.',
