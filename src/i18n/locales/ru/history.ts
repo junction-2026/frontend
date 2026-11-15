@@ -24,7 +24,7 @@ export default {
   'verdict.not_detected': 'Признаков манипуляции нет',
   'verdict.uncertain': 'Неопределённо',
   'final_assessment': 'Итоговая оценка: {status}',
-  'reopen': 'Открыть снова →',
+  'reopen': 'Открыть анализ →',
   'empty.title': 'Анализов пока нет',
   'empty.text': 'Выполненные вами анализы появятся здесь, и их можно будет открыть снова.',
   'empty.start': 'Начать первый анализ',

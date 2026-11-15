@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { coverage, json } from '../job/fixtures'
 import { I18nProvider, formatDate, useLocale } from '../i18n'
@@ -50,7 +50,7 @@ describe('History', () => {
     expect(screen.queryByRole('status')).toBeNull()
   })
 
-  it('shows status pill, verdict tag (or the finalization status when null), reopen link and no counts', async () => {
+  it('shows status pill, verdict tag (or the finalization status when null), open-analysis link and no counts', async () => {
     route(() => page([
       summary('a', { finalization: { status: 'completed', verdict: 'not_detected' } }),
       summary('b', { status: 'running', done: false, finalization: { status: 'pending', verdict: null } }),
@@ -61,7 +61,7 @@ describe('History', () => {
     expect(screen.getByText('Final assessment: pending')).toBeInTheDocument()
     expect(screen.getByText('Uncertain')).toHaveClass('tag', 'purple')
     expect(screen.getByText('running')).toHaveClass('status-pill', 'blue')
-    expect(screen.getAllByRole('link', { name: 'Reopen Analysis →' }).map((l) => l.getAttribute('href'))).toEqual(['/jobs/a', '/jobs/b', '/jobs/c'])
+    expect(screen.getAllByRole('link', { name: 'Open Analysis →' }).map((l) => l.getAttribute('href'))).toEqual(['/jobs/a', '/jobs/b', '/jobs/c'])
     for (const chip of ['All', 'Running', 'Completed', 'Failed', 'Cancelled']) expect(screen.getByRole('button', { name: chip })).toBeInTheDocument()
     expect(screen.queryByText(/\(\d+\)/)).toBeNull()
   })
@@ -72,7 +72,7 @@ describe('History', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Load more' }))
     await screen.findByText('b')
     expect(listUrls()[1]).toBe('/api/v1/jobs?limit=20&cursor=c1')
-    expect(screen.getAllByRole('link', { name: 'Reopen Analysis →' })).toHaveLength(2)
+    expect(screen.getAllByRole('link', { name: 'Open Analysis →' })).toHaveLength(2)
     expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull()
   })
 
@@ -85,7 +85,7 @@ describe('History', () => {
     await screen.findByText('f1')
     expect(listUrls()[2]).toBe('/api/v1/jobs?limit=20&status=failed')
     expect(screen.getByRole('button', { name: 'Failed' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getAllByRole('link', { name: 'Reopen Analysis →' })).toHaveLength(1) // pages of the old filter are gone
+    expect(screen.getAllByRole('link', { name: 'Open Analysis →' })).toHaveLength(1) // pages of the old filter are gone
     fireEvent.click(screen.getByRole('button', { name: 'All' }))
     await waitFor(() => expect(listUrls()).toHaveLength(4))
     expect(listUrls()[3]).toBe('/api/v1/jobs?limit=20')
@@ -104,6 +104,19 @@ describe('History', () => {
     expect(screen.getByText(`“${long.slice(0, 140)}…”`).querySelector('b')).toBeNull()
     expect(screen.getAllByText('Excerpt unavailable')).toHaveLength(2) // null and missing
     expect(fetchMock.mock.calls.map((c) => c[0] as string).filter((u) => !u.includes('?'))).toEqual([])
+  })
+
+  it('makes the item title a link to the analysis, navigating client-side', async () => {
+    route(() => page([summary('a/b', { excerpt: 'short' }), summary('d', { excerpt: null })]))
+    render(<HistoryView />)
+    await screen.findByText('“short”')
+    const [h1, h2] = screen.getAllByRole('heading', { level: 3 })
+    const l1 = within(h1).getByRole('link', { name: '“short”' })
+    expect(l1).toHaveAttribute('href', '/jobs/a%2Fb')
+    expect(within(h2).getByRole('link', { name: 'Excerpt unavailable' })).toHaveAttribute('href', '/jobs/d')
+    expect(screen.queryByText(/Reopen/)).toBeNull()
+    fireEvent.click(l1)
+    expect(window.location.pathname).toBe('/jobs/a%2Fb')
   })
 
   it('has no meta line and no mock parts', async () => {
@@ -311,7 +324,7 @@ describe('History', () => {
       expect(await screen.findByText('اليوم')).toBeInTheDocument()
       expect(screen.getAllByText('أمس')).toHaveLength(2) // the day label and the relative time
       expect(screen.getByRole('button', { name: 'الكل' })).toHaveAttribute('aria-pressed', 'true')
-      expect(screen.getAllByRole('link', { name: 'إعادة فتح التحليل ←' })).toHaveLength(2)
+      expect(screen.getAllByRole('link', { name: 'فتح التحليل ←' })).toHaveLength(2)
       expect(document.documentElement).toHaveAttribute('dir', 'rtl')
       expect(screen.queryByText('Today')).toBeNull()
     })

@@ -24,7 +24,7 @@ export default {
   'verdict.not_detected': 'لا مؤشرات على التلاعب',
   'verdict.uncertain': 'غير مؤكد',
   'final_assessment': 'التقييم النهائي: {status}',
-  'reopen': 'إعادة فتح التحليل ←',
+  'reopen': 'فتح التحليل ←',
   'empty.title': 'لا توجد تحليلات سابقة بعد',
   'empty.text': 'ستُعرض التحليلات التي تجريها هنا لتتمكن من إعادة فتحها.',
   'empty.start': 'ابدأ أول تحليل',

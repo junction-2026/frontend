@@ -75,6 +75,18 @@
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
+.history-title-link {
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+}
+.history-title-link:hover {
+  text-decoration: underline;
+}
+.history-title-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
 .history-item .tags {
   margin: 0;
 }
