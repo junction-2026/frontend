@@ -23,7 +23,7 @@ export default {
   'analyzer_depends_on': 'Depends on: {ids}',
   'try': 'Try:',
   'try.shuffle': 'Shuffle',
-  'try.info': "Explore real-world statements, compare your judgment with AI, and discover what VEIL detects.",
+  'try.info': "These statements were collected from the web; the Grok LLM predicted their expected results. Read one yourself, decide whether you agree with the LLM, then run the analysis and compare it with our engine's result.",
   'try.chip_expectation': 'Expected result predicted by the LLM: {value}',
   'try.expectation.detected': 'Detected',
   'try.expectation.not_detected': 'Not detected',
