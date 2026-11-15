@@ -4,6 +4,7 @@ export default {
   'nav.analyze': 'Analysoi',
   'nav.explore': 'Tutki',
   'nav.history': 'Historia',
+  'integrate_api': 'Integroi API',
   'language': 'Kieli',
   'health.checking': 'Tarkistetaan taustajärjestelmää…',
   'health.offline': 'Taustajärjestelmä ei ole yhteydessä',

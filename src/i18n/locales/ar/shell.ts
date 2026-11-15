@@ -4,6 +4,7 @@ export default {
   'nav.analyze': 'تحليل',
   'nav.explore': 'استكشاف',
   'nav.history': 'السجل',
+  'integrate_api': 'دمج الواجهة البرمجية',
   'language': 'اللغة',
   'health.checking': 'جارٍ فحص الخادم…',
   'health.offline': 'الخادم غير متصل',
