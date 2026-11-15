@@ -407,6 +407,13 @@ describe('HomeView try-out corpus', () => {
     }
   })
 
+  it('explainer copy: exact en text and no parenthetical in any locale', () => {
+    expect(CATALOGS.en['home.try.info']).toBe(
+      "These try-out statements were collected from the web, and their expected results were predicted by the Grok LLM. Pick one and read the statement yourself first. Then check the result the LLM predicted and decide whether you agree. Next, run the analysis and see our engine's result. Did you agree with the LLM? If not, did our engine confirm your own judgement?",
+    )
+    for (const c of Object.values(CATALOGS)) expect(c['home.try.info']).not.toContain('(')
+  })
+
   it('the explainer is permanent: unchanged after chip click, Shuffle, clearing and link mode', async () => {
     await withCorpus(ITEMS.slice(0, 5))
     const text = CATALOGS.en['home.try.info']
