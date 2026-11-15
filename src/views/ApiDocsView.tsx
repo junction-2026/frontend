@@ -38,7 +38,7 @@ const ERRORS: [number, string][] = [
 const FRAGMENTS: Record<string, string> = {
   authorization: 'Authorization', jobpath: '/jobs/<id>', content_type: 'Content-Type: application/json', url: 'url', post: 'post',
   comments: 'comments', id: 'id', id_placeholder: '<id>', done: 'done', true: 'true', retry_after: 'Retry-After', null: 'null', empty: '[]',
-  status_values: 'queued, running, completed, failed', content: 'content', result: 'result', completed: 'completed',
+  status: 'status', status_values: 'queued, scraping, running, finalizing, completed, cancelled, failed', content: 'content', result: 'result', completed: 'completed',
   verdict_values: 'detected, uncertain, not_detected', uncertain: 'uncertain', score: 'score',
   technique_members: 'source, label, name, score, strength, spans', bot_members: 'label, score, scope',
   evidence_members: 'fact_checks, news, wikipedia', error_members: 'code, message', error_code: 'error.code', details_fields: 'error.details.fields',
@@ -46,7 +46,7 @@ const FRAGMENTS: Record<string, string> = {
 const CODE = Object.fromEntries(Object.entries(FRAGMENTS).map(([k, v]) => [k, <code dir="ltr">{v}</code>]))
 
 // A code block that is always LTR, with a button that copies its exact text; a missing or rejecting clipboard is ignored.
-function CodeBlock({ text }: { text: string }) {
+function CodeBlock({ text, label }: { text: string; label: string }) {
   const t = useT()
   const [copied, setCopied] = useState(false)
   useEffect(() => {
@@ -64,7 +64,7 @@ function CodeBlock({ text }: { text: string }) {
   }
   return (
     <div className="api-code">
-      <button type="button" className="btn-link api-copy" onClick={copy}>{copied ? t('apiDocs.copied') : t('apiDocs.copy')}</button>
+      <button type="button" className="btn-link api-copy" aria-label={`${copied ? t('apiDocs.copied') : t('apiDocs.copy')}: ${label}`} onClick={copy}>{copied ? t('apiDocs.copied') : t('apiDocs.copy')}</button>
       <pre dir="ltr"><code>{text}</code></pre>
     </div>
   )
@@ -96,7 +96,7 @@ export default function ApiDocsView() {
 
       <Section title={t('apiDocs.base.title')}>
         <p>{t('apiDocs.base.text')}</p>
-        <CodeBlock text={base} />
+        <CodeBlock text={base} label={t('apiDocs.base.title')} />
       </Section>
 
       <Section title={t('apiDocs.endpoints.title')}>
@@ -121,7 +121,7 @@ export default function ApiDocsView() {
         {BODIES.map(({ key, body }) => (
           <div key={key}>
             <h3>{t(`apiDocs.request.${key}`)}</h3>
-            <CodeBlock text={JSON.stringify(body, null, 2)} />
+            <CodeBlock text={JSON.stringify(body, null, 2)} label={t(`apiDocs.request.${key}`)} />
           </div>
         ))}
         <p>{text('request.notes')}</p>
@@ -130,9 +130,9 @@ export default function ApiDocsView() {
       <Section title={t('apiDocs.curl.title')}>
         <p>{text('curl.text')}</p>
         <h3>{t('apiDocs.curl.create')}</h3>
-        <CodeBlock text={create} />
+        <CodeBlock text={create} label={t('apiDocs.curl.create')} />
         <h3>{t('apiDocs.curl.get')}</h3>
-        <CodeBlock text={get} />
+        <CodeBlock text={get} label={t('apiDocs.curl.get')} />
         <p>{text('curl.poll')}</p>
       </Section>
 
@@ -152,7 +152,7 @@ export default function ApiDocsView() {
           </tbody>
         </table>
         <h3>{t('apiDocs.response.example')}</h3>
-        <CodeBlock text={JSON.stringify(EXAMPLE, null, 2)} />
+        <CodeBlock text={JSON.stringify(EXAMPLE, null, 2)} label={t('apiDocs.response.example')} />
       </Section>
 
       <Section title={t('apiDocs.errors.title')}>

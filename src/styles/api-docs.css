@@ -39,6 +39,7 @@
 }
 
 .api-code {
+  direction: ltr; /* keeps the copy button and the room reserved for it on the same side in RTL */
   position: relative;
   margin-bottom: 0.8rem;
   border: 1px solid var(--line);
@@ -51,7 +52,6 @@
   padding: 0.85rem 1rem;
   padding-inline-end: 5.5rem; /* room for the copy button */
   overflow-x: auto;
-  text-align: left;
 }
 
 .api-copy {

@@ -28,7 +28,7 @@ export default {
   'fields.member': 'Membre',
   'fields.meaning': 'Signification',
   'field.id': 'Identifiant de l’analyse : interrogez-la avec lui et ouvrez-la dans l’interface web.',
-  'field.status': 'État du job, par exemple {status_values}.',
+  'field.status': 'État du job ; il comprend {status_values}. Pour savoir quand cesser d’interroger, fiez-vous à {done}, pas à {status}.',
   'field.done': '{true} une fois l’analyse terminée, avec succès ou non. Cessez alors d’interroger.',
   'field.created_at': 'Date de création de l’analyse (heure ISO 8601).',
   'field.finished_at': 'Date de fin ; {null} tant qu’elle s’exécute.',

@@ -28,7 +28,7 @@ export default {
   'fields.member': 'Feld',
   'fields.meaning': 'Bedeutung',
   'field.id': 'ID der Analyse: Damit fragst du ab und öffnest sie in der Web-Oberfläche.',
-  'field.status': 'Zustand des Jobs, zum Beispiel {status_values}.',
+  'field.status': 'Zustand des Jobs; er umfasst {status_values}. Ob du aufhören kannst abzufragen, zeigt {done}, nicht {status}.',
   'field.done': '{true}, sobald die Analyse beendet ist, erfolgreich oder nicht. Dann nicht mehr abfragen.',
   'field.created_at': 'Wann die Analyse erstellt wurde (Zeit nach ISO 8601).',
   'field.finished_at': 'Wann sie endete; {null}, solange sie läuft.',

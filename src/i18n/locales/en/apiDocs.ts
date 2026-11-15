@@ -28,7 +28,7 @@ export default {
   'fields.member': 'Member',
   'fields.meaning': 'Meaning',
   'field.id': 'Id of the analysis: poll with it and open it in the web UI.',
-  'field.status': 'Job state, for example {status_values}.',
+  'field.status': 'Job state; it includes {status_values}. Rely on {done}, not on {status}, to know when to stop polling.',
   'field.done': '{true} once the analysis has ended, successfully or not. Stop polling then.',
   'field.created_at': 'When the analysis was created (ISO 8601 time).',
   'field.finished_at': 'When it ended; {null} while it runs.',

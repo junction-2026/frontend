@@ -28,7 +28,7 @@ export default {
   'fields.member': 'العضو',
   'fields.meaning': 'المعنى',
   'field.id': 'معرّف التحليل: استعلم به وافتحه في واجهة الويب.',
-  'field.status': 'حالة المهمة، مثل {status_values}.',
+  'field.status': 'حالة المهمة؛ تشمل {status_values}. اعتمد على {done} لا على {status} لتعرف متى تتوقف عن الاستعلام.',
   'field.done': '{true} عندما ينتهي التحليل، بنجاح أو بدونه. توقّف عن الاستعلام حينها.',
   'field.created_at': 'وقت إنشاء التحليل (بصيغة ISO 8601).',
   'field.finished_at': 'وقت انتهائه؛ {null} ما دام قيد التشغيل.',

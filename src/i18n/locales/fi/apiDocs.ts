@@ -28,7 +28,7 @@ export default {
   'fields.member': 'Jäsen',
   'fields.meaning': 'Merkitys',
   'field.id': 'Analyysin tunniste: sillä kysyt tilaa ja avaat analyysin verkkokäyttöliittymässä.',
-  'field.status': 'Työn tila, esimerkiksi {status_values}.',
+  'field.status': 'Työn tila; se sisältää arvot {status_values}. Kyselyn lopetuksen kertoo {done}, ei {status}.',
   'field.done': '{true}, kun analyysi on päättynyt onnistuneesti tai ei. Lopeta silloin kysely.',
   'field.created_at': 'Milloin analyysi luotiin (ISO 8601 -aika).',
   'field.finished_at': 'Milloin se päättyi; {null}, kun se on käynnissä.',

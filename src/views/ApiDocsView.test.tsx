@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { I18nProvider } from '../i18n'
@@ -75,11 +76,12 @@ describe('ApiDocsView', () => {
       const writeText = vi.fn().mockResolvedValue(undefined)
       vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
       renderView()
-      const buttons = screen.getAllByRole('button', { name: 'Copy' })
+      const buttons = screen.getAllByRole('button', { name: /^Copy: / })
       expect(buttons).toHaveLength(blocks().length)
+      expect(new Set(buttons.map((b) => b.getAttribute('aria-label'))).size).toBe(buttons.length) // each name tells the blocks apart
       await act(async () => fireEvent.click(buttons[3]))
       expect(writeText).toHaveBeenCalledWith(blocks()[3])
-      expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^Copied: / })).toBeInTheDocument()
     })
 
     it.each([
@@ -88,9 +90,9 @@ describe('ApiDocsView', () => {
     ])('fails silently when the clipboard is %s', async (_n, clip) => {
       vi.stubGlobal('navigator', { ...navigator, clipboard: undefined, ...clip })
       renderView()
-      await act(async () => fireEvent.click(screen.getAllByRole('button', { name: 'Copy' })[0]))
-      expect(screen.queryByRole('button', { name: 'Copied' })).toBeNull()
-      expect(screen.getAllByRole('button', { name: 'Copy' })).toHaveLength(blocks().length)
+      await act(async () => fireEvent.click(screen.getAllByRole('button', { name: /^Copy: / })[0]))
+      expect(screen.queryByRole('button', { name: /^Copied: / })).toBeNull()
+      expect(screen.getAllByRole('button', { name: /^Copy: / })).toHaveLength(blocks().length)
     })
   })
 
@@ -102,6 +104,10 @@ describe('ApiDocsView', () => {
       renderView()
       expect(document.body.textContent).not.toContain('…') // translate() answers "…" for a key no catalog has
       expect(document.querySelector('h1')?.textContent).toBe(CATALOGS[lng]['apiDocs.title'])
+    })
+
+    it('keeps the copy button on the code side: .api-code is direction: ltr', () => {
+      expect(readFileSync('src/styles/api-docs.css', 'utf8')).toMatch(/\.api-code \{[^}]*direction: ltr/)
     })
 
     it('renders every code block dir=ltr in Arabic (RTL page)', () => {
