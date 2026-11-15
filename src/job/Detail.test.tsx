@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DetailView from '../views/DetailView'
+import { risk } from './fixtures'
 
 const fetchMock = vi.fn()
 beforeEach(() => vi.stubGlobal('fetch', fetchMock))
@@ -308,7 +309,7 @@ describe('job result view (Detail)', () => {
     const metric = (label: string) => (screen.getByText(label).parentElement as HTMLElement).querySelector('strong, .metrics-mock') as HTMLElement
     const inMock = (el: HTMLElement) => el.closest('[data-mock]')
 
-    it('shows Patterns and Claims as real values and Risk and Latency as Mock, with no confidence', async () => {
+    it('shows Patterns, Claims and Risk as real values and Latency as Mock, with no confidence', async () => {
       const c = 'They are LYING.'
       const j = job(c, { span_status: 'ok', detected: [det('Doubt', []), det('Loaded_Language', [])] }, { finalization: { status: 'completed', result: { verdict: 'detected', confidence: 0.86, user_text: 'x' } } })
       await show({ ...j, analyzers: [...j.analyzers, topic([{ text: 'a' }, { text: 'b' }, { text: 'c' }])] })
@@ -316,10 +317,55 @@ describe('job result view (Detail)', () => {
       expect(metric('Claims')).toHaveTextContent('3 extracted')
       expect(inMock(metric('Patterns'))).toBeNull()
       expect(inMock(metric('Claims'))).toBeNull()
-      expect(inMock(screen.getByText('High Risk'))).not.toBeNull()
+      expect(metric('Risk')).toHaveTextContent('—')
       expect(inMock(screen.getByText('412ms'))).not.toBeNull()
       expect(screen.queryByText(/confidence|0\.86|86 ?%/i)).toBeNull()
       expect(screen.getByRole('link', { name: /Back to summary/ })).toHaveAttribute('href', '/jobs/j1')
+    })
+
+    describe('Risk cell and overview', () => {
+      const withRisk = (r: unknown) => job('They are LYING.', { span_status: 'ok', detected: [det('Doubt', [])] }, { risk: r })
+      const riskCell = () => (screen.getByText('Risk', { selector: '.metrics-bar span' }).parentElement as HTMLElement).querySelector('strong') as HTMLElement
+
+      it('shows the percentage and band chip for a scored risk, not inside Mock', async () => {
+        await show(withRisk(risk({ score: 0.72, band: 'high' })))
+        expect(riskCell()).toHaveTextContent('72%')
+        expect(riskCell()).toHaveTextContent('High risk')
+        expect(riskCell().querySelector('.risk-chip')).toHaveAttribute('data-band', 'high')
+        expect(inMock(riskCell())).toBeNull()
+        expect(riskCell().parentElement?.querySelector('[data-mock]')).toBeNull()
+        expect(screen.getByText('412ms').closest('[data-mock]')).not.toBeNull()
+      })
+
+      it.each([
+        ['unavailable', risk({ status: 'unavailable', reason: 'no_content_signals', score: null, band: null, drivers: [] })],
+        ['scored without drivers', risk({ drivers: [] })],
+        ['unknown status', risk({ status: 'weird' })],
+        ['null', null],
+        ['missing', undefined],
+      ])('shows — when risk is %s', async (_n, r) => {
+        await show(withRisk(r))
+        expect(riskCell()).toHaveTextContent(/^—$/)
+      })
+
+      it('shows an unknown band by its id with moderate colours', async () => {
+        await show(withRisk(risk({ band: 'extreme' })))
+        expect(riskCell().querySelector('.risk-chip')).toHaveTextContent('extreme')
+        expect(riskCell().querySelector('.risk-chip')).toHaveAttribute('data-band', 'moderate')
+      })
+
+      it('renders the overview after the technique-list card and before the LLM group, and not when risk is missing', async () => {
+        const j = withRisk(risk()) as { analyzers: unknown[] }
+        j.analyzers.push({ id: 'llm_techniques', name: 'LLM', status: 'failed', result: null })
+        await show(j)
+        const overview = document.querySelector('.risk') as HTMLElement
+        expect(overview.previousElementSibling).toBe(document.querySelector('.tech-list'))
+        expect(overview.nextElementSibling).toBe(document.querySelector('.job-llm-group'))
+        expect(overview.querySelector('.risk-score')).toBeNull()
+        cleanup()
+        await show(withRisk(undefined))
+        expect(document.querySelector('.risk')).toBeNull()
+      })
     })
 
     it('shows — when the techniques or topic_extraction run did not succeed, and counts a result without claims as none', async () => {

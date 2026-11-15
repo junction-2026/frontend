@@ -5,7 +5,6 @@ import { Coverage } from '../job/Coverage'
 import { DetailedAnalysis } from '../job/DetailedAnalysis'
 import { techniqueInfo, readTechniques } from '../job/read'
 import { seconds } from '../job/text'
-import { RiskScore } from '../job/RiskScore'
 import { resultOf, Verdict } from '../job/Verdict'
 import { WithJob } from '../job/WithJob'
 import { Link } from '../router'
@@ -94,7 +93,6 @@ function Results({ job }: { job: Job }) {
         {!job.done && <Link className="btn-link" href={`/jobs/${encodeURIComponent(job.id)}/live`}>{t('results.watch_live')}</Link>}
       </div>
       <div className="results-stack">
-        <RiskScore job={job} />
         <Verdict job={job} />
         <div className="results-actions">
           <button type="button" className="btn-primary" aria-expanded={open} aria-controls={regionId} onClick={() => setOpen(!open)}>
