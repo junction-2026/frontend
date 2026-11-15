@@ -8,37 +8,49 @@ afterEach(() => {
   delete (document as unknown as Record<string, unknown>).visibilityState
 })
 
+const isLightWarm = (h: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
+  return /^#[0-9a-f]{6}$/i.test(h) && Math.min(r, g, b) >= 0xc8 && r >= g && g >= b && r - b <= 0x18
+}
+
 const setVisibility = (state: 'hidden' | 'visible') => {
   Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state })
   act(() => void document.dispatchEvent(new Event('visibilitychange')))
 }
 
 describe('ArchiveBackground', () => {
-  it('renders one hidden layer: room, light, dust, vignette, scrim; no text, nothing focusable', () => {
+  it('renders one hidden layer: room then scrim; no text, nothing focusable, no removed layers', () => {
     const { container } = render(<ArchiveBackground />)
     const bg = container.querySelectorAll('.archive-bg')
     expect(bg).toHaveLength(1)
     expect(bg[0]).toHaveAttribute('aria-hidden', 'true')
-    expect([...bg[0].children].map((c) => c.className)).toEqual(['archive-room', 'archive-light', 'archive-dust', 'archive-vignette', 'archive-scrim'])
+    expect([...bg[0].children].map((c) => c.className)).toEqual(['archive-room', 'archive-scrim'])
     expect(bg[0].textContent).toBe('')
     expect(bg[0].querySelector('[tabindex],a,button,input,select,textarea')).toBeNull()
-    expect(container.querySelectorAll('.archive-light > .archive-shaft').length).toBeGreaterThanOrEqual(2)
-    expect(container.querySelectorAll('.archive-light > .archive-shaft').length).toBeLessThanOrEqual(3)
-    const motes = container.querySelectorAll('.archive-dust > .archive-mote').length
-    expect(motes).toBeGreaterThanOrEqual(16)
-    expect(motes).toBeLessThanOrEqual(24)
+    for (const gone of ['light', 'shaft', 'dust', 'mote', 'vignette', 'shelves-far', 'shelves-near']) expect(container.querySelector(`.archive-${gone}`)).toBeNull()
   })
 
-  it('draws two hidden SVG shelf layers with at least 4 rows of every document shape', () => {
+  it('draws one hidden SVG bookshelf: 3-5 rows, at most 80 shapes, a leaning book, light warm fills', () => {
     const { container } = render(<ArchiveBackground />)
-    expect([...container.querySelector('.archive-room')!.children].map((c) => c.getAttribute('class'))).toEqual(['archive-shelves-far', 'archive-shelves-near'])
-    for (const svg of container.querySelectorAll('.archive-room > svg')) {
-      expect(svg.getAttribute('focusable')).toBe('false')
-      expect(svg).toHaveAttribute('aria-hidden', 'true')
-      expect(svg.querySelectorAll('.archive-row').length).toBeGreaterThanOrEqual(4)
-      for (const kind of ['scroll', 'roll', 'folder', 'manuscript', 'stack']) expect(svg.querySelectorAll(`.archive-${kind}`).length).toBeGreaterThan(0)
-    }
-    expect(container.querySelectorAll('svg:not([focusable="false"])')).toHaveLength(0)
+    const svgs = container.querySelectorAll('.archive-room > svg')
+    expect(svgs).toHaveLength(1)
+    const svg = svgs[0]
+    expect(svg).toHaveClass('archive-shelves')
+    expect(svg.getAttribute('focusable')).toBe('false')
+    expect(svg).toHaveAttribute('aria-hidden', 'true')
+    expect(svg.getAttribute('preserveAspectRatio')).toBe('xMidYMid slice')
+    const rows = svg.querySelectorAll('.archive-row').length
+    expect(rows).toBeGreaterThanOrEqual(3)
+    expect(rows).toBeLessThanOrEqual(5)
+    const shapes = svg.querySelectorAll('rect,line,path')
+    expect(shapes.length).toBeLessThanOrEqual(80)
+    expect(svg.querySelectorAll('*').length).toBe(shapes.length + rows)
+    expect(svg.querySelectorAll('[transform^="rotate"]').length).toBeGreaterThan(0)
+    expect(new Set([...svg.querySelectorAll('.archive-row rect[rx]')].map((r) => r.getAttribute('height'))).size).toBeGreaterThan(5)
+    for (const r of svg.querySelectorAll('[rx]')) expect(+r.getAttribute('rx')!).toBeLessThanOrEqual(2)
+    const colours = [...svg.querySelectorAll('[fill],[stroke]')].flatMap((e) => [e.getAttribute('fill'), e.getAttribute('stroke')]).filter((c): c is string => !!c && c !== 'none')
+    expect(colours.length).toBeGreaterThan(0)
+    for (const c of colours) expect(isLightWarm(c)).toBe(true)
   })
 
   it('toggles archive-paused with the tab visibility and removes its listener on unmount', () => {

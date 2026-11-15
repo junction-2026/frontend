@@ -1,16 +1,11 @@
-/* Dark archive-library backdrop behind the History page: inline-SVG shelves, golden light shafts, dust, a vignette and a
-   reading scrim. Only gradients, solid fills and SVG; every keyframe changes transform and/or opacity only. */
+/* Light, static library backdrop behind the History page: one inline-SVG bookshelf on var(--bg) and an opaque reading scrim.
+   No gradients, animation, blur or shadows; colours stay close to the neutral site palette. */
 .archive-bg {
-  --flip: 1; /* -1 in RTL: shaft tilt/shift and parallax direction mirror with the writing direction */
   position: fixed;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-}
-
-[dir='rtl'] .archive-bg {
-  --flip: -1;
 }
 
 /* Lifts the History view above the layer; the sticky topbar (z-index 40) stays above both. */
@@ -22,133 +17,44 @@
 .archive-room {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #2B1D12 0%, #1A120B 100%);
+  background: var(--bg);
 }
 
-/* Parallax layers are wider than the viewport by twice their drift so no edge is ever exposed. */
-.archive-shelves-far,
-.archive-shelves-near {
-  --drift: 2.5vw;
+.archive-shelves {
   position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: calc(100% + 2 * var(--drift));
+  inset: 0;
+  width: 100%;
   height: 100%;
-  will-change: transform;
 }
 
-.archive-shelves-far {
-  --drift: 1.5vw;
-  filter: blur(3px);
-  opacity: 0.8;
-  animation: archive-drift-far 110s ease-in-out infinite;
-}
-
-.archive-shelves-near {
-  animation: archive-drift-near 80s ease-in-out infinite;
-}
-
-.archive-light {
-  position: absolute;
-  inset: 0;
-}
-
-.archive-shaft {
-  position: absolute;
-  top: -10%;
-  width: 20%;
-  height: 130%;
-  background: linear-gradient(180deg, #E8B96A59 0%, #C08A3E26 55%, #C08A3E00 100%);
-  mix-blend-mode: screen;
-  rotate: calc(16deg * var(--flip));
-  opacity: 0.75;
-  will-change: transform, opacity;
-}
-
-.archive-shaft:nth-child(1) { inset-inline-start: 8%; animation: archive-breathe 9s ease-in-out infinite; }
-.archive-shaft:nth-child(2) { inset-inline-start: 42%; width: 14%; animation: archive-breathe 14s ease-in-out -5s infinite; }
-.archive-shaft:nth-child(3) { inset-inline-start: 72%; animation: archive-breathe 19s ease-in-out -11s infinite; }
-
-.archive-dust {
-  position: absolute;
-  inset: 0;
-}
-
-.archive-mote {
-  position: absolute;
-  inset-inline-start: var(--x);
-  top: var(--y);
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #F3E3C3;
-  opacity: 0.2;
-  animation: archive-float 24s linear infinite;
-}
-
-.archive-mote:nth-child(3n + 1) { animation-duration: 17s; }
-.archive-mote:nth-child(3n + 2) { animation-duration: 29s; }
-.archive-mote:nth-child(3n) { animation-duration: 38s; width: 4px; height: 4px; }
-.archive-mote:nth-child(4n + 1) { animation-delay: -3s; }
-.archive-mote:nth-child(4n + 2) { animation-delay: -9s; width: 2px; height: 2px; }
-.archive-mote:nth-child(4n + 3) { animation-delay: -15s; }
-.archive-mote:nth-child(4n) { animation-delay: -22s; }
-
-.archive-vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, #1A120B33 0%, #1A120B33 35%, #1A120BB8 100%);
-}
-
-/* Reading column: a near-opaque aged-paper panel keeps the dark-ink History text above 4.5:1 (var(--muted) needs alpha >= 0.99 over the darkest scene). */
+/* Reading column: opaque surface keeps --ink, --ink-2 and --muted above 4.5:1 (--muted #737373 on #FFFFFF = 4.74:1). */
 .archive-scrim {
   position: absolute;
   inset-block: 0;
   inset-inline: 0;
   margin-inline: auto;
   width: min(calc(var(--max) + 3rem), 100%);
-  background: #FFFDF8FC;
-  border-inline: 1px solid #C08A3E66;
-  box-shadow: 0 0 48px #1A120BCC;
+  background: var(--surface);
+  border-inline: 1px solid var(--line);
 }
 
-@keyframes archive-breathe {
-  0%, 100% { opacity: 0.55; transform: translate3d(0, 0, 0) rotate(0deg); }
-  50% { opacity: 0.8; transform: translate3d(calc(2vw * var(--flip)), 0, 0) rotate(2deg); }
-}
-
-@keyframes archive-float {
-  0%, 100% { opacity: 0.2; transform: translate3d(0, 0, 0); }
-  50% { opacity: 0.7; transform: translate3d(calc(28px * var(--flip)), -64px, 0); }
-}
-
-@keyframes archive-drift-near {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(calc(var(--drift) * var(--flip) * -1), 0, 0); }
-}
-
-@keyframes archive-drift-far {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(calc(var(--drift) * var(--flip) * -1), 0, 0); }
-}
-
-/* Hidden tab: ArchiveBackground adds archive-paused so nothing animates off-screen. */
+/* Hidden tab: ArchiveBackground adds archive-paused so anything animated stops off-screen. */
 .archive-paused,
 .archive-paused * {
   animation-play-state: paused;
 }
 
 @media (max-width: 640px) {
-  .archive-shelves-near { --drift: 1.25vw; }
-  .archive-shelves-far { display: none; }
-  .archive-shaft:nth-child(n + 2) { display: none; }
-  .archive-mote:nth-child(n + 9) { display: none; }
-  .archive-scrim { width: 100%; border-inline: 0; }
+  .archive-scrim {
+    width: 100%;
+    border-inline: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .archive-bg,
   .archive-bg * {
     animation: none;
+    transition: none;
   }
 }
