@@ -41,19 +41,6 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.final-assessment {
-  padding: 1rem 1.15rem;
-  margin: 1rem 0;
-}
-.final-assessment h2 {
-  margin: 0 0 0.4rem;
-  font-size: 1.1rem;
-}
-.final-assessment p {
-  margin: 0.4rem 0 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
 .verdict-body {
   margin: 0 0 1rem;
   color: var(--muted);
@@ -199,18 +186,7 @@
   margin: 0;
 }
 
-/* Detail header and metrics bar (mock: .metrics-bar) */
-.detail-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.4rem;
-}
-.detail-id {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
+/* Detail metrics bar (mock: .metrics-bar) */
 .metrics-bar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

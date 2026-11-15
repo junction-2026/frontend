@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { I18nProvider, LOCALES, formatNumber, useLocale, type Locale } from '../i18n'
 import { CATALOGS, translate } from '../i18n/translate'
 import ResultsView from '../views/ResultsView'
-import DetailView from '../views/DetailView'
 import { clearLocalizationCache, languageName, needsLocalization } from './localize'
 import { assessment, finalization, job, json, run } from './fixtures'
 
@@ -169,14 +168,6 @@ describe('one French analysis in every locale', () => {
     expect([...list.querySelectorAll('.badge-soft')].filter((b) => !b.textContent?.includes('ID') && !b.textContent?.includes('Loaded') && !b.textContent?.includes('Doubt')).map((b) => b.textContent)).toEqual([
       CATALOGS[lng]['results.jobview.strength.strong'], CATALOGS[lng]['results.jobview.strength.weak'],
     ])
-  })
-
-  it('shows the same technique term on the detail page', async () => {
-    serve(analysis())
-    mount('de', <DetailView id="j1" />)
-    expect(await screen.findByText(CATALOGS.de['techniques.Loaded_Language.name'], { selector: '.job-technique-name' })).toBeInTheDocument()
-    await userText('[de] user text')
-    expect(screen.getAllByText('Maschinell übersetzt aus: Französisch').length).toBeGreaterThan(0)
   })
 })
 

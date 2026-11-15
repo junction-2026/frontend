@@ -1,14 +1,13 @@
 import { useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from 'react'
 
 export type RouteName =
-  | 'home' | 'analyzing' | 'results' | 'detail' | 'history' | 'explore' | 'region' | 'ask' | 'states'
+  | 'home' | 'analyzing' | 'results' | 'history' | 'explore' | 'region' | 'ask' | 'states'
 export type Route = { name: RouteName; id?: string }
 
 // Ordered table; the first match wins and an unknown path falls back to Home.
 const ROUTES: [RegExp, RouteName][] = [
   [/^\/$/, 'home'],
   [/^\/jobs\/([^/]+)\/live$/, 'analyzing'],
-  [/^\/jobs\/([^/]+)\/detail$/, 'detail'],
   [/^\/jobs\/([^/]+)\/ask$/, 'ask'],
   [/^\/jobs\/([^/]+)$/, 'results'],
   [/^\/history$/, 'history'],
@@ -52,21 +51,29 @@ export function navFor(name: RouteName): 'analyze' | 'explore' | 'history' | nul
   return 'analyze'
 }
 
-// `/?job=<id>` (old shared links) becomes `/jobs/<id>`, without a reload.
+// Old links become their current URL, without a reload: `/?job=<id>` -> `/jobs/<id>` and
+// `/jobs/<id>/detail[/]` -> `/jobs/<id>` (raw id segment and query kept).
 function redirectLegacy() {
   const { pathname, search } = window.location
   const job = pathname === '/' ? new URLSearchParams(search).get('job') : null
-  if (job) window.history.replaceState(null, '', `/jobs/${encodeURIComponent(job)}`)
+  if (job) return window.history.replaceState(null, '', `/jobs/${encodeURIComponent(job)}`)
+  const detail = /^\/jobs\/([^/]+)\/detail\/*$/.exec(pathname)
+  if (detail) window.history.replaceState(null, '', `/jobs/${detail[1]}${search}`)
 }
 
 const listeners = new Set<() => void>()
 const notify = () => listeners.forEach((l) => l())
 
+// Back/Forward to an old entry is redirected before the route is read.
+const onPop = () => redirectLegacy()
+
 function subscribe(listener: () => void) {
   listeners.add(listener)
+  window.addEventListener('popstate', onPop)
   window.addEventListener('popstate', listener)
   return () => {
     listeners.delete(listener)
+    window.removeEventListener('popstate', onPop)
     window.removeEventListener('popstate', listener)
   }
 }

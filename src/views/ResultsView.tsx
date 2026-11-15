@@ -40,7 +40,6 @@ function Detailed({ job, id }: { job: Job; id: string }) {
         )}
         <div className="verdict-actions">
           <Link className="btn-link" href={`/explore?job=${encodeURIComponent(job.id)}`}>{t('results.explore')}</Link>
-          <Link className="btn-link" href={`/jobs/${encodeURIComponent(job.id)}/detail`}>{t('results.open_detail')}</Link>
           <span className="spacer" />
           <button type="button" className="icon-btn" aria-label={copied ? t('results.copied') : t('results.copy')} title={t('results.copy_title')} onClick={() => void copy()}>
             {copied ? '✓' : '⧉'}
