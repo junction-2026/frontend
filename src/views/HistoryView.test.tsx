@@ -21,6 +21,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()
   localStorage.clear()
+  window.history.replaceState(null, '', '/history')
   document.documentElement.lang = 'en'
   document.documentElement.dir = 'ltr'
 })
@@ -211,6 +212,112 @@ describe('History', () => {
     })
   })
 
+  describe('language', () => {
+    const select = () => screen.getByRole('combobox', { name: 'Language' })
+    const pick = (value: string) => fireEvent.change(select(), { target: { value } })
+
+    it('offers All, the fixed list named in the UI language, and Unknown', async () => {
+      route(() => page([]))
+      render(<HistoryView />)
+      await screen.findByText('No previous analyses yet')
+      const opts = [...select().querySelectorAll('option')].map((o) => [o.getAttribute('value'), o.textContent])
+      expect(opts[0]).toEqual(['', 'All languages'])
+      expect(opts[1]).toEqual(['en', 'English'])
+      expect(opts.slice(1, -1).map((o) => o[0])).toEqual(['en', 'de', 'fr', 'es', 'it', 'ru', 'uk', 'pl', 'ro', 'nl', 'pt', 'ar', 'zh'])
+      expect(opts.at(-1)).toEqual(['unknown', 'Unknown'])
+    })
+
+    it('sends language with status and q, keeps it in the URL, resets paging and clears with All', async () => {
+      route((url) => page([summary(url.includes('language=de') ? 'g1' : 'a')], url.includes('cursor') ? null : 'c1'))
+      render(<HistoryView />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Load more' }))
+      await waitFor(() => expect(listUrls()).toHaveLength(2))
+      fireEvent.click(screen.getByRole('button', { name: 'Failed' }))
+      await waitFor(() => expect(listUrls()).toHaveLength(3))
+      pick('de')
+      await screen.findByText('g1')
+      expect(listUrls()[3]).toBe('/api/v1/jobs?limit=20&status=failed&language=de') // no cursor
+      expect(window.location.search).toBe('?status=failed&language=de')
+      fireEvent.click(screen.getByRole('button', { name: 'Load more' }))
+      await waitFor(() => expect(listUrls()).toHaveLength(5))
+      expect(listUrls()[4]).toBe('/api/v1/jobs?limit=20&cursor=c1&status=failed&language=de')
+      pick('unknown')
+      await waitFor(() => expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=20&status=failed&language=unknown'))
+      pick('')
+      await waitFor(() => expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=20&status=failed'))
+      expect(window.location.search).toBe('?status=failed')
+    })
+
+    it('restores status, q and language from the URL and ignores invalid values', async () => {
+      window.history.replaceState(null, '', '/history?status=failed&q=needle&language=fr')
+      route(() => page([]))
+      render(<HistoryView />)
+      await screen.findByText('No analyses match “needle”')
+      expect(listUrls()).toEqual(['/api/v1/jobs?limit=20&status=failed&q=needle&language=fr'])
+      expect(select()).toHaveValue('fr')
+      expect(screen.getByRole('searchbox')).toHaveValue('needle')
+      expect(screen.getByRole('button', { name: 'Failed' })).toHaveAttribute('aria-pressed', 'true')
+      cleanup()
+      fetchMock.mockClear()
+      window.history.replaceState(null, '', '/history?status=bogus&language=deu')
+      render(<HistoryView />)
+      await screen.findByText('No previous analyses yet')
+      expect(listUrls()).toEqual(['/api/v1/jobs?limit=20'])
+      expect(window.location.search).toBe('')
+    })
+
+    it('shows the empty message with a clear-filters action, which restores the full list', async () => {
+      route((url) => page(url.includes('language=') ? [] : [summary('a')]))
+      render(<HistoryView />)
+      await screen.findByText('Today')
+      pick('zh')
+      await screen.findByText('No analyses in this language')
+      expect(screen.queryByRole('link', { name: 'Start first analysis' })).toBeNull()
+      fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+      await screen.findByText('Today')
+      expect(select()).toHaveValue('')
+      expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=20')
+    })
+
+    it('shows the error alert with a language filter', async () => {
+      route(() => json({ error: { code: 'invalid_request', message: 'bad' } }, 400))
+      render(<HistoryView />)
+      await screen.findByRole('alert')
+      pick('de')
+      expect(await screen.findByRole('alert')).toHaveTextContent('The request was not valid')
+    })
+
+    it('labels each item with the language name, the raw code when unnamed, or Unknown', async () => {
+      route(() => page([summary('a', { language: 'de' }), summary('b', { language: 'zz' }), summary('c', { language: null }), summary('d')]))
+      render(<HistoryView />)
+      await screen.findByText('Language: German')
+      expect(screen.getByText('Language: zz')).toBeInTheDocument()
+      expect(screen.getAllByText('Language: Unknown')).toHaveLength(2)
+    })
+
+    it('sends the language filter in the CSV export', async () => {
+      URL.createObjectURL = vi.fn(() => 'blob:x')
+      URL.revokeObjectURL = vi.fn()
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+      route(() => page([summary('a')]))
+      render(<HistoryView />)
+      await screen.findByText('Today')
+      pick('ru')
+      await waitFor(() => expect(listUrls()).toHaveLength(2))
+      fireEvent.click(screen.getByRole('button', { name: /Export CSV/ }))
+      await waitFor(() => expect(click).toHaveBeenCalled())
+      expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=100&language=ru')
+    })
+
+    it('names languages in the UI locale', async () => {
+      localStorage.setItem('veil.locale', 'de')
+      route(() => page([summary('a', { language: 'ru' })]))
+      render(<I18nProvider><HistoryView /></I18nProvider>)
+      await screen.findByText('Sprache: Russisch')
+      expect(screen.getByRole('combobox', { name: 'Sprache' })).toHaveTextContent('Französisch')
+    })
+  })
+
   describe('export', () => {
     it('keeps the toolbar Export button from stretching (align-self: flex-start)', () => {
       expect(readFileSync('src/history/history.css', 'utf8')).toMatch(/\.toolbar > \.btn-secondary[^{]*\{[^}]*align-self:\s*flex-start/)
@@ -232,7 +339,7 @@ describe('History', () => {
     it('pages with limit 100 through every page and downloads one CSV with BOM, CRLF and RFC 4180 quoting', async () => {
       route((url) => (url.includes('cursor=c2')
         ? page([summary('c', { finalization: { status: 'failed', verdict: null }, excerpt: null })])
-        : url.includes('cursor=c1') ? page([summary('b', { excerpt: 'say "hi", ok\nbye' })], 'c2') : page([summary('a', { excerpt: 'plain' })], 'c1')))
+        : url.includes('cursor=c1') ? page([summary('b', { excerpt: 'say "hi", ok\nbye' })], 'c2') : page([summary('a', { excerpt: 'plain', language: 'de' })], 'c1')))
       render(<HistoryView />)
       await screen.findByText('Today')
       fireEvent.click(screen.getByRole('button', { name: 'Completed' }))
@@ -244,10 +351,10 @@ describe('History', () => {
       expect(files[0].name).toBe('history-2026-11-14.csv')
       const iso = ago(H)
       expect(text()).toBe(
-        '﻿id,created_at,status,finalization_status,verdict,excerpt\r\n' +
-        `a,${iso},completed,completed,detected,plain\r\n` +
-        `b,${iso},completed,completed,detected,"say ""hi"", ok\nbye"\r\n` +
-        `c,${iso},completed,failed,,\r\n`)
+        '﻿id,created_at,status,finalization_status,verdict,excerpt,language\r\n' +
+        `a,${iso},completed,completed,detected,plain,de\r\n` +
+        `b,${iso},completed,completed,detected,"say ""hi"", ok\nbye",\r\n` +
+        `c,${iso},completed,failed,,,\r\n`)
     })
 
     it('uses the active search and neutralises spreadsheet formulas', async () => {
@@ -260,7 +367,7 @@ describe('History', () => {
       click()
       await waitFor(() => expect(files).toHaveLength(1))
       expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=100&q=x')
-      const cells = text().split('\r\n').slice(1, 8).map((l) => l.split(',').slice(5).join(','))
+      const cells = text().split('\r\n').slice(1, 8).map((l) => l.split(',').slice(5, -1).join(','))
       expect(cells).toEqual(["'=SUM(A1)", "'+1", "'-1", "'@x", "'\tx", '"\'\rx"', 'a=b']) // the CR cell is also quoted (RFC 4180)
     })
 
@@ -269,7 +376,7 @@ describe('History', () => {
       route((url) => (url.includes('limit=100') ? (new Promise((r) => { release = () => r(page([])) }) as unknown as Response) : page([summary('a')])))
       render(<HistoryView />)
       await screen.findByText('Today')
-      expect(screen.getByRole('button', { name: /Export CSV/ })).toHaveAttribute('title', 'Exports every analysis matching the active status filter and search as a CSV file.')
+      expect(screen.getByRole('button', { name: /Export CSV/ })).toHaveAttribute('title', 'Exports every analysis matching the active status and language filters and search as a CSV file.')
       click()
       const busy = await screen.findByRole('button', { name: 'Exporting…' })
       expect(busy).toBeDisabled()
@@ -285,7 +392,7 @@ describe('History', () => {
       await screen.findByText('No previous analyses yet')
       click()
       await waitFor(() => expect(files).toHaveLength(1))
-      expect(text()).toBe('﻿id,created_at,status,finalization_status,verdict,excerpt\r\n')
+      expect(text()).toBe('﻿id,created_at,status,finalization_status,verdict,excerpt,language\r\n')
     })
 
     it('shows the localized API error and downloads nothing when a page fails', async () => {

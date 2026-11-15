@@ -112,6 +112,7 @@ export type JobSummary = {
   finished_at: Timestamp | null
   coverage: Coverage
   finalization: { status: string; verdict: string | null; [k: string]: unknown }
+  language?: string | null // job language: lower-case two-letter code or null; a missing member means null
   excerpt?: string | null // first 200 characters of the input or scrape URL; untrusted, render as plain text
   [k: string]: unknown
 }
