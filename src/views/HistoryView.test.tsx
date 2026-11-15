@@ -474,6 +474,13 @@ describe('History', () => {
       expect(container.querySelector('.archive-bg')!.nextElementSibling).toBe(view)
       expect(container.querySelector('.view .archive-bg')).toBeNull()
       expect(container.querySelector('.ambient-bg')).toBeNull()
+      // the backdrop leaves the History UI inside .view as it was
+      const ui = within(view as HTMLElement)
+      expect(ui.getByRole('heading', { level: 1, name: 'Analysis History' })).toBeInTheDocument()
+      expect(ui.getByText('Browse and reopen your analysis jobs, newest first.')).toBeInTheDocument()
+      const group = ui.getByRole('group', { name: 'Filter by status' })
+      expect(within(group).getByRole('button', { name: 'All', pressed: true })).toBeInTheDocument()
+      for (const name of ['Running', 'Completed']) expect(within(group).getByRole('button', { name, pressed: false })).toBeInTheDocument()
     }
 
     it('precedes section.view while loading and when loaded', async () => {
