@@ -6,11 +6,11 @@ Defines the decorative animated pastel gradient layer shown behind the Analyze h
 ## Requirements
 
 ### Requirement: Ambient layer component
-`AmbientBackground` SHALL render one container element with class `ambient-bg` and `aria-hidden="true"` containing between 5 and 7 blob elements, and no text, focusable or interactive content.
+`AmbientBackground` SHALL render one `.ambient-bg` container with `aria-hidden="true"`, no focusable or interactive element and no `tabindex`. It SHALL contain three child layers in this order: `.ambient-glows`, holding exactly 4 `.ambient-glow` elements; `.ambient-cards`, holding 4 to 6 `.ambient-card` elements; and `.ambient-veil`, the readability gradient.
 
 #### Scenario: Structure
 - **WHEN** `AmbientBackground` is rendered
-- **THEN** there is one `.ambient-bg` with `aria-hidden="true"` and 5 to 7 `.ambient-blob` children and no focusable element
+- **THEN** there is one `.ambient-bg` with `aria-hidden="true"` whose children are `.ambient-glows` (4 `.ambient-glow`), `.ambient-cards` (4 to 6 `.ambient-card`) and `.ambient-veil` in that order, and no focusable element or `tabindex`
 
 ### Requirement: Home-only mounting
 `HomeView` SHALL render `AmbientBackground` as a sibling preceding its `<section className="view">`, not inside `.view`, whose `rise` transform animation would become the containing block of a fixed layer. No other view SHALL render it.
@@ -24,68 +24,121 @@ Defines the decorative animated pastel gradient layer shown behind the Analyze h
 - **THEN** no `.ambient-bg` exists
 
 ### Requirement: Layer geometry and stacking
-`.ambient-bg` SHALL be `position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0`. The `.view` directly following it SHALL have `position: relative; z-index: 1`. The sticky topbar (z-index 40) SHALL stay above both. The document SHALL gain no horizontal overflow at any viewport width from 320px up.
+`.ambient-bg` SHALL be `position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0`. The `.view` directly following it SHALL have `position: relative; z-index: 1`. The sticky topbar (z-index 40) SHALL stay above both. All descendants SHALL inherit `pointer-events: none`, and the document SHALL gain no horizontal overflow at any viewport width from 320px up.
 
 #### Scenario: Geometry
 - **WHEN** `ambient.css` is read
-- **THEN** the `.ambient-bg` rule has the declarations above and `.ambient-bg + .view` has `position: relative` and `z-index: 1`
-
-### Requirement: Blob palette
-Blobs SHALL use only the colours #C4B5FD, #93C5FD, #86EFAC, #FDBA9A and #F9A8D4, each at least once. A colour stop SHALL be a palette colour as `#RRGGBB`, a palette colour with alpha as `#RRGGBBAA`, or `transparent`. No other colour notation and no other hex colour SHALL appear in ambient.css.
-
-#### Scenario: Palette
-- **WHEN** `ambient.css` is read
-- **THEN** every hex colour is a palette colour with optional alpha suffix and no rgb(), hsl() or other hex is present
-
-### Requirement: Blob shape, blur and placement
-Each blob SHALL be absolutely positioned, between 300px and 600px on its longer side (`max-width: 90vw` MAY shrink it), have unequal width and height and opacity 0.4. `filter: blur()` on `.ambient-blob` SHALL be 40px to 160px (60px chosen). At least one blob SHALL be anchored past the left edge and one past the right edge of the viewport, and at least one SHALL sit behind the hero and composer area.
-
-#### Scenario: Shape
-- **WHEN** `ambient.css` is read
-- **THEN** every blob width and height is 300px to 600px, width differs from height, blur is 40px to 160px and opacity is 0.4
-
-#### Scenario: Placement
-- **WHEN** `ambient.css` is read
-- **THEN** a blob has a negative `left`, a blob has a negative `right` and a blob is placed near the horizontal centre
+- **THEN** the `.ambient-bg` rule has the declarations above, `.ambient-bg + .view` has `position: relative` and `z-index: 1`, and no rule re-enables `pointer-events`
 
 ### Requirement: Base surface unchanged
-The `body` rule SHALL keep the solid `var(--bg)` background with no gradient. Ambient colours SHALL live only in `src/styles/ambient.css`.
+The `body` rule SHALL keep the solid `var(--bg)` background with no gradient. Ambient colours SHALL live only in `src/styles/ambient.css`, which SHALL contain only the four glow colours plus #FFFFFF (veil and card surface), each optionally with alpha, and existing tokens through `var(--...)`. Highlight and badge colours SHALL be those palette colours with alpha.
 
 #### Scenario: Body
 - **WHEN** `base.css` is read
 - **THEN** the `body` rule has `background: var(--bg)` and no gradient
 
-### Requirement: Blob animation
-Each blob SHALL have its own `@keyframes` drift (translate plus scale between 0.9 and 1.15) with `animation-duration` between 18s and 35s, `infinite` iteration and an `ease-in-out` easing. The 0% and 100% keyframes SHALL be equal. No two blobs SHALL share keyframe name and duration. Only `transform` SHALL be animated and blobs SHALL set `will-change: transform`. No `backdrop-filter`, 3D hack, extra layer or SVG filter SHALL be added.
-
-#### Scenario: Motion
+#### Scenario: Palette
 - **WHEN** `ambient.css` is read
-- **THEN** every blob has a distinct keyframe name and a duration of 18s to 35s, keyframes declare only `transform`, 0% and 100% match, and no backdrop-filter or 3D hack is present
+- **THEN** every hex is one of the four glow colours or #FFFFFF with optional alpha
 
 ### Requirement: Reduced motion
-Under `@media (prefers-reduced-motion: reduce)` every blob SHALL have `animation: none` while remaining rendered at its static position and opacity.
+Under `@media (prefers-reduced-motion: reduce)` every glow, card, highlight and badge SHALL have `animation: none`. Glows and veil SHALL remain visible at rest. Cards SHALL be hidden (`display: none`) so no card sits frozen over the content and no badge or highlight sequence runs.
 
 #### Scenario: Reduced motion
 - **WHEN** `ambient.css` is read
-- **THEN** a `prefers-reduced-motion: reduce` block sets `animation: none` on `.ambient-blob` and does not change `opacity` or `display`
+- **THEN** a `prefers-reduced-motion: reduce` block sets `animation: none` on glows, cards, highlight pseudo-elements and animated badges, hides cards and does not touch the glows' or veil's opacity or display
 
 ### Requirement: No UI alteration and no dependencies
-No `filter`, `backdrop-filter`, `opacity` or blur SHALL be added to the topbar, hero, composer, buttons or any other real UI element. HomeView markup, copy, classes and behaviour SHALL otherwise be unchanged. No animation or styling library SHALL be added.
+`filter`, `opacity` and blur SHALL appear only in rules for `.ambient-glow`, `.ambient-card` and its descendants, `.ambient-veil` and their keyframes. The topbar, hero, composer and buttons SHALL get no filter, opacity, transform or new classes. HomeView markup, copy and behaviour SHALL otherwise be unchanged. No animation or styling library SHALL be added.
 
 #### Scenario: Scope
 - **WHEN** `ambient.css` is read
-- **THEN** every `filter` and `opacity` declaration is inside an `.ambient-blob` rule
+- **THEN** every selector targets an `.ambient-*` class and every `filter`, `opacity` and blur is inside a glow, card or veil rule or a keyframe
 
-### Requirement: Gradient falloff
-Each `.ambient-blob-N` background SHALL be one `radial-gradient(closest-side, ...)` of a single palette colour with at least 5 colour stops. Alpha SHALL decrease monotonically along an eased, non-linear curve from the centre. The last stop SHALL be `transparent` at 100% or earlier and no stop past 30% SHALL be fully opaque.
+### Requirement: Glow palette
+Glows SHALL use only Lavender #DDD6FE, Powder blue #BFDBFE, Mint #D1FAE5 and Peach #FFE4D6, each once. Each glow SHALL be one `radial-gradient(closest-side, ...)` of a single palette colour with at least 5 eased, monotonically decreasing alpha stops, ending in `transparent` at 100% or earlier, and no stop past 30% SHALL be opaque.
 
-#### Scenario: Falloff
+#### Scenario: Palette and falloff
 - **WHEN** `ambient.css` is read
-- **THEN** every blob gradient has 5+ stops, non-increasing alpha, ends in transparent and has no opaque stop past 30%
+- **THEN** there are four glows with the four palette colours once each, 5+ stops with non-increasing alpha and a transparent last stop
 
-### Requirement: Blur not clipped
-The blurred blob SHALL NOT be visibly clipped by its own box or layer. Neither `.ambient-blob` nor `.ambient-bg` SHALL set `contain: paint`, `clip-path` or `overflow` other than the existing `overflow: hidden` on `.ambient-bg`.
+### Requirement: Glow shape and blur
+Each glow SHALL be 400px to 800px on its longer side with unequal width and height and `max-width: 90vw`. It SHALL use a static `filter: blur()` of 60px to 160px that is never animated, and opacity 0.5 to 0.8 so it is noticeably visible.
 
-#### Scenario: No clipping
+#### Scenario: Shape
 - **WHEN** `ambient.css` is read
-- **THEN** it has no `contain`, `clip-path` and exactly one `overflow` declaration, on `.ambient-bg`
+- **THEN** every glow has unequal sides up to 800px, a static blur of 60px to 160px and opacity 0.5 to 0.8
+
+### Requirement: Glow animation
+Each glow SHALL have its own `@keyframes` declaring only `transform` (translate plus scale between 0.9 and 1.15) with equal 0% and 100% frames, an `animation-duration` of 20s to 40s, `ease-in-out` and `infinite`. No two glows SHALL share keyframe name and duration. Glows SHALL set `will-change: transform`.
+
+#### Scenario: Glow motion
+- **WHEN** `ambient.css` is read
+- **THEN** every glow has a distinct keyframe name, a 20s to 40s duration, transform-only keyframes with matching 0% and 100% frames and `will-change: transform`
+
+### Requirement: Card content
+Each card SHALL resemble a social post or news item: an avatar dot and source line, a 2 to 3 line text snippet and a muted meta line. All text SHALL come from the `ambient` catalog namespace and be fictional demo copy. Cards SHALL NOT show numbers styled as confidence or scores, real outlet or person names, or data fetched from the API. Card text SHALL use `dir="auto"`.
+
+#### Scenario: Catalog-driven text
+- **WHEN** `AmbientBackground` is rendered in en and in de
+- **THEN** every card source, text and meta equals the `ambient.card.<n>.*` catalog value of that locale and no digit or percent sign is shown
+
+### Requirement: Card placement
+Cards SHALL sit in edge columns with their horizontal centre outside the central 70% of the viewport width, at least one card on each side. Cards SHALL never overlap the hero headline, lede, composer or its buttons at viewport widths of 768px, 1280px and 1920px, and SHALL be 200px to 280px wide with a radius from the existing design tokens.
+
+#### Scenario: Placement
+- **WHEN** the card placement is evaluated at 768px, 1280px and 1920px
+- **THEN** every card centre lies within the outer 15% of the viewport on its side and its right or left edge, with drift margin, stays clear of the 760px composer column
+
+### Requirement: Card motion
+Each card SHALL have its own `@keyframes` that animate only `transform` (translateY from above the viewport to below it, horizontal drift of 40px or less, rotation within 3deg) and `opacity` (0 at the start, rising to 0.35 to 0.6, back to 0 at the end). The 0% and 100% frames SHALL both be invisible so the loop never jumps. Durations SHALL be 25s to 45s and distinct per card, with negative `animation-delay` values, `linear` or `ease-in-out` timing and `infinite` iteration.
+
+#### Scenario: Card keyframes
+- **WHEN** `ambient.css` is read
+- **THEN** each card has distinct keyframes using only transform and opacity, a peak opacity of 0.35 to 0.6, opacity 0 at 0% and 100%, a distinct 25s to 45s duration and a negative delay
+
+### Requirement: Card depth
+Cards SHALL use a static `filter: blur()` of 0.5px to 3px that is never animated in keyframes, plus reduced opacity. `backdrop-filter`, `clip-path`, `contain` and SVG filters SHALL NOT be used.
+
+#### Scenario: Depth
+- **WHEN** `ambient.css` is read
+- **THEN** the `.ambient-card` rule has a blur of 0.5px to 3px, no keyframes contain `filter` or `blur` and none of the forbidden properties appears
+
+### Requirement: Propaganda-detection demo
+At least 2 cards SHALL contain a phrase span `.ambient-hl` and a badge `.ambient-badge`, with sequences offset on a shared cycle so at most one card shows it at a time. Each sequence runs in order: highlight fades in as a soft pastel background (palette colour with alpha); badge fades and scales in (0.96 to 1); glow intensifies for 1s to 2s; both fade out while the card keeps drifting. Only `opacity` and `transform` SHALL be animated. Badge text SHALL be the catalog `techniques.<id>.name` value.
+
+#### Scenario: Demo cards
+- **WHEN** `AmbientBackground` is rendered
+- **THEN** at least 2 cards contain `.ambient-hl` and `.ambient-badge` whose badge text is a technique name from the catalog
+
+#### Scenario: One at a time
+- **WHEN** the `--seq` offsets of the demo cards are read
+- **THEN** their 10s windows within the shared 180s cycle never overlap
+
+### Requirement: Neutral cards
+At least 1 card SHALL show a neutral badge with the catalog text `ambient.no_signals` and no highlight.
+
+#### Scenario: Neutral badge
+- **WHEN** `AmbientBackground` is rendered in en
+- **THEN** a card without `.ambient-hl` shows a badge reading "No strong signals"
+
+### Requirement: Readability veil
+`.ambient-veil` SHALL be a static white radial gradient centred behind the hero and composer, fading to transparent toward the edges, with no animation, no blur and `pointer-events: none`.
+
+#### Scenario: Veil
+- **WHEN** `ambient.css` is read
+- **THEN** `.ambient-veil` has a white `radial-gradient` ending in `transparent` and no animation, filter or opacity declaration
+
+### Requirement: Small screens
+Below 768px viewport width at most 2 cards SHALL be shown, dimmer and placed at the edge outside the composer. Below 480px all cards SHALL be `display: none` while the glows and veil stay.
+
+#### Scenario: Media queries
+- **WHEN** `ambient.css` is read
+- **THEN** a `max-width: 767px` query hides cards 3 and up and dims the rest, and a `max-width: 479px` query sets `display: none` on `.ambient-card`
+
+### Requirement: RTL symmetry
+Under `dir=rtl` the decorative layer SHALL stay visually symmetric and without overflow: positions use physical `left` and `right` mirrored between odd and even cards, and card text uses `dir="auto"`.
+
+#### Scenario: Arabic
+- **WHEN** the Home view is rendered in ar
+- **THEN** the layer is unchanged in geometry and card text elements have `dir="auto"`
