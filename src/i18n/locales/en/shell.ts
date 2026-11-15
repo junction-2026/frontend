@@ -5,7 +5,6 @@ export default {
   'nav.explore': 'Explore',
   'nav.history': 'History',
   'language': 'Language',
-  'new_analysis': '+ New Analysis',
   'health.checking': 'Checking backend…',
   'health.offline': 'Backend offline',
   'health.online': 'Backend online',

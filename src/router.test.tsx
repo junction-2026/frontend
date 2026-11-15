@@ -113,7 +113,9 @@ describe('navigation', () => {
   it('has the History label without a count and the expected targets', () => {
     open('/')
     expect(nav('History')).toHaveAttribute('href', '/history')
-    expect(nav('+ New Analysis')).toHaveAttribute('href', '/')
+    expect(screen.queryByRole('link', { name: /New Analysis/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /New Analysis/ })).toBeNull()
+    expect(nav('Analyze')).toHaveAttribute('href', '/')
     expect(screen.queryByRole('link', { name: 'Account' })).toBeNull()
     expect(document.querySelector('a[href="/settings"], .avatar')).toBeNull()
     expect(screen.getByRole('link', { name: /VEIL/ })).toHaveAttribute('href', '/')

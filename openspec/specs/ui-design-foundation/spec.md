@@ -54,7 +54,7 @@ A dependency-free History-API router SHALL map `/` to Home, `/jobs/:id/live` to 
 - **THEN** the URL is unchanged and Home is rendered
 
 ### Requirement: Shell and navigation
-The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History (no count), the functional language selector (not wrapped in `Mock`), "+ New Analysis" to `/` and an account button to `/settings`, with texts from the active locale. The active nav item is Analyze for `/`, `/jobs/*`, `/ask`, `/states`; Explore for `/explore*`; History for `/history`, with `aria-current="page"`.
+The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History (no count), the functional language selector (not wrapped in `Mock`) and an account button to `/settings`, with texts from the active locale; it SHALL NOT show a "+ New Analysis" button. The active nav item is Analyze for `/`, `/jobs/*`, `/ask`, `/states`; Explore for `/explore*`; History for `/history`, with `aria-current="page"`.
 
 #### Scenario: Active state
 - **WHEN** the path is `/explore/region`
@@ -71,6 +71,10 @@ The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History 
 #### Scenario: Language selector
 - **WHEN** the user picks Deutsch in the selector
 - **THEN** the nav reads "Analysieren", "Entdecken", "Verlauf" without a reload
+
+#### Scenario: No New Analysis button
+- **WHEN** any route is rendered in any locale
+- **THEN** the top bar contains no link or button with the text of the former `shell.new_analysis` key, and the brand link and the Analyze nav item link to `/`
 
 ### Requirement: Backend health indicator
 The top bar SHALL call `checkHealth()` once on mount and show a status dot with the text "Backend online" on success; while pending, "Checking backend…" with `role="status"`; on failure, "Backend offline" with the checkHealth message as its tooltip (`title`) and `role="alert"`. The page "Hello, World!" SHALL no longer exist.

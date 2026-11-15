@@ -28,7 +28,7 @@ A dependency-free History-API router SHALL map `/` to Home, `/jobs/:id/live` to 
 - **THEN** the URL changes without a reload, the History view is shown and the window is scrolled to the top
 
 ### Requirement: Shell and navigation
-The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History (no count), the health indicator, the functional language selector (not wrapped in `Mock`) and "+ New Analysis" to `/`, with texts from the active locale. It SHALL NOT show an account or avatar link and keeps its spacing in LTR and RTL at 1440, 768 and 390px. The active nav item is Analyze for `/`, `/jobs/*`, `/ask`, `/states`; Explore for `/explore*`; History for `/history`, with `aria-current="page"`.
+The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History (no count), the health indicator, and the functional language selector (not wrapped in `Mock`), with texts from the active locale. It SHALL NOT show a "+ New Analysis" button or an account or avatar link, and keeps its spacing in LTR and RTL at 1440, 768 and 390px. The active nav item is Analyze for `/`, `/jobs/*`, `/ask`, `/states`; Explore for `/explore*`; History for `/history`, with `aria-current="page"`.
 
 #### Scenario: Active state
 - **WHEN** the path is `/explore/region`
@@ -41,6 +41,10 @@ The top bar SHALL show the brand link to `/`, the nav Analyze, Explore, History 
 #### Scenario: No account link
 - **WHEN** the top bar renders
 - **THEN** no link named "Account" and no link to `/settings` exists, and the `.avatar` styles and the `shell.account` key of every locale are removed
+
+#### Scenario: No New Analysis button
+- **WHEN** any route is rendered in any locale
+- **THEN** the top bar contains no link or button with the text of the former `shell.new_analysis` key, and the brand link and the Analyze nav item link to `/`
 
 #### Scenario: Selector markup
 - **WHEN** the top bar renders

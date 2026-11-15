@@ -5,7 +5,6 @@ export default {
   'nav.explore': 'استكشاف',
   'nav.history': 'السجل',
   'language': 'اللغة',
-  'new_analysis': '+ تحليل جديد',
   'health.checking': 'جارٍ فحص الخادم…',
   'health.offline': 'الخادم غير متصل',
   'health.online': 'الخادم متصل',

@@ -5,7 +5,6 @@ export default {
   'nav.explore': 'Explorer',
   'nav.history': 'Historique',
   'language': 'Langue',
-  'new_analysis': '+ Nouvelle analyse',
   'health.checking': 'Vérification du serveur…',
   'health.offline': 'Serveur hors ligne',
   'health.online': 'Serveur en ligne',

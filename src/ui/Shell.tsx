@@ -31,7 +31,6 @@ export function Shell({ children }: { children: ReactNode }) {
           <select className="lang-select" aria-label={t('shell.language')} value={locale} onChange={(e) => setLocale(e.target.value as Locale)}>
             {LOCALES.map((l) => <option key={l.code} value={l.code} lang={l.code}>{l.label}</option>)}
           </select>
-          <Link className="btn-primary" href="/">{t('shell.new_analysis')}</Link>
         </div>
       </header>
       {children}

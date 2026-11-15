@@ -80,6 +80,12 @@ describe('AmbientBackground', () => {
     expect(container.querySelector('.view .ambient-bg')).toBeNull()
   })
 
+  it('leaves no other decorative layer behind HomeView: no .noise-headline anywhere', () => {
+    const { container } = render(<HomeView />)
+    expect(container.querySelector('.noise-headline, [class*="noise-"]')).toBeNull()
+    expect(container.querySelector('.ambient-bg')!.previousElementSibling).toBeNull()
+  })
+
   it.each([
     ['HistoryView', <HistoryView />],
     ['AnalyzingView', <AnalyzingView id="j1" />],

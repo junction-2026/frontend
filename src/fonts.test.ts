@@ -25,8 +25,7 @@ describe('fonts', () => {
   const css = files('src').filter((f) => f.endsWith('.css'))
 
   it('no stylesheet uses a weight above 600 or bold', () => {
-    // noise-headline.css is a decorative display layer that needs weight 800-900.
-    const bad = css.filter((f) => !f.endsWith('noise-headline.css')).flatMap((f) =>
+    const bad = css.flatMap((f) =>
       [...readFileSync(f, 'utf8').matchAll(/font-weight:\s*([^;]+);/g)]
         .filter((m) => /^bold(er)?$/.test(m[1].trim()) || Number(m[1]) > 600)
         .map((m) => `${f}: ${m[0]}`),
