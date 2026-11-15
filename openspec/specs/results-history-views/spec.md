@@ -6,7 +6,7 @@ Defines the Results, Detailed analysis and History screens of the frontend: what
 ## Requirements
 
 ### Requirement: Results fetching and meta row
-The Results screen (`/jobs/:id`) SHALL fetch `getJob` and, while `done` is false, SHALL poll every 2000 ms and show a "Watch live progress" link to `/jobs/:id/live`. The meta row SHALL show the job id and the duration from `created_at` to `finished_at` (when finished). A model name and a latency SHALL NOT be shown as real values.
+The Results screen (`/jobs/:id`) SHALL fetch `getJob` and, while `done` is false, SHALL poll every 2000 ms and show a "Watch live progress" link to `/jobs/:id/live`. The meta row SHALL show the job id and the duration from `created_at` to `finished_at` (when finished). A model name SHALL NOT be shown. The duration formatting SHALL live in one helper shared with the Detail metrics bar Latency, so the two never differ.
 
 #### Scenario: Running job
 - **WHEN** the first response has `done: false`
@@ -92,7 +92,7 @@ The detailed analysis region SHALL contain a section showing `coverage` as `succ
 - **THEN** they are listed only inside a "Not run" disclosure
 
 ### Requirement: Detail metrics
-The Detail screen SHALL show a metrics bar with Patterns (detected techniques of the `succeeded` `techniques` run, else "—"), Claims (`claims` of a `succeeded` `topic_extraction` run, else "—"), Risk and Latency. The Risk cell SHALL NOT be wrapped in `Mock` and shows the real risk (percentage and band chip, else "—"); Latency SHALL be wrapped in `Mock`. Technique entries SHALL show `Detection.name` as ID badge and no match percentage; confidence SHALL NOT be shown.
+The Detail screen SHALL show a metrics bar with Patterns (detected techniques of the `succeeded` `techniques` run, else "—"), Claims (`claims` of a `succeeded` `topic_extraction` run, else "—"), Risk (real percentage and band chip, else "—", not in `Mock`) and Latency. Latency follows 'Detail metrics Latency'. Technique entries SHALL show `Detection.name` as ID badge and no match percentage; confidence SHALL NOT be shown.
 
 #### Scenario: Metrics
 - **WHEN** two techniques were detected and `topic_extraction` succeeded with three claims
@@ -235,14 +235,14 @@ Below the verdict card the Results screen SHALL show a primary `<button class="b
 - **THEN** `aria-expanded` is false, true, false and the region is present only while expanded
 
 ### Requirement: Detailed analysis region content
-The detailed region SHALL contain the analyzed excerpt (first 400 characters), the technique tags, the Mock-wrapped Polarity/Intensity row and "High rhetorical bias factor", "Explore coverage", "Open detailed analysis page" and the Copy and Share buttons, followed by the Coverage section.
+The detailed region SHALL contain the analyzed excerpt (first 400 characters), the technique tags, "Explore coverage", "Open detailed analysis page" and the Copy button, followed by the Detail metrics bar, the JobView and the Coverage section.
 
 #### Scenario: Expanded content
 - **WHEN** the region is expanded
 - **THEN** it shows the excerpt, technique tags, coverage and the link to `/jobs/:id/detail`
 
 ### Requirement: Shared detail body
-The Detail metrics bar (Patterns, Claims, Risk and Mock Latency) and the full JobView (title, highlighted text, technique list, risk overview, why region, notes, LLM-assessed group) SHALL be one component shared by `/jobs/:id/detail` and the detailed region of `/jobs/:id`; `/jobs/:id/detail` SHALL render as before apart from the Risk cell and the overview.
+The Detail metrics bar (Patterns, Claims, Risk and Latency, all real values) and the full JobView (title, highlighted text, technique list, risk overview, why region, notes, LLM-assessed group) SHALL be one component shared by `/jobs/:id/detail` and the detailed region of `/jobs/:id`; `/jobs/:id/detail` SHALL render as before apart from the Risk cell and the overview.
 
 #### Scenario: Metrics in the region
 - **WHEN** two techniques were detected and the region is expanded
@@ -328,7 +328,11 @@ All fixed text of the History screen (title, filter chips, group counts, status 
 - **THEN** it contains no `left`/`right` text alignment, margin, padding, border or offset
 
 ### Requirement: Mock-only parts of the Results screen
-In the detailed analysis region the "Polarity / Intensity" signal row, "High rhetorical bias factor" and the Share button SHALL be wrapped in `Mock`. Copy SHALL copy the page URL to the clipboard without `Mock`. "Explore coverage" SHALL link to `/explore?job=<encoded job id>` and "Open detailed analysis page" to `/jobs/:id/detail`.
+The detailed analysis region SHALL NOT render a Polarity/Intensity signal row, a "High rhetorical bias factor" line or a Share button. Copy SHALL copy the page URL to the clipboard without `Mock`. "Explore coverage" SHALL link to `/explore?job=<encoded job id>` and "Open detailed analysis page" to `/jobs/:id/detail`.
+
+#### Scenario: Removed items
+- **WHEN** the detailed region of a job with a `detected` verdict is expanded
+- **THEN** it contains no "High rhetorical bias factor", no Polarity/Intensity text, no Share button and no `[data-mock]` element
 
 #### Scenario: Copy
 - **WHEN** the user presses Copy
@@ -571,3 +575,18 @@ Each item SHALL show `JobSummary.excerpt` as plain text, cut at 140 characters w
 #### Scenario: No detail requests
 - **WHEN** ten items are loaded
 - **THEN** no `GET /api/v1/jobs/{id}` request is sent
+
+### Requirement: Detail metrics Latency
+The Latency cell of the Detail metrics bar SHALL show `finished_at` minus `created_at`, formatted like the meta-row duration (`results.duration.ms` under 1000 ms, else `results.duration.s`) and not wrapped in `Mock`. When `finished_at` is null or the span is missing, unparseable or negative it SHALL show "—".
+
+#### Scenario: Latency under one second
+- **WHEN** the job finished 284 ms after `created_at`
+- **THEN** Latency shows `284 ms` with no `Mock` ancestor
+
+#### Scenario: Latency in seconds
+- **WHEN** `created_at` is `2026-11-14T10:00:00Z` and `finished_at` is `2026-11-14T10:00:03.200Z`
+- **THEN** Latency shows `3.2 s` (en), with no `Mock` ancestor, and no hardcoded `412` appears
+
+#### Scenario: Latency unavailable
+- **WHEN** `finished_at` is null, or the timestamps are unparseable or the span is negative
+- **THEN** Latency shows "—"

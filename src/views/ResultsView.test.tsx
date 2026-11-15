@@ -199,7 +199,7 @@ describe('Results: progressive disclosure', () => {
     expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveAttribute('href', '/jobs/j1/ask')
     expect(screen.getByRole('link', { name: 'Ask VEIL' })).toHaveClass('btn-secondary')
     expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
-    for (const t of [/Zweifel/, /Loaded Language/, /Analyzer coverage/, /Patterns/, /Polarity/, /bias factor/, /Everyone knows/, /Propaganda Techniques Detected/])
+    for (const t of [/Zweifel/, /Loaded Language/, /Analyzer coverage/, /Patterns/, /Everyone knows/, /Propaganda Techniques Detected/])
       expect(screen.queryByText(t)).toBeNull()
     expect(screen.queryByText(/Have questions about this verdict/)).toBeNull()
     expect(inMock(screen.getByRole('link', { name: 'Ask VEIL' }))).toBeNull()
@@ -384,11 +384,13 @@ describe('Results: page chrome, mock parts and polling', () => {
     expect(screen.queryByRole('link', { name: 'Watch live progress' })).toBeNull()
   })
 
-  it('wraps only the mock parts in Mock', async () => {
-    await show(job())
+  it('has no bias line, polarity row or Share button, and no Mock except the Risk cell', async () => {
+    await show(withResult({ verdict: 'detected', confidence: 0.9 }))
     toggle()
-    for (const el of [screen.getByText(/Polarity: /), screen.getByText('High rhetorical bias factor'), screen.getByRole('button', { name: 'Share' })])
-      expect(inMock(el)).not.toBeNull()
+    const region = screen.getByRole('region', { name: 'Detailed analysis' })
+    expect(within(region).queryByText(/rhetorical bias|Polarity|Intensity/)).toBeNull()
+    expect(within(region).queryByRole('button', { name: 'Share' })).toBeNull()
+    expect(region.querySelector('[data-mock]')).toBeNull()
     for (const el of [
       screen.getByRole('button', { name: 'Copy' }),
       screen.getByRole('link', { name: 'Open detailed analysis page' }),
@@ -397,6 +399,15 @@ describe('Results: page chrome, mock parts and polling', () => {
       screen.getByText('1 succeeded · 1 failed · 1 skipped of 2 applicable'),
     ])
       expect(inMock(el)).toBeNull()
+  })
+
+  it('shows the real latency in the region metrics bar', async () => {
+    await show(job({ created_at: '2026-11-14T10:00:00Z', finished_at: '2026-11-14T10:00:03.200Z' }))
+    toggle()
+    const cell = (screen.getByText('Latency', { selector: '.metrics-bar span' }).parentElement as HTMLElement).querySelector('strong') as HTMLElement
+    expect(cell.textContent).toBe('3.2 s')
+    expect(inMock(cell)).toBeNull()
+    expect(screen.queryByText(/412/)).toBeNull()
   })
 
   it('links to the detail view and coverage, and copies the page URL', async () => {
