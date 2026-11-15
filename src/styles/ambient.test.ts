@@ -13,14 +13,33 @@ describe('ambient.css', () => {
     expect(rule('.ambient-bg + .view')).toMatch(/position: relative;[^]*z-index: 1/)
   })
 
-  it('uses exactly the five palette colours as radial gradients to transparent', () => {
-    const hexes = new Set([...css.matchAll(/#[0-9a-f]{6}/gi)].map((m) => m[0].toUpperCase()))
-    expect(hexes).toEqual(new Set(['#C4B5FD', '#93C5FD', '#86EFAC', '#FDBA9A', '#F9A8D4']))
+  it('uses only palette colours (optionally with alpha) in eased multi-stop gradients ending in transparent', () => {
+    const pal = ['#C4B5FD', '#93C5FD', '#86EFAC', '#FDBA9A', '#F9A8D4']
+    const hexes = [...css.matchAll(/#[0-9a-f]+/gi)].map((m) => m[0].toUpperCase())
+    for (const h of hexes) expect(pal).toContain(h.length === 9 ? h.slice(0, 7) : h)
+    for (const h of hexes) expect([7, 9]).toContain(h.length)
+    expect(new Set(hexes.map((h) => h.slice(0, 7)))).toEqual(new Set(pal))
+    expect(css).not.toMatch(/rgba?\(|hsla?\(/i)
     expect(blobRules.length).toBeGreaterThanOrEqual(5)
-    for (const r of blobRules) expect(r).toMatch(/radial-gradient\(closest-side, #[0-9A-F]{6} \d+%, transparent\)/i)
+    for (const r of blobRules) {
+      const stops = /radial-gradient\(closest-side, ([^;]*)\);/.exec(r)![1].split(/,\s*(?![^(]*\))/)
+      expect(stops.length).toBeGreaterThanOrEqual(5)
+      const parsed = stops.map((s) => /^(#[0-9A-F]{6})([0-9A-F]{2})?(?: (\d+)%)?$/i.exec(s.trim()) ?? /^(transparent) (\d+)%$/.exec(s.trim())!)
+      expect(parsed.every(Boolean)).toBe(true)
+      const alphas = stops.map((s) => (s.startsWith('transparent') ? 0 : /^#[0-9A-F]{6}([0-9A-F]{2})/i.test(s.trim()) ? parseInt(s.trim().slice(7, 9), 16) : 255))
+      for (let i = 1; i < alphas.length; i++) expect(alphas[i]).toBeLessThanOrEqual(alphas[i - 1])
+      expect(alphas.at(-1)).toBe(0)
+      expect(+/(\d+)%$/.exec(stops.at(-1)!)![1]).toBeLessThanOrEqual(100)
+      const pos = stops.map((s) => +(/(\d+)%$/.exec(s.trim())?.[1] ?? 0))
+      stops.forEach((_, i) => { if (pos[i] > 30) expect(alphas[i]).toBeLessThan(255) })
+      // eased, not linear: the drop over the first half differs from a straight ramp
+      const mid = alphas[Math.floor(alphas.length / 2)]
+      expect(Math.abs(mid - 127.5)).toBeGreaterThan(5)
+      expect(new Set(stops.map((s) => s.trim().slice(0, 7))).size).toBeLessThanOrEqual(2)
+    }
   })
 
-  it('blobs are elliptical, 300-600px, blurred 100-160px, opacity 0.35-0.45', () => {
+  it('blobs are elliptical, 300-600px, blurred 40-160px, opacity 0.35-0.45', () => {
     for (const r of blobRules) {
       const w = parseInt(/width: (\d+)px/.exec(r)![1])
       const h = parseInt(/height: (\d+)px/.exec(r)![1])
@@ -35,7 +54,7 @@ describe('ambient.css', () => {
     expect(base).toContain('infinite')
     const blurs = [...css.matchAll(/blur\((\d+)px\)/g)].map((m) => +m[1])
     expect(blurs.length).toBeGreaterThan(0)
-    for (const b of blurs) expect(b >= 100 && b <= 160).toBe(true)
+    for (const b of blurs) expect(b >= 40 && b <= 160).toBe(true)
     const opacity = +/opacity: ([\d.]+)/.exec(base)![1]
     expect(opacity >= 0.35 && opacity <= 0.45).toBe(true)
   })
@@ -66,6 +85,11 @@ describe('ambient.css', () => {
     const block = /@media \(prefers-reduced-motion: reduce\)\s*{([^]*)}\s*$/.exec(css)![1]
     expect(block).toMatch(/\.ambient-blob\s*{\s*animation: none;\s*}/)
     expect(block).not.toMatch(/opacity|display|visibility/)
+  })
+
+  it('has no clipping, containment or backdrop tricks', () => {
+    expect(css).not.toMatch(/contain:|clip-path|backdrop-filter|translateZ|translate3d/)
+    expect(css.match(/overflow:/g)).toHaveLength(1)
   })
 
   it('applies filter and opacity only to blobs', () => {
