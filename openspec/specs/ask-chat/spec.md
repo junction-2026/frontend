@@ -120,29 +120,33 @@ All Ask text (including chat error copy) SHALL be in the `ask` catalog namespace
 - **THEN** the document direction is rtl and no static Latin-script text other than the brand appears
 
 ### Requirement: Split layout
-`/jobs/:id/ask` for a loaded job SHALL render a two-column grid with the chat section (context bar, thread, composer) first in the DOM and the result panel second, at viewport widths of 960px and more, using CSS logical properties so the chat is at inline-start (left in ltr, right in rtl). Below 960px the sections SHALL stack with the chat first.
+`/jobs/:id/ask` for a loaded job SHALL render a two-column grid at viewport widths of 960px and more with the chat section (context bar, thread, composer) first in the DOM at inline-start and the result pane second at inline-end, using CSS logical properties (left in ltr, right in rtl for the chat). Each column SHALL scroll independently within the viewport height so the composer remains reachable while the result is read. Below 960px the sections SHALL stack with the chat first.
 
 #### Scenario: Wide viewport
 - **WHEN** the viewport is at least 960px wide
-- **THEN** the chat and the result panel are side by side and the chat is in the inline-start column
+- **THEN** the chat and the result pane are side by side, the chat is in the inline-start column and each column scrolls on its own
 
 #### Scenario: Narrow viewport
 - **WHEN** the viewport is narrower than 960px
 - **THEN** the sections are stacked, chat first
 
 ### Requirement: Narrow toggle
-Below 960px a "Choose result elements" button near the composer SHALL scroll to the result panel and move focus to its heading. The panel SHALL have an `<h2>` heading and `role="region"` with a localized accessible name. At 960px and more the button SHALL be hidden.
+Below 960px a "Choose result elements" button near the composer SHALL scroll to the result pane and move focus to its `<h2>` heading. The pane SHALL have `role="region"` with a localized accessible name. At 960px and more the button SHALL be hidden.
 
 #### Scenario: Toggle
 - **WHEN** the user presses "Choose result elements"
-- **THEN** the panel heading has keyboard focus
+- **THEN** the pane heading has keyboard focus
 
-### Requirement: Result panel content
-For a completed job the result panel SHALL list, in this order and only when present in the Job, the kinds `final_assessment`, `technique` (each Detection), `passage` (each TechniqueSpan, under its Detection), `llm_finding`, `risk_dimension` (available ones), `risk_driver`, `risk_caveat`, `wikipedia_claim` and `term_context`, under localized group headings.
+### Requirement: Result pane content
+The result pane SHALL render the result screen's Verdict and detailed region (excerpt, technique tags, explore link and copy action, metrics bar, JobView with risk score, Wikipedia lookup, term context, Coverage) through the same components as `/jobs/:id`, always expanded, inside the same LocalizationProvider. It SHALL NOT render the "View detailed"/"Hide detailed" toggle or the "Ask VEIL" link.
+
+#### Scenario: Same content as the result screen
+- **WHEN** a completed job with techniques, a Wikipedia claim and a term is shown
+- **THEN** the pane shows the verdict label, the technique name, the claim text and the term without any click, and no "View detailed" button
 
 #### Scenario: Absent data
 - **WHEN** the Job has no `wikipedia` result and no risk
-- **THEN** no Wikipedia or risk items are listed
+- **THEN** no Wikipedia or risk sections or toggles are rendered
 
 ### Requirement: Element references
 Item refs SHALL follow the shared element reference requirements exactly: the Detection `name`; `<start>:<end>:<technique>`; the 0-based index into the raw `llm_techniques` `findings`, `Job.risk.drivers`, `wikipedia` `claims` and `term_context` `terms`; `intensity`, `confirmation` or `amplification`; the RiskCaveat `id` (first caveat with that id); the literal `final_assessment`.
@@ -159,29 +163,18 @@ Each item label SHALL be built from the same localized text the result view show
 - **THEN** the panel shows its first 119 code points and `…` and the request label has 300 code points
 
 ### Requirement: Panel states
-For a job that is not completed, or that has no selectable elements, the panel SHALL show a localized note and no checkboxes. Selection SHALL be disabled while the composer is disabled.
+For a job that is not completed, or that has no selectable elements, the result pane SHALL show a localized note and no selection toggles. Selection toggles SHALL be disabled while the composer is disabled.
 
 #### Scenario: Running job
 - **WHEN** the job is `running`
-- **THEN** the panel shows the note and no checkbox exists
-
-### Requirement: Selection controls
-Each item SHALL be a checkbox with its label as accessible name and a visible `:focus-visible` ring from the existing design tokens, toggled with Space. At most 20 items SHALL be selectable; once 20 are selected the unselected checkboxes SHALL be disabled and a polite live note SHALL say the limit is reached. A "Clear selection" button SHALL be shown while at least one item is selected.
-
-#### Scenario: Limit
-- **WHEN** 20 items are selected
-- **THEN** the other checkboxes are disabled and the limit note is shown; deselecting one enables them again
-
-#### Scenario: Clear
-- **WHEN** the user presses "Clear selection"
-- **THEN** no item is selected and the button is gone
+- **THEN** the pane shows the note and no toggle exists, and the composer is disabled
 
 ### Requirement: Selection chips
 The selection SHALL be shown above the composer as a list of chips, each with the label and a remove button named "Remove <label>"; removing a chip deselects the element. With nothing selected a localized hint SHALL say the question is about the whole analysis. The selection SHALL live in component state only and not survive a reload.
 
 #### Scenario: Chip removal
 - **WHEN** the user presses "Remove Doubt"
-- **THEN** the chip and the checked state of that element are gone
+- **THEN** the chip is gone and the toggle of that element is no longer pressed
 
 ### Requirement: Chat request with focus
 Sending SHALL add `focus` (the current selection in panel order, each `{kind, ref, label}`) to the ChatRequest; with an empty selection the `focus` member SHALL be omitted. The selection SHALL be kept after sending.
@@ -202,8 +195,37 @@ Each user turn SHALL store the focus it was sent with. A user bubble with focus 
 - **THEN** the resent request carries focus A
 
 ### Requirement: Focus copy in every locale
-All new Ask text (panel heading and region name, narrow toggle, clear selection, remove chip, limit note, whole-analysis hint, "About:" line, empty and not-completed notes, group headings) SHALL be in the `ask` namespace for en, de, fr, fi, ar and ru, with the brand "VEIL" verbatim.
+All new Ask text (pane heading and region name, narrow toggle, section toggle name "Ask about {label}", clear selection, remove chip, limit note, whole-analysis hint, "About:" line, empty and not-completed notes) SHALL be in the `ask` namespace for en, de, fr, fi, ar and ru, with the brand "VEIL" verbatim.
 
 #### Scenario: Arabic
 - **WHEN** the locale is `ar`
-- **THEN** the panel renders right-to-left with the chat at the right and no static Latin-script text other than the brand
+- **THEN** the page renders right-to-left with the chat at the right and no static Latin-script text other than the brand
+
+### Requirement: Section selection controls
+Each element listed by `focusItemsOf` SHALL have a toggle button on its rendered section (verdict card, technique item, passage under its technique, LLM finding, risk dimension, driver and caveat, Wikipedia claim, term entry). The button SHALL have `aria-pressed`, the localized accessible name "Ask about <label>" (label as shown, at most 120 code points) and a `:focus-visible` ring from existing tokens; the section SHALL show a selected style. Click, Enter and Space SHALL activate it.
+
+#### Scenario: Technique toggle
+- **WHEN** the user presses "Ask about Doubt" on the technique list item
+- **THEN** it has `aria-pressed="true"`, a chip "Doubt" appears and the next request has `focus` `[{kind:'technique', ref:'Doubt', label:'Doubt'}]`; pressing again removes the chip and `focus` is omitted
+
+### Requirement: Selection keys
+Toggle keys SHALL be `kind:ref` computed from the raw job arrays and SHALL match the `focusItemsOf` keys: raw index for LLM findings, `Job.risk.drivers`, Wikipedia claims and term context; Detection `name`; `<start>:<end>:<technique>`; dimension key; first caveat id; `final_assessment`. An element whose key `focusItemsOf` does not list (for example a blank label) SHALL have no toggle. `focusItemsOf` SHALL stay the source of labels, sent labels (at most 500 code points) and `focus` order.
+
+#### Scenario: Raw indexes
+- **WHEN** the first of three risk drivers is not an object
+- **THEN** the toggle of the last sends `{kind:'risk_driver', ref:'2'}` and a passage toggle sends `<start>:<end>:<technique>`
+
+#### Scenario: Blank label
+- **WHEN** a term entry has a blank term
+- **THEN** it is not rendered with a toggle
+
+### Requirement: Selection limit
+At most 20 elements SHALL be selectable. Once 20 are selected the unselected toggles SHALL be disabled and a polite live note SHALL say the limit is reached. A "Clear selection" button SHALL be shown in the pane header while at least one element is selected.
+
+#### Scenario: Limit
+- **WHEN** 20 elements are selected
+- **THEN** the other toggles are disabled and the limit note is shown; deselecting one enables them again
+
+#### Scenario: Clear
+- **WHEN** the user presses "Clear selection"
+- **THEN** nothing is selected and the button is gone
