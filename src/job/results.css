@@ -281,6 +281,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem 1rem;
+  position: relative; /* containing block of .confidence-tip */
 }
 .verdict-pill {
   display: inline-flex;
@@ -346,8 +347,7 @@
   color: var(--v-text);
 }
 .confidence-info {
-  position: relative;
-  display: inline-flex;
+  display: inline-flex; /* static: the tooltip anchors to .verdict-head, not to its button or pill */
 }
 .info-btn {
   width: 22px;
@@ -374,7 +374,7 @@
 }
 .confidence-tip {
   position: absolute;
-  inset-inline-end: 0; /* anchored to the card edge so it never overflows at 320px, in ltr and rtl */
+  inset-inline-end: 0; /* end edge of .verdict-head (the card edge) so it never overflows at 320px, in ltr and rtl, whatever the pill width or wrapping */
   top: calc(100% + 0.4rem);
   z-index: 5;
   width: min(280px, 70vw);
