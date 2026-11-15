@@ -109,6 +109,7 @@ export type JobSummary = {
   finished_at: Timestamp | null
   coverage: Coverage
   finalization: { status: string; verdict: string | null; [k: string]: unknown }
+  excerpt?: string | null // first 200 characters of the input or scrape URL; untrusted, render as plain text
   [k: string]: unknown
 }
 

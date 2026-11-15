@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { coverage, job, json } from '../job/fixtures'
+import { coverage, json } from '../job/fixtures'
 import { I18nProvider, formatDate, useLocale } from '../i18n'
 import HistoryView from './HistoryView'
 
@@ -29,11 +29,8 @@ const summary = (id: string, extra: Record<string, unknown> = {}) => ({
   finalization: { status: 'completed', verdict: 'detected' }, ...extra,
 })
 const page = (items: unknown[], next_cursor: string | null = null) => json({ items, next_cursor })
-// Routes list requests to `list` and per-job requests to `detail` (default: a job whose content is `text of <id>`).
-const route = (list: (url: string) => Response, detail: (id: string) => Promise<Response> | Response = (id) => json(job({ id, input: { content: `text of ${id}` } }))) =>
-  fetchMock.mockImplementation(async (url: string) => (/^\/api\/v1\/jobs\?/.test(url) ? list(url) : detail(decodeURIComponent(url.split('/').pop() as string))))
+const route = (list: (url: string) => Response) => fetchMock.mockImplementation(async (url: string) => list(url))
 const listUrls = () => fetchMock.mock.calls.map((c) => c[0] as string).filter((u) => u.startsWith('/api/v1/jobs?'))
-const inMock = (el: HTMLElement) => el.closest('[data-mock]')
 
 describe('History', () => {
   it('lists jobs as returned (newest first), grouped by local day with item counts', async () => {
@@ -98,80 +95,190 @@ describe('History', () => {
     }
   })
 
-  it('shows the first 140 characters of the content, the scrape url as fallback, and literal text', async () => {
+  it('shows the excerpt of each item cut at 140 characters, as plain text, without per-job requests', async () => {
     const long = `<b>${'x'.repeat(200)}</b>`
-    route(
-      () => page([summary('a'), summary('b'), summary('c')]),
-      (id) => json(id === 'a' ? job({ id, input: { content: long } }) : id === 'b' ? job({ id, input: null, scrape: { status: 'running', url: 'https://x.com/alice' } }) : job({ id, input: { content: 'short' } })),
-    )
+    route(() => page([summary('a', { excerpt: long }), summary('b', { excerpt: 'https://x.com/alice' }), summary('c', { excerpt: 'short' }), summary('d', { excerpt: null }), summary('e')]))
     render(<HistoryView />)
     expect(await screen.findByText('“short”')).toBeInTheDocument()
     expect(screen.getByText('“https://x.com/alice”')).toBeInTheDocument()
-    const a = screen.getByText(`“${long.slice(0, 140)}…”`)
-    expect(a.querySelector('b')).toBeNull()
+    expect(screen.getByText(`“${long.slice(0, 140)}…”`).querySelector('b')).toBeNull()
+    expect(screen.getAllByText('Excerpt unavailable')).toHaveLength(2) // null and missing
+    expect(fetchMock.mock.calls.map((c) => c[0] as string).filter((u) => !u.includes('?'))).toEqual([])
   })
 
-  it('shows "Excerpt unavailable" for a failed excerpt request without affecting others', async () => {
-    route(() => page([summary('a'), summary('b')]), (id) => (id === 'a' ? json({ error: { code: 'internal_error', message: 'x' } }, 500) : json(job({ id, input: { content: 'fine' } }))))
+  it('has no meta line and no mock parts', async () => {
+    route(() => page([summary('a')]))
     render(<HistoryView />)
-    expect(await screen.findByText('Excerpt unavailable')).toBeInTheDocument()
-    expect(await screen.findByText('“fine”')).toBeInTheDocument()
-    expect(screen.queryByRole('alert')).toBeNull()
+    await screen.findByText('Today')
+    for (const text of ['Ledger index', 'Workspace session local', 'Synchronized']) expect(screen.queryByText(text)).toBeNull()
+    expect(document.querySelector('[data-mock]')).toBeNull()
+    expect(screen.getByRole('searchbox', { name: 'Search analyses' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /Export CSV/ })).toBeEnabled()
   })
 
-  it('never has more than four excerpt requests in flight', async () => {
-    let pending = 0
-    let peak = 0
-    const release: (() => void)[] = []
-    route(
-      () => page(Array.from({ length: 10 }, (_, i) => summary(`j${i}`))),
-      (id) => {
-        pending++
-        peak = Math.max(peak, pending)
-        return new Promise<Response>((resolve) => release.push(() => { pending--; resolve(json(job({ id, input: { content: id } }))) }))
-      },
-    )
-    render(<HistoryView />)
-    await waitFor(() => expect(release).toHaveLength(4))
-    expect(pending).toBe(4)
-    for (let done = 0; done < 10; done++) {
-      await act(async () => release[done]())
-      await waitFor(() => expect(release.length).toBe(Math.min(10, done + 5)))
+  describe('search', () => {
+    // 25 jobs, only "needle" matches; the unfiltered list is two pages with the match on page 2.
+    const needle = summary('needle-job', { excerpt: 'a needle here' })
+    const listAll = (url: string) => {
+      const u = new URL(url, 'http://x')
+      const q = u.searchParams.get('q')
+      if (q) return page(q === 'needle' ? [needle] : [])
+      return u.searchParams.get('cursor') ? page([needle]) : page([summary('a')], 'c1')
     }
-    expect(peak).toBe(4)
-    expect(await screen.findByText('“j9”')).toBeInTheDocument()
-  })
+    const type = (value: string) => fireEvent.change(screen.getByRole('searchbox', { name: 'Search analyses' }), { target: { value } })
 
-  describe('queued excerpts', () => {
-    // Ten items, so four requests are in flight and six wait; `release` settles the in-flight ones.
-    const setup = () => {
-      const release: (() => void)[] = []
-      route(
-        (url) => page(Array.from({ length: url.includes('status=failed') ? 2 : 10 }, (_, i) => summary(`${url.includes('status=failed') ? 'f' : 'j'}${i}`))),
-        (id) => new Promise<Response>((resolve) => release.push(() => resolve(json(job({ id, input: { content: id } }))))),
-      )
-      return release
-    }
-    const detailUrls = () => fetchMock.mock.calls.map((c) => c[0] as string).filter((u) => !u.includes('?'))
-
-    it('stops fetching queued excerpts after unmount', async () => {
-      const release = setup()
-      const { unmount } = render(<HistoryView />)
-      await waitFor(() => expect(release).toHaveLength(4))
-      unmount()
-      await act(async () => release.forEach((r) => r()))
-      expect(detailUrls()).toHaveLength(4)
-    })
-
-    it('drops queued excerpts of a previous filter so the new items load first', async () => {
-      const release = setup()
+    it('sends the trimmed text as q 300 ms after the last keystroke, combined with the status, and shows a match from page 2', async () => {
+      route(listAll)
       render(<HistoryView />)
-      await waitFor(() => expect(release).toHaveLength(4))
+      await screen.findByText('Today')
       fireEvent.click(screen.getByRole('button', { name: 'Failed' }))
       await waitFor(() => expect(listUrls()).toHaveLength(2))
-      await act(async () => release.slice(0, 4).forEach((r) => r()))
-      await waitFor(() => expect(detailUrls()).toHaveLength(6))
-      expect(detailUrls().slice(4)).toEqual(['/api/v1/jobs/f0', '/api/v1/jobs/f1'])
+      type('nee')
+      type('  needle ')
+      await new Promise((r) => setTimeout(r, 150))
+      expect(listUrls()).toHaveLength(2) // still debouncing
+      await screen.findByText('“a needle here”')
+      expect(listUrls()).toHaveLength(3)
+      expect(listUrls()[2]).toBe('/api/v1/jobs?limit=20&status=failed&q=needle')
+      expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull()
+    })
+
+    it('sends the query at once on Enter', async () => {
+      route(listAll)
+      render(<HistoryView />)
+      await screen.findByText('Today')
+      type('needle')
+      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter' })
+      await screen.findByText('“a needle here”')
+      expect(listUrls()[1]).toBe('/api/v1/jobs?limit=20&q=needle')
+    })
+
+    it('loads more with the same q and status, and restores the normal list when cleared', async () => {
+      route((url) => (url.includes('cursor=c1') ? page([summary('m2')]) : url.includes('q=') ? page([summary('m1')], 'c1') : page([summary('a')])))
+      render(<HistoryView />)
+      await screen.findByText('Today')
+      fireEvent.click(screen.getByRole('button', { name: 'Completed' }))
+      type('m')
+      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter' })
+      fireEvent.click(await screen.findByRole('button', { name: 'Load more' }))
+      await screen.findByText('m2')
+      expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=20&cursor=c1&status=completed&q=m')
+      type('   ')
+      await waitFor(() => expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=20&status=completed'))
+      await screen.findByText('a')
+      expect(screen.queryByText('m1')).toBeNull()
+    })
+
+    it('ignores an answer for a previous q', async () => {
+      const slow: ((r: Response) => void)[] = []
+      fetchMock.mockImplementation((url: string) => (url.includes('q=old') ? new Promise<Response>((resolve) => slow.push(resolve)) : Promise.resolve(url.includes('q=new') ? page([summary('new1')]) : page([]))))
+      render(<HistoryView />)
+      type('old')
+      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter' })
+      await waitFor(() => expect(slow).toHaveLength(1))
+      type('new')
+      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter' })
+      await screen.findByText('new1')
+      await act(async () => slow[0](page([summary('old1')])))
+      expect(screen.queryByText('old1')).toBeNull()
+      expect(screen.getByText('new1')).toBeInTheDocument()
+    })
+
+    it('shows a distinct empty state with the query as plain text when nothing matches', async () => {
+      route(() => page([]))
+      render(<HistoryView />)
+      await screen.findByText('No previous analyses yet')
+      type('<b>zzz</b>')
+      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter' })
+      const msg = await screen.findByText('No analyses match “<b>zzz</b>”')
+      expect(msg.querySelector('b')).toBeNull()
+      expect(screen.queryByText('No previous analyses yet')).toBeNull()
+      expect(screen.queryByRole('link', { name: 'Start first analysis' })).toBeNull()
+    })
+  })
+
+  describe('export', () => {
+    const files: { name: string; bytes: Uint8Array }[] = []
+    const read = (blob: Blob) => new Promise<Uint8Array>((resolve) => { const fr = new FileReader(); fr.onload = () => resolve(new Uint8Array(fr.result as ArrayBuffer)); fr.readAsArrayBuffer(blob) })
+    beforeEach(() => {
+      files.length = 0
+      const blobs: Blob[] = []
+      URL.createObjectURL = vi.fn((b: Blob) => { blobs.push(b); return 'blob:x' })
+      URL.revokeObjectURL = vi.fn()
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+        void read(blobs.at(-1) as Blob).then((bytes) => files.push({ name: this.download, bytes }))
+      })
+    })
+    const text = (i = 0) => new TextDecoder('utf-8', { ignoreBOM: true }).decode(files[i].bytes)
+    const click = () => fireEvent.click(screen.getByRole('button', { name: /Export CSV/ }))
+
+    it('pages with limit 100 through every page and downloads one CSV with BOM, CRLF and RFC 4180 quoting', async () => {
+      route((url) => (url.includes('cursor=c2')
+        ? page([summary('c', { finalization: { status: 'failed', verdict: null }, excerpt: null })])
+        : url.includes('cursor=c1') ? page([summary('b', { excerpt: 'say "hi", ok\nbye' })], 'c2') : page([summary('a', { excerpt: 'plain' })], 'c1')))
+      render(<HistoryView />)
+      await screen.findByText('Today')
+      fireEvent.click(screen.getByRole('button', { name: 'Completed' }))
+      await waitFor(() => expect(listUrls()).toHaveLength(2))
+      click()
+      await waitFor(() => expect(files).toHaveLength(1))
+      expect(listUrls().slice(2)).toEqual(['/api/v1/jobs?limit=100&status=completed', '/api/v1/jobs?limit=100&cursor=c1&status=completed', '/api/v1/jobs?limit=100&cursor=c2&status=completed'])
+      expect([...files[0].bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
+      expect(files[0].name).toBe('history-2026-11-14.csv')
+      const iso = ago(H)
+      expect(text()).toBe(
+        '﻿id,created_at,status,finalization_status,verdict,excerpt\r\n' +
+        `a,${iso},completed,completed,detected,plain\r\n` +
+        `b,${iso},completed,completed,detected,"say ""hi"", ok\nbye"\r\n` +
+        `c,${iso},completed,failed,,\r\n`)
+    })
+
+    it('uses the active search and neutralises spreadsheet formulas', async () => {
+      route((url) => (url.includes('q=x') ? page([summary('a', { excerpt: '=SUM(A1)' }), summary('b', { excerpt: '+1' }), summary('c', { excerpt: '-1' }), summary('d', { excerpt: '@x' }), summary('e', { excerpt: '\tx' }), summary('f', { excerpt: '\rx' }), summary('g', { excerpt: 'a=b' })]) : page([])))
+      render(<HistoryView />)
+      await screen.findByText('No previous analyses yet')
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'x' } })
+      fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter' })
+      await screen.findByText('“=SUM(A1)”')
+      click()
+      await waitFor(() => expect(files).toHaveLength(1))
+      expect(listUrls().at(-1)).toBe('/api/v1/jobs?limit=100&q=x')
+      const cells = text().split('\r\n').slice(1, 8).map((l) => l.split(',').slice(5).join(','))
+      expect(cells).toEqual(["'=SUM(A1)", "'+1", "'-1", "'@x", "'\tx", '"\'\rx"', 'a=b']) // the CR cell is also quoted (RFC 4180)
+    })
+
+    it('shows the busy state while exporting, with the hint on the button', async () => {
+      let release!: () => void
+      route((url) => (url.includes('limit=100') ? (new Promise((r) => { release = () => r(page([])) }) as unknown as Response) : page([summary('a')])))
+      render(<HistoryView />)
+      await screen.findByText('Today')
+      expect(screen.getByRole('button', { name: /Export CSV/ })).toHaveAttribute('title', 'Exports every analysis matching the active status filter and search as a CSV file.')
+      click()
+      const busy = await screen.findByRole('button', { name: 'Exporting…' })
+      expect(busy).toBeDisabled()
+      expect(busy).toHaveAttribute('aria-busy', 'true')
+      await act(async () => release())
+      await waitFor(() => expect(screen.getByRole('button', { name: /Export CSV/ })).toBeEnabled())
+      await waitFor(() => expect(files).toHaveLength(1)) // let the download settle before the next test
+    })
+
+    it('downloads a header-only file for an empty history', async () => {
+      route(() => page([]))
+      render(<HistoryView />)
+      await screen.findByText('No previous analyses yet')
+      click()
+      await waitFor(() => expect(files).toHaveLength(1))
+      expect(text()).toBe('﻿id,created_at,status,finalization_status,verdict,excerpt\r\n')
+    })
+
+    it('shows the localized API error and downloads nothing when a page fails', async () => {
+      route((url) => (url.includes('cursor=c1') ? json({ error: { code: 'invalid_request', message: 'bad' } }, 400) : url.includes('limit=100') ? page([summary('a')], 'c1') : page([summary('a')])))
+      render(<HistoryView />)
+      await screen.findByText('Today')
+      click()
+      expect(await screen.findByRole('alert')).toHaveTextContent('The request was not valid')
+      expect(files).toHaveLength(0)
+      expect(screen.getByRole('button', { name: /Export CSV/ })).toBeEnabled()
     })
   })
 
@@ -188,17 +295,6 @@ describe('History', () => {
     render(<HistoryView />)
     expect(await screen.findByRole('alert')).toHaveTextContent('The request was not valid')
     expect(screen.queryByText('No previous analyses yet')).toBeNull()
-  })
-
-  it('marks only the mock parts: search (disabled), export, session text', async () => {
-    route(() => page([summary('a')]))
-    render(<HistoryView />)
-    await screen.findByText('Today')
-    const search = screen.getByRole('searchbox', { name: 'Search analyses' })
-    expect(search).toBeDisabled()
-    for (const el of [search, screen.getByRole('button', { name: /Export Ledger/ }), screen.getByText('Synchronized'), screen.getByText('Workspace session local')])
-      expect(inMock(el)).not.toBeNull()
-    for (const el of [screen.getByRole('link', { name: 'Reopen Analysis →' }), screen.getByText('Today'), screen.getByRole('button', { name: 'All' })]) expect(inMock(el)).toBeNull()
   })
 
   describe('locales', () => {
