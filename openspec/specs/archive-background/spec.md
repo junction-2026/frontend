@@ -1,7 +1,7 @@
 # archive-background Specification
 
 ## Purpose
-Defines the decorative archived-documents backdrop shown behind the History page: its structure, placement, palette, subtlety, motion and reduced-motion behaviour, without altering the real UI.
+Defines the light, low-detail, static library-shelf backdrop shown behind the History page, matching the neutral app palette: its structure, placement, colours and reduced-motion behaviour, without altering the real UI.
 
 ## Requirements
 
