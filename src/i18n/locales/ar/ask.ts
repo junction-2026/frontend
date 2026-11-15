@@ -38,6 +38,7 @@ export default {
   'focus.select': 'اسأل عن {label}',
   'focus.choose': 'اختيار عناصر النتيجة',
   'focus.clear': 'مسح التحديد',
+  'focus.select_all': 'تحديد الكل',
   'focus.remove': 'إزالة {label}',
   'focus.limit': 'يمكنك اختيار {max} عنصراً على الأكثر.',
   'focus.hint': 'سؤالك يخص التحليل كله.',
