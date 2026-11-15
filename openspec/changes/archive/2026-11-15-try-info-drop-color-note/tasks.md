@@ -1,0 +1,2 @@
+- [x] 1. Remove the parenthetical from `try.info` in all six locales
+- [x] 2. Add unit test for en text and no '(' in any locale
