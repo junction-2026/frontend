@@ -129,16 +129,62 @@
 .try-row {
   margin: 0.95rem auto 0;
   max-width: 760px;
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
   color: var(--muted);
   font-size: 0.88rem;
 }
 
 .try-row button {
+  min-width: 24px;
+  min-height: 24px;
+  max-width: 100%;
   color: var(--ink-2);
   text-decoration: underline;
   text-underline-offset: 3px;
   font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.try-row .try-shuffle {
+  text-decoration: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
+}
+
+.try-expectation {
+  margin: 0.7rem auto 0;
+  max-width: 760px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.try-expectation[data-expectation='detected'] {
+  background: var(--verdict-detected-bg);
+  border-color: var(--verdict-detected-border);
+  color: var(--verdict-detected-pill-text);
+}
+
+.try-expectation[data-expectation='not_detected'] {
+  background: var(--verdict-not-detected-bg);
+  border-color: var(--verdict-not-detected-border);
+  color: var(--verdict-not-detected-pill-text);
+}
+
+.try-expectation[data-expectation='uncertain'] {
+  background: var(--verdict-uncertain-bg);
+  border-color: var(--verdict-uncertain-border);
+  color: var(--verdict-uncertain-pill-text);
 }
 
 /* ——— Analyzing ——— */

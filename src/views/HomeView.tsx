@@ -3,6 +3,7 @@ import { createJob, listAnalyzers } from '../api/client'
 import { errorMessage } from '../api/errors'
 import type { AnalyzerInfo, ApiError, CreateJobBody } from '../api/types'
 import { rich, useT } from '../i18n'
+import { draw, loadRaw, truncate, validItems, type Expectation, type TryItem } from '../home/tryCorpus'
 import { navigate } from '../router'
 import { AmbientBackground } from '../ui/AmbientBackground'
 import '../styles/analyze.css'
@@ -44,6 +45,25 @@ export default function HomeView() {
   const [listError, setListError] = useState<ApiError | null>(null)
   const [isPublic, setIsPublic] = useState(true)
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set())
+  // null corpus = loading or failed: the four fallback samples show.
+  const [corpus, setCorpus] = useState<TryItem[] | null>(null)
+  const [chips, setChips] = useState<TryItem[]>([])
+  const [expected, setExpected] = useState<Expectation | null>(null)
+
+  useEffect(() => {
+    let stale = false
+    loadRaw()
+      .then(validItems)
+      .then((items) => {
+        if (stale || items.length < 5) return
+        setCorpus(items)
+        setChips(draw(items, 5))
+      })
+      .catch(() => {})
+    return () => {
+      stale = true
+    }
+  }, [])
 
   // The analyzers are fetched the first time the panel opens.
   useEffect(() => {
@@ -101,7 +121,7 @@ export default function HomeView() {
           <div className="composer-top">
             <div className="mode-tabs" role="tablist" aria-label={t('home.mode.label')}>
               {(['text', 'link'] as const).map((m) => (
-                <button key={m} type="button" role="tab" aria-selected={mode === m} className={mode === m ? 'active' : undefined} onClick={() => { setMode(m); setProblem(null) }}>
+                <button key={m} type="button" role="tab" aria-selected={mode === m} className={mode === m ? 'active' : undefined} onClick={() => { setMode(m); setProblem(null); if (m === 'link') setExpected(null) }}>
                   {t(`home.mode.${m}`)}
                 </button>
               ))}
@@ -117,7 +137,7 @@ export default function HomeView() {
             dir="auto"
             placeholder={t(`home.placeholder_${mode}`)}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => { setValue(e.target.value); if (!e.target.value.trim()) setExpected(null) }}
             onKeyDown={(e) => {
               if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault()
@@ -177,15 +197,34 @@ export default function HomeView() {
           )}
         </div>
 
-        <p className="try-row">
-          {t('home.try')}{' '}
-          {SAMPLES.map((s, i) => (
-            <span key={s}>
-              {i > 0 && ' · '}
-              <button type="button" onClick={() => { setMode('text'); setValue(t(`home.sample.${s}.text`)) }}>{t(`home.sample.${s}.label`)}</button>
-            </span>
-          ))}
-        </p>
+        <div className="try-row">
+          <span>{t('home.try')}</span>
+          {corpus
+            ? chips.map((c, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  dir="auto"
+                  title={c.statement}
+                  aria-label={truncate(c.statement, 300)}
+                  onClick={() => { setMode('text'); setValue(c.statement); setExpected(c.expectation) }}
+                >
+                  {truncate(c.statement, 60)}
+                </button>
+              ))
+            : SAMPLES.map((s) => (
+                <button key={s} type="button" onClick={() => { setMode('text'); setValue(t(`home.sample.${s}.text`)) }}>{t(`home.sample.${s}.label`)}</button>
+              ))}
+          {corpus && (
+            <button type="button" className="try-shuffle" onClick={() => { setChips(draw(corpus, 5)); setExpected(null) }}>{t('home.try.shuffle')}</button>
+          )}
+        </div>
+        {expected && (
+          <div className="try-expectation" role="status" data-expectation={expected}>
+            <strong>{t('home.try.expectation.prefix')} {t(`home.try.expectation.${expected}`)}</strong>
+            <span>{t('home.try.expectation.note')}</span>
+          </div>
+        )}
       </div>
 
     </section>
