@@ -203,11 +203,11 @@ describe('translate', () => {
     const Probe = () => {
       const t = useT()
       const { setLocale } = useLocale()
-      return <button onClick={() => setLocale('fi')}>{t('shell.account')}</button>
+      return <button onClick={() => setLocale('fi')}>{t('shell.nav.history')}</button>
     }
     render(<I18nProvider><Probe /></I18nProvider>)
-    fireEvent.click(screen.getByRole('button', { name: 'Account' }))
-    expect(screen.getByRole('button', { name: 'Tili' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'History' }))
+    expect(screen.getByRole('button', { name: 'Historia' })).toBeInTheDocument()
   })
 })
 

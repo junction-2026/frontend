@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 // Views whose static text must come from the catalogs. Result/detail views and src/job belong to the result-localization task.
 const files = import.meta.glob(
   [
-    '../views/{Home,Explore,Region,History,Ask,Settings,States}View.tsx',
+    '../views/{Home,Explore,Region,History,Ask,States}View.tsx',
     '../explore/*.tsx',
     '../explore/propagandaMap/*.tsx',
     '../history/*.tsx',
@@ -16,9 +16,9 @@ const files = import.meta.glob(
 ) as Record<string, string>
 
 const ATTRS = new Set(['placeholder', 'title', 'aria-label', 'aria-description', 'alt', 'label'])
-// Brand, the avatar initial of the Ask mock, and the keycap of the search shortcut: not translatable.
+// Brand and the keycap of the search shortcut: not translatable.
 // 'Decode the Noise' is a fixed brand phrase, identical in every locale (decorative NoiseHeadline).
-const ALLOWED = new Set(['VEIL', 'V', '⌘ K', 'Decode the Noise'])
+const ALLOWED = new Set(['VEIL', '⌘ K', 'Decode the Noise'])
 const LETTER = /\p{L}/u
 
 export function literals(name: string, source: string): string[] {
@@ -43,7 +43,7 @@ export function literals(name: string, source: string): string[] {
 describe('no hardcoded user-visible strings', () => {
   it('scans the owned views', () => expect(Object.keys(files).length).toBeGreaterThan(10))
 
-  it('finds none in the shell, Home, Explore, Region, History, Ask, Settings and States', () => {
+  it('finds none in the shell, Home, Explore, Region, History, Ask and States', () => {
     expect(Object.entries(files).flatMap(([name, src]) => literals(name, src))).toEqual([])
   })
 

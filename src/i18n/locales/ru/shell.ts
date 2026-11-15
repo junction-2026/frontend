@@ -6,7 +6,6 @@ export default {
   'nav.history': 'История',
   'language': 'Язык',
   'new_analysis': '+ Новый анализ',
-  'account': 'Аккаунт',
   'health.checking': 'Проверка бэкенда…',
   'health.offline': 'Бэкенд недоступен',
   'health.online': 'Бэкенд работает',

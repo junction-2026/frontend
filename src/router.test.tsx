@@ -33,7 +33,8 @@ describe('matchRoute', () => {
     ['/ask', { name: 'ask' }],
     ['/jobs/abc/ask', { name: 'ask', id: 'abc' }],
     ['/jobs/a%20b/ask', { name: 'ask', id: 'a b' }],
-    ['/settings', { name: 'settings' }],
+    ['/settings', { name: 'home' }],
+    ['/settings/x', { name: 'home' }],
     ['/states', { name: 'states' }],
     ['/history/', { name: 'history' }],
     ['/nope', { name: 'home' }],
@@ -63,7 +64,7 @@ describe('routes render their stub view in the shell', () => {
     ['/explore/region', 'Explore the world.'],
     ['/ask', /^Ask VEIL/],
     ['/jobs/j1/ask', /^Ask VEIL/],
-    ['/settings', 'Settings & Methodology'],
+    ['/settings', 'See beyond the narrative.'],
     ['/states', 'Edge Cases & System States'],
     ['/unknown', 'See beyond the narrative.'],
   ])('%s', (path, heading, level = 1) => {
@@ -103,7 +104,7 @@ describe('navigation', () => {
     ['/explore', ['Explore']],
     ['/explore/region', ['Explore']],
     ['/history', ['History']],
-    ['/settings', []],
+    ['/settings', ['Analyze']],
   ])('active tab for %s', (path, expected) => {
     open(path)
     expect(activeTabs()).toEqual(expected)
@@ -113,7 +114,8 @@ describe('navigation', () => {
     open('/')
     expect(nav('History')).toHaveAttribute('href', '/history')
     expect(nav('+ New Analysis')).toHaveAttribute('href', '/')
-    expect(nav('Account')).toHaveAttribute('href', '/settings')
+    expect(screen.queryByRole('link', { name: 'Account' })).toBeNull()
+    expect(document.querySelector('a[href="/settings"], .avatar')).toBeNull()
     expect(screen.getByRole('link', { name: /VEIL/ })).toHaveAttribute('href', '/')
   })
 

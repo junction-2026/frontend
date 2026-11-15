@@ -1,4 +1,4 @@
-/* Ask, Explore/Region, Settings and States styles ported from UI_DESIGN/css/styles.css (UI_DESIGN is removed in the same change). */
+/* Ask, Explore/Region and States styles ported from UI_DESIGN/css/styles.css (UI_DESIGN is removed in the same change). */
 /* ——— Ask VEIL ——— */
 .context-bar {
   display: flex;
@@ -521,79 +521,6 @@
   gap: 0.5rem;
 }
 
-/* ——— Settings ——— */
-.settings-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin: 1rem 0 1.1rem;
-}
-
-.settings-tabs button {
-  padding: 0.5rem 0.85rem;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 600;
-}
-
-.settings-tabs button.active {
-  border-color: var(--ink);
-  color: var(--ink);
-}
-
-.settings-block {
-  padding: 1.05rem 1.15rem;
-  margin-bottom: 0.85rem;
-}
-
-.settings-block-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.85rem;
-  color: var(--faint);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.setting-row,
-.analyzer-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.85rem 0;
-  border-top: 1px solid var(--line);
-}
-
-.setting-row:first-of-type,
-.analyzer-row:first-of-type {
-  border-top: none;
-  padding-top: 0.2rem;
-}
-
-.setting-row h4,
-.analyzer-row h4 {
-  margin: 0 0 0.25rem;
-  font-size: 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.setting-row p,
-.analyzer-row p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.86rem;
-  max-width: 36rem;
-}
-
 /* ——— Edge cases ——— */
 .edge-grid {
   display: grid;
@@ -711,9 +638,7 @@
 .mock-block { margin-bottom: 0.9rem; }
 .chat-thread .mock-block { margin-bottom: 1.4rem; }
 .btn-primary:disabled, .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
-.analyzer-row .id-badge { font-family: ui-monospace, monospace; }
 .status-pill.gray { background: var(--bg-soft); color: var(--muted); }
-.settings-tabs .mock { margin-inline-end: 0.3rem; }
 .chat-input .chat-field { flex: 1; }
 .pipeline-grid .skip { color: var(--orange); }
 .edge-note { color: var(--muted); font-size: 0.8rem; }
