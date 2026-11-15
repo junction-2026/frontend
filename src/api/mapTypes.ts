@@ -6,11 +6,13 @@ export type CountryAggregate = { country_code: string; country: string; analyses
 export type CountriesResponse = { items: CountryAggregate[]; analyses: number }
 
 export type MapTechnique = { name: string; display: string; strength?: string } // no strength: old result, show no indicator
+export type MapCountry = { country_code: string; country: string; basis: string[] } // basis: only the known 'outlet' | 'content' are kept
 export type MapAnalysis = {
   job_id: string
   created_at: string
   country_code: string
   country: string
+  countries: MapCountry[]
   outlet: { name: string; domain: string } | null
   source: { url: string; title: string | null }
   snippet: string
@@ -33,6 +35,12 @@ export function readCountries(raw: unknown): CountriesResponse {
   return { items, analyses: count(obj(raw).analyses) }
 }
 
+const BASES = ['outlet', 'content']
+const readMapCountries = (v: unknown): MapCountry[] => arr(v).map((c) => {
+  const o = obj(c)
+  return { country_code: str(o.country_code).toUpperCase(), country: str(o.country), basis: arr(o.basis).filter((b): b is string => typeof b === 'string' && BASES.includes(b)) }
+}).filter((c) => c.country_code)
+
 export function readAnalyses(raw: unknown): MapAnalysesPage {
   const items = arr(obj(raw).items).map((i) => {
     const o = obj(i)
@@ -43,6 +51,7 @@ export function readAnalyses(raw: unknown): MapAnalysesPage {
     }).filter((t) => t.name)
     return {
       job_id: str(o.job_id), created_at: str(o.created_at), country_code: str(o.country_code), country: str(o.country),
+      countries: readMapCountries(o.countries),
       outlet: typeof outlet.name === 'string' ? { name: outlet.name, domain: str(outlet.domain) } : null,
       source: { url: str(obj(o.source).url), title: typeof obj(o.source).title === 'string' ? (obj(o.source).title as string) : null },
       snippet: str(o.snippet), techniques, verdict: typeof o.verdict === 'string' ? o.verdict : null,

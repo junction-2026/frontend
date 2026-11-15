@@ -6,6 +6,7 @@ const files = import.meta.glob(
   [
     '../views/{Home,Explore,Region,History,Ask,Settings,States}View.tsx',
     '../explore/*.tsx',
+    '../explore/propagandaMap/*.tsx',
     '../history/*.tsx',
     '../ui/*.tsx',
     '../secondary/*.tsx',
