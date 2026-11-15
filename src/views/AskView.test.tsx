@@ -379,6 +379,72 @@ describe('result pane', () => {
     expect(readFileSync('src/job/job.css', 'utf8')).toMatch(/button\.focus-select:focus-visible \{ outline: 2px solid var\(--blue\)/)
   })
 
+  describe('whole-analysis hint', () => {
+    const hint = () => screen.queryByText('Your question is about the whole analysis.')
+    const chips = () => document.querySelectorAll('.focus-chips li')
+    const expectHint = () => { expect(hint()).toBeInTheDocument(); expect(document.querySelector('.focus-chips')).toBeNull(); expect(screen.queryByRole('button', { name: /^Remove / })).toBeNull() }
+    const expectChips = (n: number) => { expect(hint()).toBeNull(); expect(chips()).toHaveLength(n) }
+
+    it('shows the hint and no chips for the default selection, yet still sends every element', async () => {
+      await show()
+      expect(pressed()).toHaveLength(15)
+      expectHint()
+      await ask('q')
+      await screen.findByText('An answer.')
+      expect(chats()[0].body.focus).toHaveLength(15)
+    })
+
+    it('shows N-1 chips after deselecting one element and the hint again after reselecting it', async () => {
+      await show()
+      fireEvent.click(toggle('Doubt'))
+      expectChips(14)
+      expect(selectAll().indeterminate).toBe(true)
+      fireEvent.click(toggle('Doubt'))
+      expectHint()
+    })
+
+    it('shows the hint once the last element is selected one by one, and not before', async () => {
+      await showNone()
+      expectHint()
+      const labels = toggles().map((b) => (b.getAttribute('aria-label') ?? '').replace(/^Ask about /, ''))
+      labels.slice(0, -1).forEach((l) => fireEvent.click(toggle(l)))
+      expectChips(14)
+      fireEvent.click(toggle(labels[14]))
+      expectHint()
+      expect(selectAll()).toBeChecked()
+    })
+
+    it('shows the hint and omits focus for an empty selection', async () => {
+      await showNone()
+      expectHint()
+      await ask('q')
+      await screen.findByText('An answer.')
+      expect(chats()[0].body).not.toHaveProperty('focus')
+    })
+
+    it('shows chips, never the hint, for any non-empty selection over the limit', async () => {
+      jobBody = terms(25)
+      await show()
+      expect(pressed()).toHaveLength(20)
+      expectChips(20)
+      fireEvent.click(selectAll())
+      expectHint()
+      fireEvent.click(selectAll())
+      expectChips(20)
+      fireEvent.click(toggle('term 0'))
+      expectChips(19)
+    })
+
+    it('shows the hint for a non-empty selection exactly when Select all is checked (N <= 20)', async () => {
+      jobBody = terms(3)
+      await show()
+      for (const l of ['term 0', 'term 1', 'term 2', 'term 1']) {
+        fireEvent.click(toggle(l))
+        if (pressed().length > 0) expect(Boolean(hint())).toBe(selectAll().checked)
+      }
+    })
+  })
+
   it('selects a technique, shows its chip, sends it as focus and removes it again', async () => {
     await showNone()
     fireEvent.click(toggle('Doubt'))
@@ -569,7 +635,9 @@ describe('result pane', () => {
   it('selects every element by default, shows the checked Select all in the pane header and sends all of them', async () => {
     await show()
     expect(pressed()).toHaveLength(15)
-    expect(document.querySelectorAll('.focus-chips li')).toHaveLength(15)
+    expect(document.querySelector('.focus-chips')).toBeNull() // every element: the whole-analysis hint instead of 15 chips
+    expect(screen.queryByRole('button', { name: /^Remove / })).toBeNull()
+    expect(screen.getByText('Your question is about the whole analysis.')).toBeInTheDocument()
     expect(selectAll()).toBeChecked()
     expect(selectAll().indeterminate).toBe(false)
     const head = document.querySelector('.ask-result-head') as HTMLElement
@@ -654,7 +722,8 @@ describe('result pane', () => {
     jobBody = richJob()
     await act(async () => { vi.advanceTimersByTime(2_500) })
     expect(await screen.findByRole('checkbox', { name: 'Select all' })).toBeChecked()
-    expect(document.querySelectorAll('.focus-chips li')).toHaveLength(15)
+    expect(document.querySelector('.focus-chips')).toBeNull()
+    expect(screen.getByText('Your question is about the whole analysis.')).toBeInTheDocument()
     fireEvent.click(selectAll())
     rerender(view)
     await act(async () => { vi.advanceTimersByTime(5_000) })

@@ -118,7 +118,7 @@ function JobChat({ id }: { id: string }) {
           <ChatHead />
           {!result && <Skeleton />}
           {result && !result.ok && <ErrorAlert error={result.error} notFound={t('results.job_not_found')} />}
-          {job && <Chat id={id} status={job.status} done={job.done === true} chat={chat} focus={focus} onRemove={toggle} onChoose={choose} />}
+          {job && <Chat id={id} status={job.status} done={job.done === true} chat={chat} focus={focus} total={items.length} onRemove={toggle} onChoose={choose} />}
         </div>
       </div>
       {job && (
