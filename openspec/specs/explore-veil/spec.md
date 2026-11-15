@@ -6,11 +6,15 @@ Defines the decorative animated cloth veil shown behind the Explore page: its st
 ## Requirements
 
 ### Requirement: Veil component
-`ExploreVeil` SHALL render one `.explore-veil` with `aria-hidden="true"`, no focusable element and no `tabindex`, containing in order one `.explore-veil-truth` and then 2 or 3 `.explore-veil-panel` elements. It SHALL render no text.
+`ExploreVeil` SHALL render one `div.explore-veil` with `aria-hidden="true"`, no text, no focusable element and no `tabindex`. In WebGL mode it SHALL contain one `canvas.explore-veil-canvas`. In fallback mode it SHALL contain one `div.explore-veil-fallback` and no canvas. The `.explore-veil-truth` and `.explore-veil-panel*` elements and their CSS SHALL NOT exist.
 
 #### Scenario: Structure
-- **WHEN** `ExploreVeil` is rendered
-- **THEN** there is one hidden `.explore-veil` whose first child is `.explore-veil-truth`, followed by 2 or 3 `.explore-veil-panel`, and no text or focusable element
+- **WHEN** `ExploreVeil` is rendered and a WebGL context can be created
+- **THEN** there is one hidden `.explore-veil` containing one `canvas.explore-veil-canvas` and no `.explore-veil-fallback`, text or focusable element
+
+#### Scenario: Fallback mode
+- **WHEN** `ExploreVeil` is rendered and no WebGL context can be created
+- **THEN** there is one hidden `.explore-veil` containing one `.explore-veil-fallback` and no canvas
 
 ### Requirement: Explore-only mounting
 `ExploreView` SHALL render `<ExploreVeil />` as the sibling directly preceding the `.view` section in both modes (with a job: `ExploreJob`; without: `PropagandaMap`), not inside `.view`, whose `rise` transform would capture the fixed layer. No other view SHALL render it.
@@ -24,57 +28,110 @@ Defines the decorative animated cloth veil shown behind the Explore page: its st
 - **THEN** no `.explore-veil` exists
 
 ### Requirement: Layer geometry and stacking
-`.explore-veil` SHALL be `position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0`. `.explore-veil + .view` SHALL be `position: relative; z-index: 1`. The sticky topbar (z-index 40) SHALL stay above both. No rule SHALL re-enable pointer events. The document SHALL gain no horizontal overflow at any width from 320px up, in LTR and RTL.
+`.explore-veil` SHALL be `position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; background: #FFFFFF`. `.explore-veil + .view` SHALL be `position: relative; z-index: 1`. The sticky topbar (z-index 40) SHALL stay above both. No rule SHALL re-enable pointer events. The document SHALL gain no horizontal overflow at any width from 320px up, in LTR and RTL.
 
 #### Scenario: Geometry
 - **WHEN** `explore-veil.css` is read
-- **THEN** `.explore-veil` has the declarations above, `.explore-veil + .view` has `position: relative` and `z-index: 1`, and no `pointer-events: auto|all` exists
+- **THEN** `.explore-veil` has the declarations above, `.explore-veil-canvas` fills it, `.explore-veil + .view` has `position: relative` and `z-index: 1`, and no `pointer-events: auto|all` exists
 
 ### Requirement: Style isolation and palette
-All veil styles SHALL live in `src/styles/explore-veil.css`, imported by `ExploreVeil`. Every selector SHALL target an `.explore-veil*` class. Hex colours SHALL be only Lavender `#DDD6FE`, Powder blue `#BFDBFE` and `#FFFFFF`, each optionally with alpha, plus existing tokens via `var(--...)`. Body, Explore, map and panel styles SHALL be untouched.
+All veil styles SHALL live in `src/styles/explore-veil.css`, imported by `ExploreVeil`. Every selector SHALL target an `.explore-veil*` class. Hex colours SHALL be only the neutral palette `#FFFFFF`, `#F4F1EC`, `#E9E5DE` and `#DCD8D1`, each optionally with alpha, with every RGB channel at least `0xD0`. Body, Explore, map and panel styles SHALL be untouched.
 
 #### Scenario: Palette
 - **WHEN** `explore-veil.css` is read
-- **THEN** every hex colour is one of the three palette colours (with optional alpha) and every selector contains `.explore-veil`
+- **THEN** every hex colour is one of the four palette colours (with optional alpha) and every selector contains `.explore-veil`
 
 ### Requirement: Cloth look
-Each panel SHALL use layered `linear-gradient`s of alternating translucent light and darker bands (at least 4 fold bands) for soft vertical folds, with panel opacity between 0.15 and 0.4 at rest so content contrast is unchanged. Any blur SHALL be a static filter of at most 40px and SHALL never be animated.
+In WebGL mode the fragment shader SHALL compute a heightfield of vertical hanging folds (at least 3 fold frequencies) plus at least 2 travelling wave or noise octaves. Lighting SHALL come from normals derived from that heightfield: soft diffuse shading plus a low specular sheen. There SHALL be no repeating tile, stripe or hue pattern.
 
 #### Scenario: Folds
-- **WHEN** `explore-veil.css` is read
-- **THEN** the panel cloth has at least 4 darker and 4 light gradient stops, the panel rest opacity is within 0.15 to 0.4, and no `@keyframes` contains `filter` or `blur`
-
-### Requirement: Sway
-Each panel SHALL have its own `@keyframes` declaring only `transform` (small translate, `skewX` within ±3deg, `scaleY` 0.98 to 1.03) with equal 0% and 100% frames, a duration of 8s to 16s, `ease-in-out` and `infinite`, with durations that differ between panels. Panels SHALL set `will-change: transform`.
-
-#### Scenario: Sway timing
-- **WHEN** `explore-veil.css` is read
-- **THEN** each panel sways with its own transform-only keyframes of 8s to 16s, with distinct durations and equal 0% and 100% frames
-
-### Requirement: Reveal
-A separate per-panel reveal animation (`transform` and `opacity` only, combined with the sway through a wrapper element) SHALL have a cycle of 15s to 30s, with durations that differ between panels. It SHALL hold closed for most of the cycle; in a window of 3s to 6s it SHALL ease the panels outward (the first toward the inline-start side, the last toward the inline-end side, the middle one lifted upward) by 25% to 50% and lower their opacity, then return to the identical 0% and 100% rest frame.
-
-#### Scenario: Reveal timing
-- **WHEN** `explore-veil.css` is read
-- **THEN** each panel's reveal has its own keyframes and a distinct cycle of 15s to 30s, is closed for the first half of the cycle or more, opens and closes within 3s to 6s by 25% to 50%, and has equal 0% and 100% frames
-
-### Requirement: Truth layer
-`.explore-veil-truth` SHALL be a static soft `radial-gradient` glow from the palette (opacity at most 0.5), visually covered by the closed panels and visible only when they part. It SHALL carry no text or data.
-
-#### Scenario: Glow
-- **WHEN** `explore-veil.css` is read
-- **THEN** `.explore-veil-truth` has a `radial-gradient`, an opacity of at most 0.5 and no animation
+- **WHEN** the shader module is inspected
+- **THEN** it declares at least 3 fold frequencies and 2 travelling octaves
 
 ### Requirement: Reduced motion
-Under `@media (prefers-reduced-motion: reduce)` every veil animation SHALL be `animation: none`, with the panels static in the closed rest position and still visible.
+Under `@media (prefers-reduced-motion: reduce)` `explore-veil.css` SHALL declare `animation: none` and `transition: none` for `.explore-veil *`, and the veil SHALL use the static fallback instead of WebGL.
 
 #### Scenario: Reduced motion
 - **WHEN** `explore-veil.css` is read
-- **THEN** the reduced-motion block sets `animation: none` on `.explore-veil-panel` and `.explore-veil-panel::before` and hides nothing
+- **THEN** the reduced-motion block sets `animation: none` and `transition: none` on `.explore-veil *` and hides nothing
 
-### Requirement: CSS-only performance
-Animation SHALL be CSS-only (no `setInterval`, `setTimeout`, `requestAnimationFrame` or JS-driven styles), so browsers throttle it in hidden tabs. No npm dependency SHALL be added.
+### Requirement: Canvas layout
+`.explore-veil-canvas` SHALL be `display: block`, absolutely positioned at `inset: 0` with `width: 100%` and `height: 100%`.
 
-#### Scenario: No timers
-- **WHEN** `ExploreVeil.tsx` is read
-- **THEN** it contains no timer, animation-frame call or inline style
+#### Scenario: Canvas fills the layer
+- **WHEN** `explore-veil.css` is read
+- **THEN** `.explore-veil-canvas` has the declarations above
+
+### Requirement: Cloth colour
+Output alpha SHALL be within 0.35 to 0.75 at rest. Colours SHALL be neutral only: base tint `#F4F1EC` and shadow `#D9D5CE`. Every composited pixel over the `#FFFFFF` base SHALL keep each RGB channel at least `0xD0`, so `--ink` and `--muted` text contrast on content surfaces is preserved.
+
+#### Scenario: Contrast floor
+- **WHEN** the shader module is inspected
+- **THEN** its alpha range is within 0.35 to 0.75 and the base and shadow colours composited at the maximum alpha stay at or above `0xD0` per channel
+
+### Requirement: Renderer
+The WebGL renderer SHALL use plain WebGL1 (`canvas.getContext('webgl', {alpha: true, premultipliedAlpha: true, antialias: false, powerPreference: 'low-power'})`) and draw one full-screen quad with a single fragment shader. Shader source SHALL live in `src/ui/silkVeil/`. No npm dependency and no video or image asset SHALL be added.
+
+#### Scenario: Context request
+- **WHEN** the renderer starts
+- **THEN** it requests a `webgl` context with the attributes above and issues one draw call per frame
+
+### Requirement: Motion
+All motion SHALL be a continuous function of elapsed time `t` in seconds (uniform `u_time`), slow (wave phase speed at most 0.15 viewport widths per second, fold sway amplitude at most 3% of the viewport width) and eased. `t` SHALL never reset and no periodic loop with a restart SHALL be used, so no seam occurs. While paused, `t` SHALL stop advancing and on resume SHALL continue from the paused value without a jump.
+
+#### Scenario: Pause and resume
+- **WHEN** the document becomes hidden for 60 s and then visible again
+- **THEN** `u_time` on the first frame after resume is within one clamped frame step of its value before the pause
+
+### Requirement: Reveal scheduler
+`src/ui/silkVeil/reveal.ts` SHALL be a pure, unit-testable module that schedules reveals with gaps drawn uniformly at random from 10 s to 20 s, measured from the end of the previous reveal; the first reveal SHALL fall in the same window after mount. Each reveal SHALL last a random 3 s to 5 s and rise with a smooth ease-in-out (no derivative jump) to `u_reveal = 1` and back to 0. The RNG SHALL be injectable. Elapsed-time accounting SHALL exclude paused (hidden) time.
+
+#### Scenario: Gaps and durations
+- **WHEN** 200 reveals are scheduled with a seeded RNG
+- **THEN** every gap is within 10 s to 20 s, every duration within 3 s to 5 s, the gaps are not all equal, and the value is 0 at the start and end of each reveal and 1 at its plateau
+
+#### Scenario: Paused time
+- **WHEN** no time is advanced while the document is hidden
+- **THEN** the scheduler state is unchanged
+
+### Requirement: Reveal visual
+At `u_reveal = 1` the shader SHALL displace the cloth toward one randomly chosen side (left or right, re-chosen per reveal), passing through it with a lifted curved edge. Cloth alpha SHALL drop to 0 over at least 40% of the viewport area, so the `#FFFFFF` base is visible there. At `u_reveal = 0` the cloth SHALL fully cover the view again.
+
+#### Scenario: Coverage
+- **WHEN** the shader tuning constants are inspected
+- **THEN** the fully cleared share of the viewport at `u_reveal = 1` is at least 40% and the edge sits at the side boundary at `u_reveal = 0`
+
+### Requirement: Performance
+The device pixel ratio SHALL be capped at `min(devicePixelRatio, 1.5)` and the canvas backing store SHALL be scaled by a render scale between 0.5 and 0.75 (CSS upscales). Resize SHALL be handled with a window resize listener, applied at most once per animation frame. Rendering SHALL run on `requestAnimationFrame` only, with one draw call per frame.
+
+#### Scenario: Backing store size
+- **WHEN** the viewport is 1000x600 CSS pixels at a device pixel ratio of 3
+- **THEN** the backing store is 1000 * 1.5 * scale by 600 * 1.5 * scale pixels, with the scale between 0.5 and 0.75
+
+### Requirement: Pause
+While `document.visibilityState` is `'hidden'` the rAF loop SHALL be cancelled and the reveal clock frozen; on `'visible'` it SHALL resume. On `webglcontextlost` the loop SHALL stop and the component SHALL switch to the fallback.
+
+#### Scenario: Visibility
+- **WHEN** `visibilitychange` fires while hidden
+- **THEN** the pending animation frame is cancelled, and when it fires while visible a frame is requested again
+
+### Requirement: Cleanup
+On unmount the component SHALL cancel the pending animation frame, remove the `visibilitychange`, `resize` and `webglcontextlost` listeners, delete the shader, program and buffer, and call `WEBGL_lose_context.loseContext()` when available.
+
+#### Scenario: Unmount
+- **WHEN** a WebGL-mode `ExploreVeil` unmounts
+- **THEN** the frame is cancelled, the listeners are removed, the GL objects are deleted and `loseContext` is called
+
+### Requirement: Fallback selection
+The static fallback SHALL be used when WebGL context creation fails or throws, when `matchMedia('(prefers-reduced-motion: reduce)')` matches (re-evaluated on change), or when a low-power heuristic holds: `navigator.hardwareConcurrency` at most 2, or `navigator.deviceMemory` at most 2 when defined, or `navigator.connection.saveData`. Detection SHALL live in `src/ui/silkVeil/capability.ts`.
+
+#### Scenario: Selection
+- **WHEN** reduced motion matches, or a low-power signal is present, or the context cannot be created
+- **THEN** the veil renders `.explore-veil-fallback` and no canvas
+
+### Requirement: Fallback look
+`.explore-veil-fallback` SHALL be a static CSS fabric-like background (layered linear and radial gradients of the neutral palette, suggesting soft vertical folds) with no animation, transition or keyframes, and with every RGB channel at least `0xD0`.
+
+#### Scenario: Static fabric
+- **WHEN** `explore-veil.css` is read
+- **THEN** `.explore-veil-fallback` has at least 2 linear gradients and a radial gradient, and the file contains no `@keyframes`, `animation:` (other than `none`) or `transition:` (other than `none`)
