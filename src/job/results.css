@@ -235,6 +235,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem 1rem;
+  position: relative; /* containing block of .confidence-tip */
 }
 .verdict-pill {
   display: inline-flex;
@@ -292,6 +293,7 @@
 .verdict-confidence {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin: 0;
   font-size: 0.85rem;
@@ -299,8 +301,11 @@
   color: var(--v-text);
 }
 .confidence-info {
-  position: relative;
+  position: relative; /* the risk info tooltip anchors to its own button */
   display: inline-flex;
+}
+.verdict-head .confidence-info {
+  position: static; /* verdict tooltips anchor to .verdict-head, so the pill cannot push them off-screen */
 }
 .info-btn {
   width: 22px;
@@ -314,9 +319,20 @@
   display: grid;
   place-items: center;
 }
+.verdict-origin {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: help;
+}
 .confidence-tip {
   position: absolute;
-  inset-inline-end: 0; /* anchored to the card edge so it never overflows at 320px, in ltr and rtl */
+  inset-inline-end: 0; /* end edge of .verdict-head (the card edge) so it never overflows at 320px, in ltr and rtl, whatever the pill width or wrapping */
   top: calc(100% + 0.4rem);
   z-index: 5;
   width: min(280px, 70vw);
