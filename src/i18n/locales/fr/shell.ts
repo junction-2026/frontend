@@ -4,6 +4,7 @@ export default {
   'nav.analyze': 'Analyser',
   'nav.explore': 'Explorer',
   'nav.history': 'Historique',
+  'integrate_api': 'Intégrer l’API',
   'language': 'Langue',
   'health.checking': 'Vérification du serveur…',
   'health.offline': 'Serveur hors ligne',

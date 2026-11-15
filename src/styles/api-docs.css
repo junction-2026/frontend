@@ -1,0 +1,113 @@
+/* /docs/api: public API docs. Code is always LTR; the page text follows the locale. */
+.api-docs {
+  max-width: 52rem;
+}
+
+.api-section {
+  margin-top: 2rem;
+}
+
+.api-section h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.api-section h3 {
+  margin: 1.1rem 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.api-section p {
+  margin: 0 0 0.7rem;
+  color: var(--ink-2);
+  line-height: 1.55;
+}
+
+.api-docs code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+
+.api-docs p code,
+.api-docs td code,
+.api-docs th code {
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+  background: var(--bg-soft);
+  overflow-wrap: anywhere;
+}
+
+.api-code {
+  direction: ltr; /* keeps the copy button and the room reserved for it on the same side in RTL */
+  position: relative;
+  margin-bottom: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+}
+
+.api-code pre {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  padding-inline-end: 5.5rem; /* room for the copy button */
+  overflow-x: auto;
+}
+
+.api-copy {
+  position: absolute;
+  top: 0.4rem;
+  inset-inline-end: 0.5rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  font-size: 0.78rem;
+}
+
+.api-endpoints dt {
+  margin-top: 0.6rem;
+}
+
+.api-endpoints dd {
+  margin: 0.2rem 0 0;
+  color: var(--ink-2);
+}
+
+.api-table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.api-table th,
+.api-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+}
+
+.api-table thead th {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.api-table tbody th {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.api-table tr.nested th {
+  padding-inline-start: 1.6rem;
+}
+
+@media (max-width: 640px) {
+  .api-table tbody th {
+    white-space: normal;
+  }
+}

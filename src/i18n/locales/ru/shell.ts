@@ -4,6 +4,7 @@ export default {
   'nav.analyze': 'Анализ',
   'nav.explore': 'Обзор',
   'nav.history': 'История',
+  'integrate_api': 'Подключить API',
   'language': 'Язык',
   'health.checking': 'Проверка бэкенда…',
   'health.offline': 'Бэкенд недоступен',

@@ -13,7 +13,8 @@ const TABS = [
 export function Shell({ children }: { children: ReactNode }) {
   const t = useT()
   const { locale, setLocale } = useLocale()
-  const active = navFor(useRoute().name)
+  const route = useRoute().name
+  const active = navFor(route)
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -26,6 +27,9 @@ export function Shell({ children }: { children: ReactNode }) {
               {t(tab.label)}
             </Link>
           ))}
+          <Link href="/docs/api" className="nav-integrate" aria-current={route === 'api-docs' ? 'page' : undefined}>
+            {t('shell.integrate_api')}
+          </Link>
         </nav>
         <div className="topbar-actions">
           <HealthIndicator />
