@@ -1,14 +1,17 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type Ref } from 'react'
 import { verdictOf, type Job } from '../api/types'
 import { Chat } from '../ask/Chat'
-import { FocusPanel } from '../ask/FocusPanel'
-import { focusItemsOf, MAX_FOCUS } from '../ask/focusItems'
+import { focusItemsOf, MAX_FOCUS, type FocusEntry } from '../ask/focusItems'
 import { useChat } from '../ask/useChat'
-import { useLocale, useT } from '../i18n'
-import { resultOf } from '../job/Verdict'
+import { useFormat, useLocale, useT } from '../i18n'
+import { FocusSelectionProvider } from '../job/focusSelection'
+import { LocalizationProvider } from '../job/localize'
+import { ResultDetail } from '../job/ResultDetail'
+import { resultOf, Verdict } from '../job/Verdict'
 import { Skeleton, ErrorAlert } from '../job/WithJob'
 import { useJob } from '../job/useJob'
 import { Link } from '../router'
+import '../job/results.css'
 import '../secondary/secondary.css'
 import '../ask/ask.css'
 
@@ -43,6 +46,40 @@ function ContextBar({ job }: { job: Job }) {
   )
 }
 
+// The result screen's Verdict and detailed region, always open, with a toggle on each element the chat can focus on.
+function ResultPane({ job, items, selected, disabled, headingRef, onToggle, onClear }: {
+  job: Job; items: FocusEntry[]; selected: ReadonlySet<string>; disabled: boolean
+  headingRef: Ref<HTMLHeadingElement>; onToggle: (key: string) => void; onClear: () => void
+}) {
+  const t = useT()
+  const { formatNumber } = useFormat()
+  const completed = job.status === 'completed'
+  const full = selected.size >= MAX_FOCUS
+  const selection = items.length > 0 ? { entries: new Map(items.map((i) => [i.key, i])), selected, full, disabled, toggle: onToggle } : null
+  return (
+    <section className="ask-result" role="region" aria-label={t('ask.focus.region')}>
+      <div className="card ask-result-head">
+        <h2 ref={headingRef} tabIndex={-1}>{t('ask.focus.title')}</h2>
+        {selected.size > 0 && <button type="button" className="btn-secondary focus-clear" onClick={onClear} disabled={disabled}>{t('ask.focus.clear')}</button>}
+        {!completed || !selection ? (
+          <p className="chat-note" role="note">{t(completed ? 'ask.focus.empty' : 'ask.focus.not_completed')}</p>
+        ) : (
+          <p className="chat-note">{t('ask.focus.help')}</p>
+        )}
+        <p className="chat-note" role="status" aria-live="polite">{full && t('ask.focus.limit', { max: formatNumber(MAX_FOCUS) })}</p>
+      </div>
+      <FocusSelectionProvider value={selection}>
+        <LocalizationProvider job={job}>
+          <div className="results-stack">
+            <Verdict job={job} />
+            <ResultDetail job={job} />
+          </div>
+        </LocalizationProvider>
+      </FocusSelectionProvider>
+    </section>
+  )
+}
+
 function JobChat({ id }: { id: string }) {
   const t = useT()
   const { locale } = useLocale()
@@ -73,8 +110,8 @@ function JobChat({ id }: { id: string }) {
         </div>
       </div>
       {job && (
-        <FocusPanel
-          items={items} selected={new Set(focus.map((f) => f.key))} completed={completed} disabled={disabled}
+        <ResultPane
+          job={job} items={items} selected={new Set(focus.map((f) => f.key))} disabled={disabled}
           headingRef={heading} onToggle={toggle} onClear={() => setChosen([])}
         />
       )}

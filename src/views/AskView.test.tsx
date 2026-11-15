@@ -3,8 +3,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { richJob } from '../ask/askFixtures'
 import { I18nProvider } from '../i18n'
-import { job, json, run } from '../job/fixtures'
+import { translate } from '../i18n/translate'
+import { job, json, risk, run } from '../job/fixtures'
 import AskView from './AskView'
+import ResultsView from './ResultsView'
 
 const fetchMock = vi.fn()
 const reply = (content: string, extra: Record<string, unknown> = {}) =>
@@ -60,9 +62,9 @@ describe('context bar and states', () => {
   it('names the job (verdict, input, link back) outside any Mock', async () => {
     await show()
     expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/jobs/j1')
-    const bar = within(document.querySelector('.context-bar') as HTMLElement) // the result panel lists the same verdict label
+    const bar = within(document.querySelector('.context-bar') as HTMLElement) // the result pane shows the same verdict label and excerpt
     expect(bar.getByText('Manipulation detected')).toBeInTheDocument()
-    expect(screen.getByText('Everyone knows these people are destroying our future.')).toBeInTheDocument()
+    expect(bar.getByText('Everyone knows these people are destroying our future.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to summary/ })).toHaveAttribute('href', '/jobs/j1')
     expect(document.querySelector('[data-mock]')).toBeNull()
     expect(document.body.textContent).not.toMatch(/No backend for Ask VEIL/)
@@ -71,7 +73,7 @@ describe('context bar and states', () => {
   it('prefers the source title', async () => {
     jobBody = job({ input: { content: 'body', source: { title: 'A headline' } } })
     await show()
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('A headline')
+    expect(within(document.querySelector('.context-bar') as HTMLElement).getByRole('heading', { level: 3 })).toHaveTextContent('A headline')
   })
 
   it('shows a not-found state for an unknown job', async () => {
@@ -303,210 +305,249 @@ describe('errors', () => {
   })
 })
 
-describe('focus: split layout and panel', () => {
-  const box = (name: string) => screen.getByRole('checkbox', { name }) as HTMLInputElement
+describe('result pane', () => {
   const css = readFileSync('src/ask/ask.css', 'utf8')
+  const pane = () => screen.getByRole('region', { name: 'Result elements to ask about' })
+  const toggle = (label: string) => screen.getByRole('button', { name: `Ask about ${label}` }) as HTMLButtonElement
+  const toggles = () => screen.queryAllByRole('button', { name: /^Ask about / })
+  beforeEach(() => { jobBody = richJob() })
 
-  it('puts the chat first and the result panel second in a grid, logical and with a 960px breakpoint', async () => {
-    jobBody = richJob()
+  it('puts the chat first and the result pane second in a logical two-column grid with a 960px breakpoint', async () => {
     await show()
     const split = document.querySelector('.ask-split') as HTMLElement
-    expect([...split.children].map((c) => c.className)).toEqual(['ask-chat', expect.stringContaining('focus-panel')])
+    expect([...split.children].map((c) => c.className)).toEqual(['ask-chat', 'ask-result'])
     expect(split.children[0].querySelector('textarea')).not.toBeNull()
-    const panel = screen.getByRole('region', { name: 'Result elements to ask about' })
-    expect(panel).toBe(split.children[1])
-    expect(within(panel).getByRole('heading', { level: 2 })).toHaveTextContent('Result elements')
+    expect(pane()).toBe(split.children[1])
+    expect(within(pane()).getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('Analysis result')
     expect(css).toMatch(/@media \(min-width: 960px\)[^}]*\{[^}]*grid-template-columns/)
+    expect(css).toMatch(/\.ask-chat, \.ask-result \{[^}]*position: sticky[^}]*max-block-size: calc\(100dvh[^}]*overflow-y: auto/)
     expect(css).not.toMatch(/\b(left|right|margin-left|margin-right|padding-left|padding-right)\s*:/)
   })
 
-  it('moves focus to the panel heading with the narrow toggle', async () => {
-    jobBody = richJob()
+  it('moves focus to the pane heading with the narrow toggle', async () => {
     await show()
     fireEvent.click(screen.getByRole('button', { name: 'Choose result elements' }))
-    expect(screen.getByRole('heading', { level: 2, name: 'Result elements' })).toHaveFocus()
+    expect(screen.getByRole('heading', { level: 2, name: 'Analysis result' })).toHaveFocus()
   })
 
-  it('lists every kind as a native checkbox, focusable, with a visible focus ring, toggled as Space does', async () => {
-    jobBody = richJob()
+  it('shows the result screen content expanded, without its toggle or Ask link', async () => {
     await show()
-    const all = screen.getAllByRole('checkbox')
+    const p = pane()
+    expect(p.querySelector('.verdict .verdict-pill')).toHaveTextContent('Propaganda detected')
+    expect(within(p).getByText('Doubt', { selector: '.tag' })).toBeInTheDocument()
+    expect(within(p).getByText('People are destroying our future')).toBeInTheDocument()
+    expect(within(p).getByText('future')).toBeInTheDocument()
+    expect(within(p).getByRole('link', { name: /Explore/ })).toBeInTheDocument()
+    expect(within(p).queryByRole('button', { name: /detailed analysis$/ })).toBeNull()
+    expect(within(p).queryByRole('link', { name: /Ask VEIL/ })).toBeNull()
+    // same components as /jobs/:id: these parts read the same (selection mode only adds toggles, passages and opens the risk lists)
+    const parts = ['.verdict', '.results-excerpt', '.detailed-summary', '.metrics-bar', '.excerpt-box', '.wiki-lookup', '.term-context']
+    const text = (sel: string) => { const c = (document.querySelector(sel) as Element).cloneNode(true) as Element; c.querySelectorAll('.focus-select').forEach((e) => e.remove()); return c.textContent }
+    const shown = parts.map(text)
+    cleanup()
+    localStorage.setItem('veil.locale', 'en')
+    render(<I18nProvider><ResultsView id="j1" /></I18nProvider>)
+    fireEvent.click(await screen.findByRole('button', { name: /detailed analysis$/ }))
+    expect(parts.map(text)).toEqual(shown)
+  })
+
+  it('gives every element kind a toggle button with aria-pressed, named after its label', async () => {
+    await show()
+    const all = toggles()
     expect(all).toHaveLength(15)
-    expect(all.every((c) => c.tagName === 'INPUT' && c.getAttribute('type') === 'checkbox')).toBe(true)
-    const doubt = box('Doubt')
+    expect(all.every((b) => b.tagName === 'BUTTON' && b.getAttribute('aria-pressed') === 'false')).toBe(true)
+    const dim = translate('en', 'results.risk.dim.intensity')
+    for (const l of ['Manipulation detected', 'Loaded language', 'Everyone knows', 'destroying', 'Doubt', 'Misleading headline', dim, 'People are destroying our future', 'future']) expect(toggle(l)).toBeInTheDocument()
+    expect(toggle(translate('en', 'results.risk.driver.amplification'))).toBeInTheDocument() // driver, behind the (open) disclosure
+    expect(toggle(translate('en', 'results.risk.caveat.bot_not_intent'))).toBeInTheDocument()
+    const doubt = toggle('Doubt')
     doubt.focus()
     expect(doubt).toHaveFocus()
-    fireEvent.click(doubt) // the click a browser sends for Space on a focused checkbox (jsdom has no key activation)
-    expect(doubt.checked).toBe(true)
-    fireEvent.click(doubt)
-    expect(doubt.checked).toBe(false)
-    expect(css).toMatch(/\.focus-item input:focus-visible[^{]*\{[^}]*outline: 2px solid var\(--blue\)/)
+    expect(doubt.closest('[data-focus-selected]')).toBeNull()
+    fireEvent.click(doubt) // Enter and Space activate a button through click
+    expect(doubt).toHaveAttribute('aria-pressed', 'true')
+    expect(doubt.closest('[data-focus-selected]')).not.toBeNull()
+    expect(readFileSync('src/job/job.css', 'utf8')).toMatch(/button\.focus-select:focus-visible \{ outline: 2px solid var\(--blue\)/)
   })
 
-  it.each([['running'], ['completed']])('shows a note and no checkboxes for a %s job without elements', async (status) => {
-    jobBody = status === 'completed' ? job({ finalization: { status: 'failed', result: null } }) : richJob({ status, done: false })
+  it('selects a technique, shows its chip, sends it as focus and removes it again', async () => {
     await show()
-    expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
-    const note = status === 'completed' ? 'This analysis has no result elements to choose from.' : 'Result elements can be chosen once the analysis has finished.'
-    expect(within(screen.getByRole('region', { name: 'Result elements to ask about' })).getByText(note)).toBeInTheDocument()
+    fireEvent.click(toggle('Doubt'))
+    expect(toggle('Doubt')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Remove Doubt' })).toBeInTheDocument()
+    expect(screen.queryByText('Your question is about the whole analysis.')).toBeNull()
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(chats()[0].body.focus).toEqual([{ kind: 'technique', ref: 'Doubt', label: 'Doubt' }])
+    const bubble = document.querySelector('.bubble-user') as HTMLElement
+    expect(within(bubble).getByText('About:')).toBeInTheDocument()
+    expect(toggle('Doubt')).toHaveAttribute('aria-pressed', 'true') // kept after sending
+    fireEvent.click(toggle('Doubt'))
+    expect(toggle('Doubt')).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByRole('button', { name: /^Remove / })).toBeNull()
+    await ask('again')
+    await waitFor(() => expect(chats()).toHaveLength(2))
+    expect(chats()[1].body).not.toHaveProperty('focus')
   })
 
-  it('disables the checkboxes while the composer is disabled after a 409', async () => {
-    jobBody = richJob()
+  it('sends several elements in panel order, a passage by span and a driver by its raw index', async () => {
+    jobBody = richJob({ risk: risk({ drivers: [null, 'x', { kind: 'amplification', text: 'raw driver' }] }) })
+    await show()
+    fireEvent.click(toggle(translate('en', 'results.risk.driver.amplification')))
+    fireEvent.click(toggle('destroying'))
+    fireEvent.click(toggle('Loaded language'))
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(chats()[0].body.focus).toEqual([
+      { kind: 'technique', ref: 'Loaded_Language', label: 'Loaded language' },
+      { kind: 'passage', ref: '32:42:Loaded_Language', label: 'destroying' },
+      { kind: 'risk_driver', ref: '2', label: translate('en', 'results.risk.driver.amplification') },
+    ])
+  })
+
+  it('addresses Wikipedia claims and terms by their raw array index', async () => {
+    jobBody = richJob({
+      analyzers: [
+        run('wikipedia', 'succeeded', { result: { claims: [null, { claim: 'second claim', wikis: [] }] } }),
+        run('term_context', 'succeeded', { result: { terms: [{ term: '' }, { term: 'kept', in_post: 'p' }] } }),
+      ],
+    })
+    await show()
+    fireEvent.click(toggle('second claim'))
+    fireEvent.click(toggle('kept'))
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(chats()[0].body.focus).toEqual([
+      { kind: 'wikipedia_claim', ref: '1', label: 'second claim' },
+      { kind: 'term_context', ref: '1', label: 'kept' },
+    ])
+    expect(toggles().filter((b) => b.getAttribute('aria-label') === 'Ask about ')).toHaveLength(0) // the blank term has no toggle
+  })
+
+  it('gives repeated refs (equal kind and ref are one element) a toggle on the first occurrence only', async () => {
+    const d = { name: 'Doubt', display: 'Doubt', explanation: 'x', spans: [{ technique: 'Doubt', text: 'knows', start: 9, end: 14 }] }
+    jobBody = richJob({
+      analyzers: [run('techniques', 'succeeded', { result: { detected: [d, d], span_status: 'ok' } })],
+      risk: risk({ caveats: [{ id: 'bot_not_intent', text: 'a' }, { id: 'bot_not_intent', text: 'b' }] }),
+    })
+    await show()
+    expect(screen.getAllByRole('button', { name: 'Ask about Doubt' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Ask about knows' })).toHaveLength(1)
+    const caveat = `Ask about ${translate('en', 'results.risk.caveat.bot_not_intent')}`
+    expect(screen.getAllByRole('button', { name: caveat })).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: caveat }))
+    expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
+  })
+
+  it('shows the same kinds with a localized name', async () => {
+    await show('j1', 'de')
+    expect(screen.getByRole('button', { name: `Zu ${translate('de', 'techniques.Doubt.name')} fragen` })).toBeInTheDocument()
+  })
+
+  it('allows at most 20 elements and says so politely', async () => {
+    jobBody = richJob({ analyzers: [run('term_context', 'succeeded', { result: { terms: Array.from({ length: 25 }, (_, i) => ({ term: `term ${i}` })) } })] })
+    await show()
+    for (let i = 0; i < 19; i++) fireEvent.click(toggle(`term ${i}`))
+    expect(screen.queryByText('You can choose at most 20 elements.')).toBeNull()
+    fireEvent.click(toggle('term 19'))
+    expect(toggle('term 20')).toBeDisabled()
+    expect(toggle('term 0')).toBeEnabled()
+    expect(screen.getByText('You can choose at most 20 elements.')).toHaveAttribute('aria-live', 'polite')
+    fireEvent.click(toggle('term 0'))
+    expect(toggle('term 20')).toBeEnabled()
+    fireEvent.click(toggle('term 20'))
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(chats()[0].body.focus).toHaveLength(20)
+  })
+
+  it('clears the selection from the pane header and through chips', async () => {
+    await show()
+    expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
+    fireEvent.click(toggle('Doubt'))
+    fireEvent.click(toggle('Everyone knows'))
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Everyone knows' }))
+    expect(toggle('Everyone knows')).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(toggle('Everyone knows'))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }))
+    expect(toggles().filter((b) => b.getAttribute('aria-pressed') === 'true')).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(chats()[0].body).not.toHaveProperty('focus')
+  })
+
+  it('keeps the original focus on Retry and leaves earlier bubbles alone', async () => {
+    chat = () => err(503, 'chat_unavailable')
+    await show()
+    fireEvent.click(toggle('Doubt'))
+    await ask('first')
+    await screen.findByRole('alert')
+    fireEvent.click(toggle('Doubt'))
+    fireEvent.click(toggle('Everyone knows'))
+    chat = () => reply('now it works')
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    await screen.findByText('now it works')
+    expect(chats()[1].body.focus).toEqual([{ kind: 'technique', ref: 'Doubt', label: 'Doubt' }])
+    expect(document.querySelectorAll('.bubble-user')[0]).not.toHaveTextContent('Everyone knows')
+  })
+
+  it.each([['queued'], ['running']])('shows a note and no toggles for a %s job and keeps the composer off', async (status) => {
+    jobBody = richJob({ status, done: false })
+    await show()
+    expect(toggles()).toHaveLength(0)
+    expect(within(pane()).getByText('Result elements can be chosen once the analysis has finished.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toBeDisabled()
+  })
+
+  it('shows a note and no toggles for a completed job without elements', async () => {
+    jobBody = job({ finalization: { status: 'failed', result: null } })
+    await show()
+    expect(toggles()).toHaveLength(0)
+    expect(within(pane()).getByText('This analysis has no result elements to choose from.')).toBeInTheDocument()
+  })
+
+  it('disables the toggles while the composer is disabled after a 409', async () => {
     chat = () => err(409, 'job_not_completed', { status: 'failed' })
     await show()
     await ask('why?')
     await screen.findByText('This analysis did not finish, so there is nothing to ask about.')
-    expect(box('Doubt')).toBeDisabled()
+    expect(toggle('Doubt')).toBeDisabled()
   })
 
   it('renders labels as literal text', async () => {
     const text = '<img src=x onerror=alert(1)>'
     jobBody = richJob({ input: { content: text }, analyzers: [run('techniques', 'succeeded', { result: { detected: [{ name: 'X', display: 'X', explanation: '', spans: [{ technique: 'X', text, start: 0, end: text.length }] }] } })] })
     await show()
-    fireEvent.click(box(text))
+    fireEvent.click(toggle(text))
     expect(screen.getByRole('button', { name: `Remove ${text}` }).previousElementSibling).toHaveAttribute('dir', 'auto')
     await ask('q')
     await screen.findByText('An answer.')
     expect(document.querySelector('.ask-split img, .ask-split b')).toBeNull()
-    expect(document.querySelector('.bubble-focus li')).toHaveTextContent(text)
     expect(chats()[0].body.focus).toEqual([{ kind: 'passage', ref: `0:${text.length}:X`, label: text }])
-  })
-})
-
-describe('focus: selection and requests', () => {
-  const T = { kind: 'technique', ref: 'Doubt', label: 'Doubt' }
-  const P = { kind: 'passage', ref: '0:14:Loaded_Language', label: 'Everyone knows' }
-  const box = (name: string) => screen.getByRole('checkbox', { name }) as HTMLInputElement
-  const sent = (i = 0) => chats()[i].body
-  const checked = () => screen.getAllByRole('checkbox').filter((c) => (c as HTMLInputElement).checked)
-  beforeEach(() => { jobBody = richJob() })
-
-  it('omits focus without a selection and says the question is about the whole analysis', async () => {
-    await show()
-    expect(screen.getByText('Your question is about the whole analysis.')).toBeInTheDocument()
-    await ask('q')
-    await screen.findByText('An answer.')
-    expect(sent()).not.toHaveProperty('focus')
-    expect(document.querySelector('.bubble-focus')).toBeNull()
-  })
-
-  it('sends one selected element as focus, keeps it selected and marks the bubble', async () => {
-    await show()
-    fireEvent.click(box('Doubt'))
-    expect(screen.queryByText('Your question is about the whole analysis.')).toBeNull()
-    await ask('q')
-    await screen.findByText('An answer.')
-    expect(sent().focus).toEqual([T])
-    expect(box('Doubt').checked).toBe(true)
-    const bubble = document.querySelector('.bubble-user') as HTMLElement
-    expect(within(bubble).getByText('About:')).toBeInTheDocument()
-    expect(within(bubble).getByText('Doubt')).toHaveAttribute('dir', 'auto')
-  })
-
-  it('sends several elements in panel order whatever the click order, with plain messages', async () => {
-    await show()
-    fireEvent.click(box('Doubt'))
-    fireEvent.click(box('Everyone knows'))
-    await ask('q')
-    await screen.findByText('An answer.')
-    expect(sent().focus).toEqual([P, T])
-    expect(sent().messages).toEqual([{ role: 'user', content: 'q' }])
-  })
-
-  it('deselects, clears and removes through chips', async () => {
-    await show()
-    fireEvent.click(box('Doubt'))
-    fireEvent.click(box('Everyone knows'))
-    fireEvent.click(box('Doubt'))
-    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(1)
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Everyone knows' }))
-    expect(box('Everyone knows').checked).toBe(false)
-    expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
-    fireEvent.click(box('Doubt'))
-    fireEvent.click(box('Everyone knows'))
-    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }))
-    expect(checked()).toHaveLength(0)
-    expect(screen.queryByRole('button', { name: /^Remove / })).toBeNull()
-    await ask('q')
-    await screen.findByText('An answer.')
-    expect(sent()).not.toHaveProperty('focus')
-  })
-
-  it('allows at most 20 elements and says so politely', async () => {
-    jobBody = richJob({ analyzers: [run('term_context', 'succeeded', { result: { terms: Array.from({ length: 25 }, (_, i) => ({ term: `term ${i}` })) } })] })
-    await show()
-    for (let i = 0; i < 19; i++) fireEvent.click(box(`term ${i}`))
-    expect(screen.queryByText('You can choose at most 20 elements.')).toBeNull()
-    expect(box('term 20')).toBeEnabled()
-    fireEvent.click(box('term 19'))
-    expect(box('term 20')).toBeDisabled()
-    expect(box('term 0')).toBeEnabled()
-    expect(screen.getByText('You can choose at most 20 elements.')).toHaveAttribute('aria-live', 'polite')
-    fireEvent.click(box('term 0'))
-    expect(box('term 20')).toBeEnabled()
-    fireEvent.click(box('term 20'))
-    await ask('q')
-    await screen.findByText('An answer.')
-    expect(sent().focus).toHaveLength(20)
-  })
-
-  it('keeps the original focus on Retry and leaves earlier bubbles alone when the selection changes', async () => {
-    chat = () => err(503, 'chat_unavailable')
-    await show()
-    fireEvent.click(box('Doubt'))
-    await ask('first')
-    await screen.findByRole('alert')
-    fireEvent.click(box('Doubt'))
-    fireEvent.click(box('Everyone knows'))
-    chat = () => reply('now it works')
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
-    await screen.findByText('now it works')
-    expect(sent(1).focus).toEqual([T])
-    expect(sent(1)).toEqual(sent(0))
-    expect(document.querySelectorAll('.bubble-user')[0]).toHaveTextContent('Doubt')
-    await ask('second')
-    await waitFor(() => expect(chats()).toHaveLength(3))
-    expect(sent(2).focus).toEqual([P])
-    const bubbles = document.querySelectorAll('.bubble-user')
-    expect(bubbles[0].querySelectorAll('.bubble-focus li')).toHaveLength(1)
-    expect(bubbles[0]).not.toHaveTextContent('Everyone knows')
   })
 
   it('stores focus per turn in sessionStorage and restores it, but not the selection', async () => {
     await show()
-    fireEvent.click(box('Doubt'))
+    fireEvent.click(toggle('Doubt'))
     await ask('remember')
     await screen.findByText('An answer.')
-    expect(JSON.parse(sessionStorage.getItem('veil.ask.j1') as string)[0]).toEqual({ role: 'user', content: 'remember', focus: [T] })
+    expect(JSON.parse(sessionStorage.getItem('veil.ask.j1') as string)[0]).toEqual({ role: 'user', content: 'remember', focus: [{ kind: 'technique', ref: 'Doubt', label: 'Doubt' }] })
     cleanup()
     await show()
     expect(document.querySelector('.bubble-focus')).toHaveTextContent('Doubt')
-    expect(checked()).toHaveLength(0)
+    expect(toggle('Doubt')).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('loads threads stored without focus and drops malformed focus entries', async () => {
-    sessionStorage.setItem('veil.ask.j1', JSON.stringify([{ role: 'user', content: 'old' }, { role: 'assistant', content: 'older answer' }, { role: 'user', content: 'odd', focus: [{ kind: 1 }, 'x', T] }, { role: 'assistant', content: 'a2' }]))
-    await show()
-    expect(screen.getByText('older answer')).toBeInTheDocument()
-    const bubbles = document.querySelectorAll('.bubble-user')
-    expect(bubbles[0].querySelector('.bubble-focus')).toBeNull()
-    expect(bubbles[1].querySelectorAll('.bubble-focus li')).toHaveLength(1)
-  })
-})
-
-describe('focus: Arabic', () => {
   it('renders right-to-left with the chat first and no static Latin text but the brand', async () => {
-    jobBody = richJob()
     await show('j1', 'ar')
     expect(document.documentElement.dir).toBe('rtl')
     const split = document.querySelector('.ask-split') as HTMLElement
     expect(split.children[0]).toHaveClass('ask-chat')
-    const panel = split.children[1] as HTMLElement
-    fireEvent.click(within(panel).getAllByRole('checkbox')[0])
-    const statics = [...split.querySelectorAll('.focus-panel h2, .focus-panel legend, .focus-panel .chat-note, .focus-clear, .focus-toggle')].map((e) => e.textContent ?? '')
-    statics.push(panel.getAttribute('aria-label') ?? '')
+    fireEvent.click(within(split.children[1] as HTMLElement).getAllByRole('button', { name: /^اسأل عن / })[0])
+    const statics = [...split.querySelectorAll('.ask-result-head h2, .ask-result-head .chat-note, .focus-clear, .focus-toggle')].map((e) => e.textContent ?? '')
+    statics.push((document.querySelector('.ask-result') as HTMLElement).getAttribute('aria-label') ?? '')
     expect(statics.join(' ').replace(/VEIL/g, '')).not.toMatch(/[A-Za-z]/)
-    expect(statics.length).toBeGreaterThan(8)
+    expect(statics.length).toBeGreaterThan(4)
   })
 })
