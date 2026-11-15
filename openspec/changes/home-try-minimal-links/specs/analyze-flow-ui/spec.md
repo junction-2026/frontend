@@ -48,17 +48,6 @@ Each corpus example SHALL keep `aria-describedby` referencing a visually hidden 
 - **WHEN** a corpus example with expectation `uncertain` is rendered in en
 - **THEN** its accessible description is "Expected result predicted by the LLM: Uncertain"
 
-### Requirement: Try-out explainer
-Home SHALL always render, directly below the Try row, a paragraph with class `try-info` and text `home.try.info`, in fallback mode and in corpus mode alike. It SHALL NOT use `role="status"` or `aria-live`, SHALL NOT be inside `[data-mock]`, and SHALL stay identical after example clicks, Shuffle, clearing the textarea and switching to link mode.
-
-#### Scenario: Fallback has no explainer
-- **WHEN** Home renders in fallback mode (corpus loading, failed or too small)
-- **THEN** the same `.try-info` paragraph is present, exactly once, directly below the Try row (the explainer is no longer corpus-only)
-
-#### Scenario: Permanent explainer
-- **WHEN** an example is clicked, Shuffle pressed, the textarea cleared and link mode selected
-- **THEN** the same explainer paragraph is present throughout
-
 ### Requirement: Explainer copy
 The en `home.try.info` SHALL read exactly the text in the scenario below. The fr, de, fi, ar and ru catalogs SHALL carry faithful translations; the ar text SHALL contain no Latin-script letters, except that the product name VEIL may appear per the existing ar catalog convention. Locale key sets SHALL stay identical.
 
@@ -108,6 +97,17 @@ Each corpus example SHALL show its statement truncated to 60 code points plus an
 - **WHEN** a corpus example whose expectation is `detected` is rendered in en
 - **THEN** its title is the statement, a newline, and "Expected result predicted by the LLM: Detected"
 
+### Requirement: Try-out explainer always shown
+Home SHALL always render, directly below the Try row, a paragraph with class `try-info` and text `home.try.info`, in fallback mode and in corpus mode alike. It SHALL NOT use `role="status"` or `aria-live`, SHALL NOT be inside `[data-mock]`, and SHALL stay identical after example clicks, Shuffle, clearing the textarea and switching to link mode.
+
+#### Scenario: Fallback shows the explainer
+- **WHEN** Home renders in fallback mode (corpus loading, failed or too small)
+- **THEN** the same `.try-info` paragraph is present, exactly once, directly below the Try row (the explainer is no longer corpus-only)
+
+#### Scenario: Permanent explainer
+- **WHEN** an example is clicked, Shuffle pressed, the textarea cleared and link mode selected
+- **THEN** the same explainer paragraph is present throughout
+
 ## REMOVED Requirements
 
 ### Requirement: Try-out chip tint
@@ -117,3 +117,7 @@ Each corpus example SHALL show its statement truncated to 60 code points plus an
 ### Requirement: Try-out chips
 **Reason**: Renamed to "Try-out corpus links" (see MODIFIED above) because examples are no longer chips.
 **Migration**: Use the added requirement "Try-out corpus links".
+
+### Requirement: Try-out explainer
+**Reason**: The explainer was shown only while the corpus was active and its scenarios said so; it is now always shown.
+**Migration**: Use the added requirement "Try-out explainer always shown".
