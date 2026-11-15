@@ -5,8 +5,6 @@ export default {
   'elapsed': 'Verstrichen: {time}',
   'time.s': '{v} s',
   'time.m': '{v} min',
-  'mock.pool': 'Beschreibung des Pools',
-  'pool': 'Synchroner Konsens-Pool',
   'fault.pill': 'Eingabefehler · {code}',
   'fault.title': 'Social-Media-Beitrag konnte nicht abgerufen werden',
   'fault.switch': 'Zur Texteingabe wechseln →',

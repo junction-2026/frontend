@@ -8,7 +8,6 @@ import { useFormat, useLocale, useT } from '../i18n'
 import { activityDetail, activityLine, activityTitle, analyzerName, availabilityNote } from '../job/activity'
 import { enumLabel, seconds } from '../job/text'
 import { Link } from '../router'
-import { Mock } from '../ui/MockBadge'
 import '../styles/analyze.css'
 
 // The router has no replace; it listens to popstate, so replaceState plus a popstate event re-renders the route.
@@ -167,7 +166,6 @@ function Live({ id }: { id: string }) {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
                   {t('analysis.ledger.title')}
                 </h3>
-                <Mock label={t('analysis.mock.pool')}><span>{t('analysis.pool')}</span></Mock>
               </div>
               {rows.map((r, i) => (
                 <div className="ledger-item" key={r.id}>
