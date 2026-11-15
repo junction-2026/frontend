@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const css = readFileSync(new URL('./results.css', import.meta.url), 'utf8')
+const css = readFileSync('src/job/results.css', 'utf8')
 const rule = (sel: string) => css.match(new RegExp(`^${sel.replace('.', '\\.')} \\{([^}]*)\\}`, 'm'))?.[1] ?? ''
 
 describe('verdict tooltip anchor', () => {
