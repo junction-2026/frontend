@@ -8,9 +8,10 @@ import { useCountryAnalyses } from './model'
 
 const STRENGTHS = ['strong', 'weak']
 
-function Item({ a }: { a: MapAnalysis }) {
+function Item({ a, code }: { a: MapAnalysis; code: string }) {
   const t = useT()
-  const { formatDate } = useFormat()
+  const { formatDate, formatCountryName } = useFormat()
+  const others = a.countries.filter((c) => c.country_code !== code.toUpperCase())
   const when = a.created_at && !Number.isNaN(Date.parse(a.created_at)) ? formatDate(a.created_at, { dateStyle: 'medium' }) : null
   return (
     <li className="related-card">
@@ -18,6 +19,9 @@ function Item({ a }: { a: MapAnalysis }) {
       <div className="related-meta">
         {a.outlet && <span><bdi>{a.outlet.name}</bdi></span>}
         {when && <span>{when}</span>}
+        {others.length > 0 && (
+          <span>{t('explore.pmap.also_associated')} {others.map((c, i) => <span key={c.country_code}>{i > 0 && ', '}<bdi>{formatCountryName(c.country_code, c.country || c.country_code)}</bdi></span>)}</span>
+        )}
         {a.verdict && <span className="tag gray">{t(`history.verdict.${a.verdict === 'detected' || a.verdict === 'not_detected' ? a.verdict : 'uncertain'}`)}</span>}
       </div>
       {a.techniques.length > 0 && (
@@ -56,7 +60,7 @@ export const Panel = forwardRef<HTMLElement, { code: string; name: string; onClo
       {state.status === 'ready' && (
         <>
           {state.data.items.length === 0 ? <p className="explore-note">{t('explore.pmap.panel_empty', { country: name })}</p> : (
-            <ul className="related-list">{state.data.items.map((a) => <Item key={a.job_id} a={a} />)}</ul>
+            <ul className="related-list">{state.data.items.map((a) => <Item key={a.job_id} a={a} code={code} />)}</ul>
           )}
           {state.data.more === 'error' && <p role="alert" className="state-error">{t('explore.pmap.more_failed')}</p>}
           {state.data.next && (

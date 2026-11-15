@@ -14,7 +14,7 @@ const COUNTRIES = {
   ],
 }
 const item = (n: number, extra: Record<string, unknown> = {}) => ({
-  job_id: `job-${n}`, created_at: '2026-11-10T10:00:00Z', finished_at: '2026-11-10T10:00:03Z', status: 'completed', country_code: 'RU', country: 'Russia',
+  job_id: `job-${n}`, created_at: '2026-11-10T10:00:00Z', finished_at: '2026-11-10T10:00:03Z', status: 'completed', country_code: 'RU', country: 'Russia', countries: [{ country_code: 'RU', country: 'Russia', basis: ['outlet'] }],
   outlet: { name: `Outlet ${n}`, domain: 'o.ru', country_code: 'RU', country: 'Russia' }, source: { url: 'https://o.ru/a', title: `Title ${n}` },
   snippet: `Snippet ${n}`, techniques: [{ name: 'Doubt', display: 'Doubt', strength: 'weak' }, { name: 'Repetition', display: 'Repetition' }], verdict: 'detected', ...extra,
 })
@@ -81,13 +81,13 @@ describe('global propaganda map', () => {
     fireEvent.pointerEnter(path('RU'), { clientX: 10, clientY: 10 })
     const tip = screen.getByRole('tooltip')
     expect(tip).toHaveTextContent('Russia')
-    expect(tip).toHaveTextContent('12 analyses of pages from outlets in Russia')
+    expect(tip).toHaveTextContent('12 analyses associated with Russia')
     expect(tip).toHaveTextContent('Top techniques: Loaded Language (12), Doubt (5), Repetition (3)')
     expect(tip).not.toHaveTextContent('Flag-Waving')
     expect(tip).not.toHaveTextContent(/propaganda by/i)
     fireEvent.pointerLeave(path('RU'))
     fireEvent.pointerEnter(path('DE'))
-    expect(screen.getByRole('tooltip')).toHaveTextContent('1 analysis of a page from an outlet in Germany')
+    expect(screen.getByRole('tooltip')).toHaveTextContent('1 analysis associated with Germany')
     fireEvent.pointerEnter(path('FR'))
     expect(screen.getByRole('tooltip')).toHaveTextContent('No analyses with detected techniques')
   })
@@ -121,6 +121,53 @@ describe('global propaganda map', () => {
     expect(within(li2).getByRole('link', { name: '<b>raw</b> snippet' })).toHaveAttribute('href', '/jobs/job-2') // snippet when title null, as text
     expect(li2.querySelector('b')).toBeNull()
     expect(li2).not.toHaveTextContent('Manipulation')
+  })
+
+  it('shows the other associated countries of a multi-country item as plain text, never the panel country', async () => {
+    analyses = () => Promise.resolve(json({ items: [item(1, { countries: [
+      { country_code: 'RU', country: 'Russia', basis: ['outlet', 'content'] },
+      { country_code: 'UA', country: 'Ukraine', basis: ['content', 'future'] },
+      { country_code: 'QQ', country: '<b>Zedland</b>', basis: [] },
+      { country_code: 'QR', country: '', basis: ['content'] },
+      { country_code: '', country: 'Nowhere', basis: ['content'] },
+    ] })], next_cursor: null }))
+    const panel = await openRu()
+    const li = (await within(panel).findByRole('link', { name: 'Title 1' })).closest('li')!
+    expect(li).toHaveTextContent('Also associated with: Ukraine, <b>Zedland</b>, QR')
+    expect(li.querySelector('b')).toBeNull()
+    expect(li.textContent).not.toMatch(/Also associated with:.*Russia/)
+  })
+
+  it('shows no other-countries line for a single-country item', async () => {
+    const panel = await openRu()
+    await within(panel).findByRole('link', { name: 'Title 1' })
+    expect(within(panel).queryByText(/Also associated with/)).toBeNull()
+  })
+
+  it('shows a pasted-text item (outlet null, url "") without outlet or URL text, linked by job_id, title falling back to the snippet', async () => {
+    analyses = () => Promise.resolve(json({ items: [item(7, { outlet: null, source: { url: '', title: null }, snippet: 'Pasted words', countries: [{ country_code: 'RU', country: 'Russia', basis: ['content'] }] })], next_cursor: null }))
+    const panel = await openRu()
+    const link = await within(panel).findByRole('link', { name: 'Pasted words' })
+    expect(link).toHaveAttribute('href', '/jobs/job-7')
+    expect(within(panel).getAllByRole('link')).toHaveLength(1)
+    const li = link.closest('li')!
+    expect(li).toHaveTextContent(/^Pasted words/)
+    expect(li.querySelector('.related-meta span')).toHaveTextContent('Nov 10, 2026') // the first meta entry is the date, no outlet before it
+  })
+
+  it('states the subtitle from the distinct top-level count, never the sum of items', async () => {
+    countries = () => Promise.resolve(json({ analyses: 1, items: [{ country_code: 'RU', country: 'Russia', analyses: 1, techniques: [] }, { country_code: 'UA', country: 'Ukraine', analyses: 1, techniques: [] }] }))
+    render(<ExploreView />)
+    await waitFor(() => expect(path('RU')).toHaveAttribute('fill', STEP_COLORS[0]))
+    expect(screen.getByText('1 analysis · 2 countries')).toBeInTheDocument()
+  })
+
+  it('words the lede, map title and note as associated countries, not outlet-only', async () => {
+    await show()
+    const head = document.querySelector('.view')!.textContent!
+    expect(head).toContain('associated')
+    expect(head).not.toMatch(/outlet country|by outlet|from their outlets|is placed in the country/i)
+    expect(screen.getByText(/Notice: A country is one an analysis is associated with/)).toHaveTextContent('not a rating of the country')
   })
 
   it('pages with Load more following next_cursor', async () => {
@@ -185,10 +232,10 @@ describe('global propaganda map', () => {
     await waitFor(() => expect(path('RU')).toHaveAttribute('fill', STEP_COLORS[4]))
     expect(document.documentElement).toHaveAttribute('dir', 'rtl')
     fireEvent.pointerEnter(path('DE'))
-    expect(screen.getByRole('tooltip')).toHaveTextContent('1 تحليل لصفحة من وسيلة إعلام في')
+    expect(screen.getByRole('tooltip')).toHaveTextContent('1 تحليل مرتبط بـ')
     fireEvent.pointerLeave(path('DE'))
     fireEvent.pointerEnter(path('RU'))
-    expect(screen.getByRole('tooltip')).toHaveTextContent('12 تحليلًا لصفحات من وسائل إعلام في')
+    expect(screen.getByRole('tooltip')).toHaveTextContent('12 تحليلًا مرتبطًا بـ')
     localStorage.clear()
     document.documentElement.dir = 'ltr'
     document.documentElement.lang = 'en'
@@ -197,7 +244,7 @@ describe('global propaganda map', () => {
   it('explains the empty map when there are no analyses', async () => {
     countries = () => Promise.resolve(json({ items: [], analyses: 0 }))
     render(<ExploreView />)
-    expect(await screen.findByRole('status', { name: '' })).toHaveTextContent('Only analyses of pages from known outlets with detected techniques appear on this map.')
+    expect(await screen.findByRole('status', { name: '' })).toHaveTextContent('Only analyses with detected techniques that could be associated with a country appear on this map.')
     expect(path('RU')).toHaveAttribute('fill', '#E9EDF2')
   })
 })
