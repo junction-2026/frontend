@@ -107,6 +107,10 @@ describe('HomeView composer', () => {
     expect(box()).toHaveValue("In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.")
   })
 
+  it('has no Latin letters in the ar springfield label', () => {
+    expect(CATALOGS.ar['home.sample.springfield.label']).not.toMatch(/\p{Script=Latin}/u)
+  })
+
   it('keeps the springfield quote identical in every locale', () => {
     for (const c of Object.values(CATALOGS)) expect(c['home.sample.springfield.text']).toBe(CATALOGS.en['home.sample.springfield.text'])
   })
