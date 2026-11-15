@@ -8,22 +8,22 @@ Blobs SHALL use only the colours #C4B5FD, #93C5FD, #86EFAC, #FDBA9A and #F9A8D4,
 - **THEN** every hex colour is a palette colour with optional alpha suffix and no rgb(), hsl() or other hex is present
 
 ### Requirement: Blob shape, blur and placement
-Each blob SHALL be absolutely positioned, between 300px and 600px on its longer side (it MAY shrink with `vw` on narrow viewports, `max-width: 90vw`), have unequal width and height and opacity 0.4. `filter: blur()` SHALL stay on `.ambient-blob` as extra smoothing with a radius of 40px to 160px (60px chosen; at most 100px if lowered for WebKit caps). At least one blob SHALL be anchored past the left edge, one past the right edge, and one SHALL sit near the horizontal centre.
+Each blob SHALL be absolutely positioned, between 300px and 600px on its longer side (it MAY shrink with `vw` on narrow viewports via `max-width: 90vw`), have unequal width and height and opacity 0.4 (narrowed from 0.35 to 0.45 so every blob renders at one known strength). `filter: blur()` SHALL stay on `.ambient-blob` as extra smoothing with a radius of 40px to 160px; the chosen value is 60px. At least one blob SHALL be anchored past the left edge and one past the right edge of the viewport, and at least one SHALL sit behind the hero and composer area.
 
 #### Scenario: Shape
 - **WHEN** `ambient.css` is read
-- **THEN** blob sizes are 300px to 600px, width differs from height, blur is 40px to 160px and opacity is 0.4
+- **THEN** every blob width and height is 300px to 600px, width differs from height, blur is 40px to 160px and opacity is 0.4
 
 #### Scenario: Placement
 - **WHEN** `ambient.css` is read
 - **THEN** a blob has a negative `left`, a blob has a negative `right` and a blob is placed near the horizontal centre
 
 ### Requirement: Blob animation
-Keyframes, names, durations (18s to 35s), delays, `ease-in-out` easing and `infinite` iteration SHALL stay unchanged. Only `transform` SHALL be animated and `will-change: transform` SHALL be kept on `.ambient-blob`. No new animated property, `backdrop-filter`, `translateZ`/3D hack, extra pseudo-element layer or SVG filter SHALL be added.
+Each blob SHALL have its own `@keyframes` drift (translate plus scale between 0.9 and 1.15) with `animation-duration` between 18s and 35s, `infinite` iteration and an `ease-in-out` easing. The 0% and 100% keyframes SHALL be equal. No two blobs SHALL share keyframe name and duration. Only `transform` SHALL be animated and blobs SHALL set `will-change: transform`. No new animated property, `backdrop-filter`, `translateZ`/3D hack, extra pseudo-element layer or SVG filter SHALL be added.
 
 #### Scenario: Motion
 - **WHEN** `ambient.css` is read
-- **THEN** keyframes declare only `transform` and no backdrop-filter or 3D hack is present
+- **THEN** every blob has a distinct keyframe name and a duration of 18s to 35s, keyframes declare only `transform`, 0% and 100% match, and no backdrop-filter or 3D hack is present
 
 ## ADDED Requirements
 
