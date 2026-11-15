@@ -23,7 +23,7 @@ export default {
   'analyzer_depends_on': 'Riippuu: {ids}',
   'try': 'Kokeile:',
   'try.shuffle': 'Sekoita',
-  'try.info': 'Nämä kokeiluväitteet on kerätty verkosta, ja niiden odotetut tulokset on ennustanut Grok-kielimalli (näkyy kunkin chipin värinä). Valitse yksi ja lue väite ensin itse. Tarkista sitten kielimallin ennustama tulos ja päätä, oletko samaa mieltä. Suorita seuraavaksi analyysi ja katso moottorimme tulos. Olitko samaa mieltä kielimallin kanssa? Jos et, vahvistiko moottorimme oman arviosi?',
+  'try.info': 'Nämä kokeiluväitteet on kerätty verkosta, ja niiden odotetut tulokset on ennustanut Grok-kielimalli. Valitse yksi ja lue väite ensin itse. Tarkista sitten kielimallin ennustama tulos ja päätä, oletko samaa mieltä. Suorita seuraavaksi analyysi ja katso moottorimme tulos. Olitko samaa mieltä kielimallin kanssa? Jos et, vahvistiko moottorimme oman arviosi?',
   'try.chip_expectation': 'Kielimallin ennustama odotettu tulos: {value}',
   'try.expectation.detected': 'Havaittu',
   'try.expectation.not_detected': 'Ei havaittu',

@@ -23,7 +23,7 @@ export default {
   'analyzer_depends_on': 'Abhängig von: {ids}',
   'try': 'Probieren Sie:',
   'try.shuffle': 'Mischen',
-  'try.info': 'Diese Testaussagen wurden im Web gesammelt, und ihre erwarteten Ergebnisse wurden vom Grok-LLM vorhergesagt (erkennbar an der Farbe jedes Chips). Wählen Sie eine aus und lesen Sie die Aussage zuerst selbst. Prüfen Sie dann das vom LLM vorhergesagte Ergebnis und entscheiden Sie, ob Sie zustimmen. Starten Sie anschließend die Analyse und sehen Sie das Ergebnis unserer Engine. Haben Sie dem LLM zugestimmt? Wenn nicht: Hat unsere Engine Ihre eigene Einschätzung bestätigt?',
+  'try.info': 'Diese Testaussagen wurden im Web gesammelt, und ihre erwarteten Ergebnisse wurden vom Grok-LLM vorhergesagt. Wählen Sie eine aus und lesen Sie die Aussage zuerst selbst. Prüfen Sie dann das vom LLM vorhergesagte Ergebnis und entscheiden Sie, ob Sie zustimmen. Starten Sie anschließend die Analyse und sehen Sie das Ergebnis unserer Engine. Haben Sie dem LLM zugestimmt? Wenn nicht: Hat unsere Engine Ihre eigene Einschätzung bestätigt?',
   'try.chip_expectation': 'Vom LLM vorhergesagtes erwartetes Ergebnis: {value}',
   'try.expectation.detected': 'Erkannt',
   'try.expectation.not_detected': 'Nicht erkannt',
