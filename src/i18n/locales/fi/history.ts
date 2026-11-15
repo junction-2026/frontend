@@ -24,7 +24,7 @@ export default {
   'verdict.not_detected': 'Ei manipulaatioon viittaavia merkkejä',
   'verdict.uncertain': 'Epävarma',
   'final_assessment': 'Loppuarvio: {status}',
-  'reopen': 'Avaa analyysi uudelleen →',
+  'reopen': 'Avaa analyysi →',
   'empty.title': 'Ei vielä aiempia analyyseja',
   'empty.text': 'Suorittamasi analyysit listataan tässä, jotta voit avata ne uudelleen.',
   'empty.start': 'Aloita ensimmäinen analyysi',

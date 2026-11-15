@@ -44,7 +44,9 @@ function Item({ job, now }: { job: JobSummary; now: number }) {
           <span className={`status-pill ${statusTone(job)}`}>{status(job.status)}</span>
         </div>
         <h3>
-          {job.excerpt ? <bdi>{`“${excerpt(job.excerpt)}”`}</bdi> : t('history.excerpt_unavailable')}
+          <Link className="history-title-link" href={`/jobs/${encodeURIComponent(job.id)}`}>
+            {job.excerpt ? <bdi>{`“${excerpt(job.excerpt)}”`}</bdi> : t('history.excerpt_unavailable')}
+          </Link>
         </h3>
         <div className="tags">
           {v ? <span className={`tag ${v.tone}`}>{t(`history.verdict.${kind}`)}</span> : <span className="tag gray">{t('history.final_assessment', { status: job.finalization?.status ? status(job.finalization.status) : t('history.status.unknown') })}</span>}

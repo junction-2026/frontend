@@ -24,7 +24,7 @@ export default {
   'verdict.not_detected': 'No manipulation indicators',
   'verdict.uncertain': 'Uncertain',
   'final_assessment': 'Final assessment: {status}',
-  'reopen': 'Reopen Analysis →',
+  'reopen': 'Open Analysis →',
   'empty.title': 'No previous analyses yet',
   'empty.text': 'Analyses you run will be listed here so you can reopen them.',
   'empty.start': 'Start first analysis',
