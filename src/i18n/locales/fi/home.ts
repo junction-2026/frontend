@@ -22,6 +22,8 @@ export default {
   'sample.breaking.text': 'Uutinen: viranomaiset ovat pulassa kriisin syventyessä – lähteiden mukaan yleisö on pidetty pimennossa kuukausia.',
   'sample.editorial.label': 'Toimituksellisten kehysten vertailu',
   'sample.editorial.text': 'Vaikka kriitikot väittävät uudistusta kiireelliseksi, tarkempi katsaus lukuihin kertoo hiljaisemman tarinan kannustimista ja kehystyksestä.',
+  'sample.springfield.label': 'Poliittinen retoriikka: Trump Springfieldistä (lainaus)',
+  'sample.springfield.text': "In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.",
   'url_too_long': 'Linkki on pidempi kuin {max} merkkiä.',
   'url_invalid': 'Anna täydellinen linkki, joka alkaa http:// tai https://.',
 }

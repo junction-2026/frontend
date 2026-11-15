@@ -26,6 +26,8 @@ export default {
   'sample.breaking.text': 'عاجل: المسؤولون في حالة ارتباك مع تفاقم الأزمة — مصادر تقول إن الجمهور ظل في الظلام لأشهر.',
   'sample.editorial.label': 'مقارنة التأطير التحريري',
   'sample.editorial.text': 'بينما يرى المنتقدون أن الإصلاح عاجل، تروي نظرة أدق إلى الأرقام قصة أهدأ عن الحوافز والتأطير.',
+  'sample.springfield.label': 'خطاب سياسي: ترامب عن سبرينغفيلد (اقتباس)',
+  'sample.springfield.text': "In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.",
   'url_too_long': 'الرابط أطول من {max} حرف.',
   'url_invalid': 'أدخل رابطًا كاملًا يبدأ بـ http:// أو https://.',
 }
