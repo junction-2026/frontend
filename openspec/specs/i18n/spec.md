@@ -31,7 +31,7 @@ When `params.count` is a number, `t` SHALL select the key `<key>_<category>` usi
 - **THEN** the `_two` form is used
 
 ### Requirement: Catalogs
-Catalogs SHALL be one TS module per locale and namespace at `src/i18n/locales/<lng>/<ns>.ts` with a default export of a flat key→string object, discovered with `import.meta.glob` and addressed as `<ns>.<key>`; the `en` catalogs are the source of truth. First-pass translations of every key in `common`, `shell` and `home` SHALL exist for fr, ar, de and fi, and of every key in every namespace of `en` for ru.
+Catalogs SHALL be one TS module per locale and namespace at `src/i18n/locales/<lng>/<ns>.ts` with a default export of a flat key→string object, discovered with `import.meta.glob` and addressed as `<ns>.<key>`; the `en` catalogs are the source of truth. First-pass translations of every key in `common`, `shell` and `home` SHALL exist for fr, ar, de and fi, and of every key in every namespace of `en` for ru. There is no `settings` namespace.
 
 #### Scenario: Adding a namespace
 - **WHEN** a file `locales/<lng>/<ns>.ts` is added
@@ -39,7 +39,7 @@ Catalogs SHALL be one TS module per locale and namespace at `src/i18n/locales/<l
 
 #### Scenario: Russian namespaces
 - **WHEN** the files of `locales/ru` and `locales/en` are listed
-- **THEN** both hold the same namespaces (ambient, analysis, ask, common, compose, explore, history, home, results, settings, shell, techniques)
+- **THEN** both hold the same namespaces (ambient, analysis, ask, common, compose, explore, history, home, results, shell, techniques) and no `locales/<lng>/settings.ts` exists in en, de, fi, fr, ru or ar
 
 ### Requirement: Fallback and catalog consistency
 A key that is absent or empty in the active locale SHALL fall back to the `en` value; a key that no catalog defines SHALL render as "…". `translate` SHALL NEVER return the key, `undefined` or an empty string and SHALL NOT throw. In development each missing `locale:key` SHALL log one `console.warn`; production logs nothing. Non-en keys and placeholders SHALL exist in the en catalog (a plural form `<key>_<category>` is valid when en has `<key>_other`).
@@ -145,7 +145,7 @@ Changing the locale SHALL only change the context: the route, the Explore countr
 - **THEN** the country stays selected, `html` has dir rtl, and no new request was sent
 
 ### Requirement: No hardcoded static strings
-User-visible static text of the shell, Home, Explore, Region, History, Ask, Settings and States views and of `src/explore`, `src/history` and `src/ui` SHALL come from the catalogs. A test SHALL fail when those `.tsx` files contain JSX text or `placeholder`, `title`, `aria-label` or `alt` string literals that contain letters, other than an allow-list of the brand name "VEIL" and the avatar initial.
+User-visible static text of the shell, Home, Explore, Region, History, Ask and States views and of `src/explore`, `src/history` and `src/ui` SHALL come from the catalogs. A test SHALL fail when those `.tsx` files contain JSX text or `placeholder`, `title`, `aria-label` or `alt` string literals that contain letters, other than an allow-list of the brand name "VEIL" and the keycap of the search shortcut.
 
 #### Scenario: Literal added to a view
 - **WHEN** a view gets `<h2>Hello</h2>`

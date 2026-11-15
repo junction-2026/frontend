@@ -1,7 +1,7 @@
 import { useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from 'react'
 
 export type RouteName =
-  | 'home' | 'analyzing' | 'results' | 'detail' | 'history' | 'explore' | 'region' | 'ask' | 'settings' | 'states'
+  | 'home' | 'analyzing' | 'results' | 'detail' | 'history' | 'explore' | 'region' | 'ask' | 'states'
 export type Route = { name: RouteName; id?: string }
 
 // Ordered table; the first match wins and an unknown path falls back to Home.
@@ -15,7 +15,6 @@ const ROUTES: [RegExp, RouteName][] = [
   [/^\/explore$/, 'explore'],
   [/^\/explore\/region$/, 'region'],
   [/^\/ask$/, 'ask'],
-  [/^\/settings$/, 'settings'],
   [/^\/states$/, 'states'],
 ]
 
@@ -46,11 +45,10 @@ export function matchRoute(pathname: string, search = ''): Route {
   return { name: 'home' }
 }
 
-// Which primary nav tab a route belongs to (null: none, e.g. Settings).
+// Which primary nav tab a route belongs to (null: none).
 export function navFor(name: RouteName): 'analyze' | 'explore' | 'history' | null {
   if (name === 'explore' || name === 'region') return 'explore'
   if (name === 'history') return 'history'
-  if (name === 'settings') return null
   return 'analyze'
 }
 
