@@ -1,7 +1,7 @@
 # secondary-screens Specification
 
 ## Purpose
-Defines the Explore, Region, Ask, States and Settings screens: their layout and navigation, which parts are mock data marked with MockBadge, and the one backend-connected block (the Settings analyzers list).
+Defines the Explore, Region, Ask and States screens: their layout and navigation, and which parts are mock data marked with MockBadge. None of these screens has a backend-connected analyzer block; the analyzer list lives in the Analyze screen (analyze-flow-ui).
 
 ## Requirements
 
