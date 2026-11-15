@@ -315,3 +315,25 @@
     font-size: 0.8rem;
   }
 }
+
+/* "Integrate API": a grey neutral button after the tabs, never the active-tab or accent look. */
+.nav-tabs a.nav-integrate {
+  margin-inline-start: 0.2rem;
+  background: var(--line-strong);
+  color: var(--ink-2);
+}
+
+.nav-tabs a.nav-integrate:hover {
+  color: var(--ink);
+}
+
+.nav-tabs a.nav-integrate[aria-current='page'] {
+  box-shadow: inset 0 0 0 1px var(--muted);
+}
+
+@media (max-width: 640px) {
+  .nav-tabs a.nav-integrate {
+    margin-inline-start: 0;
+    flex: 1.4;
+  }
+}

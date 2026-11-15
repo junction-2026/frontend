@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { matchRoute, navigate } from './router'
+import { matchRoute, navFor, navigate } from './router'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
@@ -37,6 +37,9 @@ describe('matchRoute', () => {
     ['/settings/x', { name: 'home' }],
     ['/states', { name: 'states' }],
     ['/history/', { name: 'history' }],
+    ['/docs/api', { name: 'api-docs' }],
+    ['/docs/api/', { name: 'api-docs' }],
+    ['/docs', { name: 'home' }],
     ['/nope', { name: 'home' }],
     ['/jobs/abc/extra', { name: 'home' }],
     ['/jobs/%E0%A4%A', { name: 'home' }],
@@ -65,6 +68,8 @@ describe('routes render their stub view in the shell', () => {
     ['/jobs/j1/ask', /^Ask VEIL/],
     ['/settings', 'See beyond the narrative.'],
     ['/states', 'Edge Cases & System States'],
+    ['/docs/api', 'Public API'],
+    ['/docs/api/', 'Public API'],
     ['/unknown', 'See beyond the narrative.'],
   ])('%s', (path, heading, level = 1) => {
     open(path)
@@ -156,5 +161,38 @@ describe('navigation', () => {
     document.addEventListener('click', (e) => e.preventDefault(), { once: true }) // jsdom cannot navigate
     fireEvent.click(nav('History'), { ctrlKey: true })
     expect(window.location.pathname).toBe('/')
+  })
+})
+
+describe('Integrate API button', () => {
+  it('follows the History link and links to /docs/api', () => {
+    open('/')
+    const links = screen.getAllByRole('link')
+    const button = nav('Integrate API')
+    expect(links[links.indexOf(nav('History')) + 1]).toBe(button)
+    expect(button).toHaveAttribute('href', '/docs/api')
+    expect(button).not.toHaveAttribute('aria-current')
+    expect(button).not.toHaveClass('active')
+  })
+
+  it('opens the docs client-side with no tab active and aria-current on the button', () => {
+    open('/')
+    fireEvent.click(nav('Integrate API'))
+    expect(window.location.pathname).toBe('/docs/api')
+    expect(screen.getByRole('heading', { level: 1, name: 'Public API' })).toBeInTheDocument()
+    expect(activeTabs()).toEqual([])
+    expect(nav('Integrate API')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('has no active tab on /docs/api/ and navFor is null', () => {
+    open('/docs/api/')
+    expect(activeTabs()).toEqual([])
+    expect(navFor('api-docs')).toBeNull()
+  })
+
+  it('leaves the other routes alone', () => {
+    open('/history')
+    expect(activeTabs()).toEqual(['History'])
+    expect(nav('Integrate API')).not.toHaveAttribute('aria-current')
   })
 })

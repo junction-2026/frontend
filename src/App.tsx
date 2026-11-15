@@ -2,6 +2,7 @@ import { useState, type ComponentType } from 'react'
 import { I18nProvider } from './i18n'
 import { initRouter, useRoute, type RouteName } from './router'
 import { Shell } from './ui/Shell'
+import ApiDocsView from './views/ApiDocsView'
 import AnalyzingView from './views/AnalyzingView'
 import AskView from './views/AskView'
 import ExploreView from './views/ExploreView'
@@ -16,12 +17,13 @@ import './styles/base.css'
 import './styles/shell.css'
 import './styles/components.css'
 import './styles/hosting-badge.css'
+import './styles/api-docs.css'
 
 type ViewProps = { id: string }
 // Job routes always carry an id; the others ignore it.
 const VIEWS: Record<RouteName, ComponentType<ViewProps>> = {
   home: HomeView, analyzing: AnalyzingView, results: ResultsView, history: HistoryView,
-  explore: ExploreView, region: RegionView, ask: AskView, states: StatesView,
+  explore: ExploreView, region: RegionView, ask: AskView, states: StatesView, 'api-docs': ApiDocsView,
 }
 
 export default function App() {

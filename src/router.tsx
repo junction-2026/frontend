@@ -1,7 +1,7 @@
 import { useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from 'react'
 
 export type RouteName =
-  | 'home' | 'analyzing' | 'results' | 'history' | 'explore' | 'region' | 'ask' | 'states'
+  | 'home' | 'analyzing' | 'results' | 'history' | 'explore' | 'region' | 'ask' | 'states' | 'api-docs'
 export type Route = { name: RouteName; id?: string }
 
 // Ordered table; the first match wins and an unknown path falls back to Home.
@@ -15,6 +15,7 @@ const ROUTES: [RegExp, RouteName][] = [
   [/^\/explore\/region$/, 'region'],
   [/^\/ask$/, 'ask'],
   [/^\/states$/, 'states'],
+  [/^\/docs\/api$/, 'api-docs'],
 ]
 
 // `?job=<id>` of /explore: URL-decoded; a malformed escape or an empty value counts as absent.
@@ -48,6 +49,7 @@ export function matchRoute(pathname: string, search = ''): Route {
 export function navFor(name: RouteName): 'analyze' | 'explore' | 'history' | null {
   if (name === 'explore' || name === 'region') return 'explore'
   if (name === 'history') return 'history'
+  if (name === 'api-docs') return null
   return 'analyze'
 }
 
