@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import DetailView from '../views/DetailView'
+import { DetailedAnalysis } from './DetailedAnalysis'
+import { WithJob } from './WithJob'
 import { risk } from './fixtures'
 
 const fetchMock = vi.fn()
@@ -12,6 +13,8 @@ afterEach(() => {
   window.history.replaceState(null, '', '/')
 })
 
+// The detailed-region body of /jobs/:id, without the Results screen around it.
+const RegionBody = ({ id }: { id: string }) => <WithJob id={id}>{(j) => <DetailedAnalysis job={j} />}</WithJob>
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
 const det = (name: string, spans?: unknown[]) => ({
   name,
@@ -34,7 +37,7 @@ const job = (content: string, result: unknown, extra: object = {}) => ({
 })
 const show = async (j: unknown) => {
   fetchMock.mockResolvedValue(json(j))
-  render(<DetailView id="j1" />)
+  render(<RegionBody id="j1" />)
   return screen.findByTestId('job-text')
 }
 const marks = (el: HTMLElement) => [...el.querySelectorAll('mark')]
@@ -145,7 +148,7 @@ describe('job result view (Detail)', () => {
     fetchMock
       .mockResolvedValueOnce(json(job('abc', null, { status: 'running', done: false })))
       .mockResolvedValueOnce(json(job('abc', { detected: [] })))
-    render(<DetailView id="j1" />)
+    render(<RegionBody id="j1" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(fetchMock).toHaveBeenCalledTimes(1)
     await act(() => vi.advanceTimersByTimeAsync(1999))
@@ -159,7 +162,7 @@ describe('job result view (Detail)', () => {
   it('stops polling on unmount', async () => {
     vi.useFakeTimers()
     fetchMock.mockImplementation(async () => json(job('abc', null, { status: 'running', done: false })))
-    const { unmount } = render(<DetailView id="j1" />)
+    const { unmount } = render(<RegionBody id="j1" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     unmount()
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -169,7 +172,7 @@ describe('job result view (Detail)', () => {
   it('shows an alert for 404 and for a network error, without polling', async () => {
     vi.useFakeTimers()
     fetchMock.mockResolvedValue(json({ error: { code: 'not_found' } }, 404))
-    const { unmount } = render(<DetailView id="nope" />)
+    const { unmount } = render(<RegionBody id="nope" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(screen.getByRole('alert')).toHaveTextContent(/not found/i)
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -177,7 +180,7 @@ describe('job result view (Detail)', () => {
     unmount()
     fetchMock.mockReset()
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
-    render(<DetailView id="nope" />)
+    render(<RegionBody id="nope" />)
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(screen.getByRole('alert')).toHaveTextContent(/Could not reach the backend/)
     await act(() => vi.advanceTimersByTimeAsync(10000))
@@ -304,7 +307,7 @@ describe('job result view (Detail)', () => {
       expect(screen.queryByText(/AI-assessed/)).toBeNull()
     })
   })
-  describe('Detail screen', () => {
+  describe('Detail metrics bar', () => {
     const topic = (claims: unknown, status = 'succeeded') => ({ id: 'topic_extraction', name: 'Topic extraction', status, result: status === 'succeeded' ? { topics: [], news: [], claims } : null })
     const metric = (label: string) => (screen.getByText(label).parentElement as HTMLElement).querySelector('strong') as HTMLElement
     const inMock = (el: HTMLElement) => el.closest('[data-mock]')
@@ -322,7 +325,6 @@ describe('job result view (Detail)', () => {
       expect(screen.queryByText(/412/)).toBeNull()
       expect(document.querySelector('[data-mock]')).toBeNull()
       expect(screen.queryByText(/confidence|0\.86|86 ?%/i)).toBeNull()
-      expect(screen.getByRole('link', { name: /Back to summary/ })).toHaveAttribute('href', '/jobs/j1')
     })
 
     describe('Latency', () => {
