@@ -347,7 +347,11 @@
   color: var(--v-text);
 }
 .confidence-info {
-  display: inline-flex; /* static: the tooltip anchors to .verdict-head, not to its button or pill */
+  position: relative; /* the risk info tooltip anchors to its own button */
+  display: inline-flex;
+}
+.verdict-head .confidence-info {
+  position: static; /* verdict tooltips anchor to .verdict-head, so the pill cannot push them off-screen */
 }
 .info-btn {
   width: 22px;
