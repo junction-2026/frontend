@@ -4,6 +4,29 @@
 
 ## MODIFIED Requirements
 
+### Requirement: Detail metrics
+The Detail metrics bar in the detailed region of `/jobs/:id` SHALL show Patterns (detected techniques of the `succeeded` `techniques` run, else "—"), Claims (`claims` of a `succeeded` `topic_extraction` run, else "—"), Risk (real percentage and band chip, else "—", not in `Mock`) and Latency. Latency follows 'Detail metrics Latency'. Technique entries SHALL show `Detection.name` as ID badge and no match percentage; confidence SHALL NOT be shown.
+
+#### Scenario: Metrics
+- **WHEN** two techniques were detected and `topic_extraction` succeeded with three claims
+- **THEN** Patterns shows 2, Claims shows 3 and no confidence is shown
+
+#### Scenario: Scored risk
+- **WHEN** `risk` is scored with score 0.72 and band `high`
+- **THEN** the Risk cell shows the formatted `72%` and a localized `High risk` chip (colours per 'Risk band colours'), with no `Mock` ancestor
+
+#### Scenario: Risk unavailable
+- **WHEN** `risk` is unavailable, fails 'Risk score context is required', or is null or missing
+- **THEN** the Risk cell shows "—"
+
+#### Scenario: Unknown band
+- **WHEN** the band is `extreme`
+- **THEN** the chip shows `extreme` with the moderate colours
+
+#### Scenario: Claims unavailable
+- **WHEN** `topic_extraction` failed
+- **THEN** Claims shows "—"
+
 ### Requirement: Detailed analysis region content
 The detailed region SHALL contain the analyzed excerpt (first 400 characters), the technique tags, "Explore coverage" and the Copy button, followed by the Detail metrics bar, the JobView and the Coverage section. It SHALL NOT contain a link to a separate detail page.
 

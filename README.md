@@ -13,7 +13,6 @@ Client-side History-API router (no dependency); an unknown path shows Home. `/?j
 | `/` | Home (Analyze) |
 | `/jobs/:id/live` | Analyzing |
 | `/jobs/:id` | Results |
-| `/jobs/:id/detail` | Detail |
 | `/history` | History |
 | `/explore`, `/explore/region` | Explore, Region |
 | `/ask` | Ask |
