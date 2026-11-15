@@ -424,6 +424,21 @@ describe('result pane', () => {
     expect(toggles().filter((b) => b.getAttribute('aria-label') === 'Ask about ')).toHaveLength(0) // the blank term has no toggle
   })
 
+  it('gives repeated refs (equal kind and ref are one element) a toggle on the first occurrence only', async () => {
+    const d = { name: 'Doubt', display: 'Doubt', explanation: 'x', spans: [{ technique: 'Doubt', text: 'knows', start: 9, end: 14 }] }
+    jobBody = richJob({
+      analyzers: [run('techniques', 'succeeded', { result: { detected: [d, d], span_status: 'ok' } })],
+      risk: risk({ caveats: [{ id: 'bot_not_intent', text: 'a' }, { id: 'bot_not_intent', text: 'b' }] }),
+    })
+    await show()
+    expect(screen.getAllByRole('button', { name: 'Ask about Doubt' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Ask about knows' })).toHaveLength(1)
+    const caveat = `Ask about ${translate('en', 'results.risk.caveat.bot_not_intent')}`
+    expect(screen.getAllByRole('button', { name: caveat })).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: caveat }))
+    expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
+  })
+
   it('shows the same kinds with a localized name', async () => {
     await show('j1', 'de')
     expect(screen.getByRole('button', { name: `Zu ${translate('de', 'techniques.Doubt.name')} fragen` })).toBeInTheDocument()

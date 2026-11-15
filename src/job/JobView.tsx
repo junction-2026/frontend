@@ -98,6 +98,7 @@ export default function JobView({ job }: { job: Job }) {
     })
   }
 
+  const seen = new Set<string>() // passage refs already listed, across detections
   const firstSpan = (name: string) => spans.find((s) => s.technique === name)
   return (
     <>
@@ -138,17 +139,16 @@ export default function JobView({ job }: { job: Job }) {
         {techniques && techniques.detected.length === 0 && <p className="tech-note">{t('results.jobview.none')}</p>}
         {techniques && (
           <ul className="job-techniques">
-            {techniques.detected.map((d) => {
+            {techniques.detected.map((d, di) => {
               const n = spanCount(d.name)
               const pl = plain(d)
               const info = infos.get(d.name)!
               const anchor = firstSpan(d.name)
-              const ask = pick('technique', d.name)
-              const seen = new Set<string>()
+              const ask = techniques.detected.findIndex((x) => x.name === d.name) === di ? pick('technique', d.name) : null // equal refs are one element: first occurrence only
               const passages = spans.flatMap((s) => {
                 const ref = `${s.start}:${s.end}:${d.name}`
                 const p = s.technique === d.name && !seen.has(ref) ? pick('passage', ref) : null
-                seen.add(ref)
+                if (s.technique === d.name) seen.add(ref)
                 return p ? [<li key={ref} className="focus-passage" data-focus-selected={p.selected || undefined}><bdi dir="auto">{s.text}</bdi>{p.button}</li>] : []
               })
               return (

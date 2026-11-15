@@ -178,8 +178,8 @@ export function RiskSection({ risk }: { risk: RiskView }) {
       <Disclosure
         label={t('results.risk.caveats')}
         region={t('results.risk.caveats')}
-        items={risk.caveats.map((c) => {
-          const ask = pick('risk_caveat', c.id)
+        items={risk.caveats.map((c, i) => {
+          const ask = risk.caveats.findIndex((x) => x.id === c.id) === i ? pick('risk_caveat', c.id) : null // equal refs are one element: first occurrence only
           return <li key={c.id} data-focus-selected={ask?.selected || undefined}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}{ask?.button}</li>
         })}
       />
