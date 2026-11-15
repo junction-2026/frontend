@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { verdictOf, type Job } from '../api/types'
 import { useFormat, useLocale, useT } from '../i18n'
+import { useFocusPick } from './focusSelection'
 import { userTextEntry, useLoc, useLocalizedText } from './localize'
 import { timedOut } from './read'
 import { summaryOf } from './summary'
@@ -134,8 +135,9 @@ function Result({ job, r }: { job: Job; r: NonNullable<ReturnType<typeof resultO
   const { summary, disclosure } = useExplanation(text(r.user_text), t(`results.verdict.${verdict}.body`))
   const origin = botTextOf(job)
   const insufficient = verdict === 'uncertain' && r.produced_by === 'orchestrator'
+  const ask = useFocusPick()('final_assessment', 'final_assessment')
   return (
-    <section className="verdict" data-verdict={verdict}>
+    <section className="verdict" data-verdict={verdict} data-focus-selected={ask?.selected || undefined}>
       <div className="verdict-head">
         <span className="verdict-pill">
           <span className="verdict-dot" aria-hidden="true" />
@@ -146,6 +148,7 @@ function Result({ job, r }: { job: Job; r: NonNullable<ReturnType<typeof resultO
           <ConfidenceInfo />
           {origin && <OriginMarker origin={origin} />}
         </p>
+        {ask?.button}
       </div>
       <h2>{t(`results.verdict.${verdict}.heading`)}</h2>
       {summary}

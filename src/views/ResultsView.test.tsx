@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement } from 'react'
 import { I18nProvider, useLocale, type Locale } from '../i18n'
+import { richJob } from '../ask/askFixtures'
 import { assessment, coverage, finalization, job, json, risk, run } from '../job/fixtures'
 import ResultsView from './ResultsView'
 
@@ -666,5 +667,21 @@ describe('text-origin marker (bot_detection)', () => {
     await screen.findByRole('heading', { level: 2 })
     expect(marker()!.textContent).not.toMatch(/Looks/)
     expect(marker()!.getAttribute('aria-label')).not.toMatch(/\{pct\}|results\./)
+  })
+})
+
+describe('Results: no selection mode', () => {
+  it('renders no "Ask about" toggle before or after opening the detailed region', async () => {
+    await show(richJob())
+    const none = () => {
+      expect(screen.queryAllByRole('button', { name: /^Ask about / })).toHaveLength(0)
+      expect(document.querySelector('.focus-select, [data-focus-selected], .focus-passages')).toBeNull()
+    }
+    none()
+    toggle()
+    expect(await screen.findByText('People are destroying our future')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Main drivers/ }))
+    expect(screen.getByRole('button', { name: /Main drivers/ })).toHaveAttribute('aria-expanded', 'true')
+    none()
   })
 })

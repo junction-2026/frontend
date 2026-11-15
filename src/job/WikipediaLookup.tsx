@@ -1,5 +1,6 @@
 import type { ClaimLookup, CrossLanguageDifference, Job, WikiLookup, WikipediaLookup as Result } from '../api/types'
 import { useLocale, useT } from '../i18n'
+import { useFocusPick } from './focusSelection'
 import { languageName } from './localize'
 import { run } from './read'
 
@@ -94,6 +95,18 @@ function CrossLanguage({ c }: { c: ClaimLookup }) {
 
 const wikisOf = (c: ClaimLookup): WikiLookup[] => (Array.isArray(c.wikis) ? c.wikis.filter(obj) : [])
 
+function Claim({ c, index }: { c: ClaimLookup; index: number }) {
+  const ask = useFocusPick()('wikipedia_claim', index)
+  return (
+    <li className="tech-item wiki-claim" data-focus-selected={ask?.selected || undefined}>
+      <strong dir="auto">{text(c.claim)}</strong>
+      <ul className="wiki-editions">{wikisOf(c).map((w, j) => <Edition key={j} w={w} />)}</ul>
+      <CrossLanguage c={c} />
+      {ask?.button}
+    </li>
+  )
+}
+
 // Read-only Wikipedia section of the job view: per claim each edition's passage verbatim and apart, its coverage label and
 // the cross-language state. No verdict, no merged passage, no counts.
 export function WikipediaLookup({ job }: { job: Job }) {
@@ -109,13 +122,7 @@ export function WikipediaLookup({ job }: { job: Job }) {
         <>
           <p className="tech-note">{t('results.wiki.note')}</p>
           <ul className="wiki-claims">
-            {res.claims.filter(obj).map((c, i) => (
-              <li key={i} className="tech-item wiki-claim">
-                <strong dir="auto">{text(c.claim)}</strong>
-                <ul className="wiki-editions">{wikisOf(c).map((w, j) => <Edition key={j} w={w} />)}</ul>
-                <CrossLanguage c={c} />
-              </li>
-            ))}
+            {res.claims.map((c, i) => obj(c) && <Claim key={i} c={c} index={i} />)}
           </ul>
         </>
       )}

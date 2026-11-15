@@ -49,10 +49,10 @@ const open = (path: string, locale: string) => {
 }
 const requests = () => fetchMock.mock.calls.map((c) => String(c[0]))
 
-// The text a reader sees that the UI itself wrote: attributes and text, without data (<bdi>, dir=auto), the keycap, the brand initial, and the language names, which are shown in their own language.
+// The text a reader sees that the UI itself wrote: attributes and text, without data (<bdi>, dir=auto), the keycap, the brand initial, the "i" glyph of info buttons, and the language names, which are shown in their own language.
 function staticText(): string {
   const root = document.querySelector('.app-shell')!.cloneNode(true) as HTMLElement
-  root.querySelectorAll('bdi, [dir=auto], .kbd, .avatar-sm, svg, .lang-select').forEach((e) => e.remove())
+  root.querySelectorAll('bdi, [dir=auto], .kbd, .avatar-sm, .info-btn, svg, .lang-select').forEach((e) => e.remove())
   const attrs = [...root.querySelectorAll('[aria-label],[placeholder],[title]')].flatMap((e) => ['aria-label', 'placeholder', 'title'].map((a) => e.getAttribute(a) ?? ''))
   return [root.textContent, ...attrs].join(' ').replaceAll('VEIL', '')
 }

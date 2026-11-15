@@ -11,7 +11,7 @@ export type RiskView = {
   summary: string
   dimensions: { key: DimensionKey; available: boolean; score: number | null; low: boolean; reason: string | null }[]
   techniques: { label: string; display: string; probability: number; impact: string }[]
-  drivers: { kind: string; technique: string | null; text: string }[]
+  drivers: { kind: string; technique: string | null; text: string; index: number }[] // index: position in the raw Job.risk.drivers
   caveats: { id: string; text: string }[]
 }
 
@@ -37,7 +37,7 @@ export function readRisk(job: Job): RiskView | null {
       ? [{ label: t.label, display: str(t.display), probability: t.probability as number, impact: str(t.impact) }]
       : [],
   )
-  const drivers = list(r.drivers).flatMap((d) => (typeof d.kind === 'string' ? [{ kind: d.kind, technique: str(d.technique) || null, text: str(d.text) }] : []))
+  const drivers = (Array.isArray(r.drivers) ? r.drivers : []).flatMap((d: unknown, index) => (isObj(d) && typeof d.kind === 'string' ? [{ kind: d.kind, technique: str(d.technique) || null, text: str(d.text), index }] : []))
   const caveats = list(r.caveats).flatMap((c) => (typeof c.id === 'string' ? [{ id: c.id, text: str(c.text) }] : []))
   if (!caveats.some((c) => c.id === 'content_not_reader')) caveats.unshift({ id: 'content_not_reader', text: '' })
   const score = ratio(r.score)

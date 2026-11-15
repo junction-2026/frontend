@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Job } from '../api/types'
 import { useFormat, useLocale, useT } from '../i18n'
+import { useFocusPick } from './focusSelection'
 import { findingEntry, useLoc, useLocalizedText } from './localize'
 import { plain, readLlm, readTechniques, str, techniqueInfo, techniqueText, whyText, type Finding } from './read'
 import { segment, validSpans, type Span } from './segments'
@@ -23,13 +24,15 @@ function LlmWhy({ f }: { f: Finding }) {
 // the quoted span text verbatim.
 function LlmFinding({ f, name, definition }: { f: Finding; name: string; definition: string }) {
   const { text, note } = useLocalizedText(f.explanation, findingEntry(useLoc(), f.index, f.label))
+  const ask = useFocusPick()('llm_finding', f.index)
   return (
-    <li className="tech-item">
+    <li className="tech-item" data-focus-selected={ask?.selected || undefined}>
       <strong>{name}</strong>
       <p>{definition}</p>
       <p dir="auto">{text}</p>
       {note}
       {typeof f.span.text === 'string' && <blockquote><bdi dir="auto">{f.span.text}</bdi></blockquote>}
+      {ask?.button}
     </li>
   )
 }
@@ -41,6 +44,7 @@ export default function JobView({ job }: { job: Job }) {
   const { formatNumber: fmt } = useFormat()
   const [selected, setSelected] = useState<string | null>(null)
   const [active, setActive] = useState<Active | null>(null)
+  const pick = useFocusPick()
   const content = typeof job.input?.content === 'string' ? job.input.content : ''
   const rawTitle = job.input?.source?.title
   const title = typeof rawTitle === 'string' && rawTitle.trim() !== '' ? rawTitle : ''
@@ -94,6 +98,7 @@ export default function JobView({ job }: { job: Job }) {
     })
   }
 
+  const seen = new Set<string>() // passage refs already listed, across detections
   const firstSpan = (name: string) => spans.find((s) => s.technique === name)
   return (
     <>
@@ -134,13 +139,20 @@ export default function JobView({ job }: { job: Job }) {
         {techniques && techniques.detected.length === 0 && <p className="tech-note">{t('results.jobview.none')}</p>}
         {techniques && (
           <ul className="job-techniques">
-            {techniques.detected.map((d) => {
+            {techniques.detected.map((d, di) => {
               const n = spanCount(d.name)
               const pl = plain(d)
               const info = infos.get(d.name)!
               const anchor = firstSpan(d.name)
+              const ask = techniques.detected.findIndex((x) => x.name === d.name) === di ? pick('technique', d.name) : null // equal refs are one element: first occurrence only
+              const passages = spans.flatMap((s) => {
+                const ref = `${s.start}:${s.end}:${d.name}`
+                const p = s.technique === d.name && !seen.has(ref) ? pick('passage', ref) : null
+                if (s.technique === d.name) seen.add(ref)
+                return p ? [<li key={ref} className="focus-passage" data-focus-selected={p.selected || undefined}><bdi dir="auto">{s.text}</bdi>{p.button}</li>] : []
+              })
               return (
-                <li key={d.name} className="tech-item">
+                <li key={d.name} className="tech-item" data-focus-selected={ask?.selected || undefined}>
                   <button
                     type="button"
                     aria-pressed={selected === d.name}
@@ -156,6 +168,8 @@ export default function JobView({ job }: { job: Job }) {
                   </button>
                   {n === 0 && pl.why && <p className="job-technique-why">{whyText(info, locale, pl.why)}</p>}
                   {anchor && <div className="anchor">{t('results.jobview.anchor')} “<bdi dir="auto">{anchor.text}</bdi>”</div>}
+                  {passages.length > 0 && <ul className="focus-passages">{passages}</ul>}
+                  {ask?.button}
                 </li>
               )
             })}

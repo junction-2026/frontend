@@ -221,3 +221,19 @@
   margin-block: 0.4rem;
   font-style: normal;
 }
+
+/* Ask page selection mode (focusSelection.tsx): a toggle on each element; selected sections get a border. Existing tokens only. */
+[data-focus-selected] { box-shadow: 0 0 0 3px var(--blue); }
+li[data-focus-selected] { border-radius: var(--radius-sm); background-color: var(--blue-soft); }
+li.tech-item[data-focus-selected] { padding-inline: 0.6rem; }
+button.focus-select {
+  inline-size: 1.7rem; block-size: 1.7rem; padding: 0; margin: 0; display: inline-flex; align-items: center; justify-content: center;
+  flex: none; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); line-height: 1; cursor: pointer;
+}
+button.focus-select:hover:not(:disabled) { background: var(--bg-soft); }
+button.focus-select[aria-pressed='true'] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+button.focus-select:disabled { color: var(--faint); cursor: not-allowed; }
+button.focus-select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.focus-passages { list-style: none; margin: 0.4rem 0 0.6rem; padding: 0 0 0 0; display: grid; gap: 0.3rem; }
+.focus-passage { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.25rem 0.5rem; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 0.88rem; overflow-wrap: anywhere; }
+.tech-item > button.focus-select { margin-block-start: 0.2rem; }
