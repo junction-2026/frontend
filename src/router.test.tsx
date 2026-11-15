@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { matchRoute } from './router'
+import { matchRoute, navigate } from './router'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
@@ -26,7 +26,7 @@ describe('matchRoute', () => {
     ['/', { name: 'home' }],
     ['/jobs/abc/live', { name: 'analyzing', id: 'abc' }],
     ['/jobs/abc', { name: 'results', id: 'abc' }],
-    ['/jobs/a%20b/detail', { name: 'detail', id: 'a b' }],
+    ['/jobs/x/detail', { name: 'home' }], // redirected before the route is read; no detail route
     ['/history', { name: 'history' }],
     ['/explore', { name: 'explore' }],
     ['/explore/region', { name: 'region' }],
@@ -58,7 +58,6 @@ describe('routes render their stub view in the shell', () => {
   it.each<[string, string | RegExp, number?]>([
     ['/', 'See beyond the narrative.'],
     ['/jobs/j1/live', 'Analyzing your content...', 2],
-    ['/jobs/j1/detail', 'Detailed analysis'],
     ['/history', 'Analysis History'],
     ['/explore', 'Explore the world.'],
     ['/explore/region', 'Explore the world.'],
@@ -90,6 +89,26 @@ describe('legacy ?job link', () => {
     open('/?job=')
     expect(window.location.search).toBe('?job=')
     expect(screen.getByRole('heading', { level: 1, name: 'See beyond the narrative.' })).toBeInTheDocument()
+  })
+})
+
+describe('legacy /jobs/:id/detail link', () => {
+  it.each(['/jobs/a%20b/detail', '/jobs/a%20b/detail/'])('replaces %s with /jobs/a%%20b on init and renders Results', (url) => {
+    open(`${url}?x=1`)
+    expect(window.location.pathname + window.location.search).toBe('/jobs/a%20b?x=1')
+    expect(vi.mocked(fetch).mock.calls.map((c) => c[0])).toContain('/api/v1/jobs/a%20b')
+    expect(screen.queryByRole('heading', { name: 'Detailed analysis' })).toBeNull()
+  })
+
+  it('is replaced after navigate() and on popstate', () => {
+    open('/')
+    act(() => navigate('/jobs/a%20b/detail/'))
+    expect(window.location.pathname).toBe('/jobs/a%20b')
+    window.history.pushState(null, '', '/jobs/a%20b/detail') // a stale entry reached via Back/Forward
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    })
+    expect(window.location.pathname).toBe('/jobs/a%20b')
   })
 })
 

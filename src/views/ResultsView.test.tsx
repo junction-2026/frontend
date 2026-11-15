@@ -224,7 +224,7 @@ describe('Results: progressive disclosure', () => {
     expect(within(region).getByRole('heading', { name: 'Analyzer coverage' })).toBeInTheDocument()
     expect(region.querySelector('.quote-text')).toHaveTextContent('Everyone knows')
     expect(region.querySelector('.job-text')).toHaveTextContent('Everyone knows')
-    expect(within(region).getByRole('link', { name: 'Open detailed analysis page' })).toHaveAttribute('href', '/jobs/j1/detail')
+    expect(within(region).queryByRole('link', { name: 'Open detailed analysis page' })).toBeNull()
     fireEvent.click(btn)
     expect(btn).toHaveAccessibleName('View detailed analysis')
     expect(screen.queryByRole('region', { name: 'Detailed analysis' })).toBeNull()
@@ -393,7 +393,7 @@ describe('Results: page chrome, mock parts and polling', () => {
     expect(region.querySelector('[data-mock]')).toBeNull()
     for (const el of [
       screen.getByRole('button', { name: 'Copy' }),
-      screen.getByRole('link', { name: 'Open detailed analysis page' }),
+      screen.getByRole('link', { name: 'Explore coverage' }),
       screen.getByRole('link', { name: 'Ask VEIL' }),
       screen.getByText('Job j1'),
       screen.getByText('1 succeeded · 1 failed · 1 skipped of 2 applicable'),
@@ -410,27 +410,27 @@ describe('Results: page chrome, mock parts and polling', () => {
     expect(screen.queryByText(/412/)).toBeNull()
   })
 
-  it('links to the detail view and coverage, and copies the page URL', async () => {
+  it('links to coverage, has no detail-page link, and copies the page URL', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { clipboard: { writeText } })
     await show(job())
     toggle()
-    expect(screen.getByRole('link', { name: 'Open detailed analysis page' })).toHaveAttribute('href', '/jobs/j1/detail')
+    expect(screen.queryByRole('link', { name: 'Open detailed analysis page' })).toBeNull()
+    expect([...document.querySelectorAll('.card.detailed-summary a')].some((a) => a.getAttribute('href')?.endsWith('/detail'))).toBe(false)
     expect(screen.getByRole('link', { name: 'Explore coverage' })).toHaveAttribute('href', '/explore?job=j1')
     fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
     expect(writeText).toHaveBeenCalledWith(window.location.href)
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument()
   })
 
-  it('keeps both summary actions as anchors with URL-encoded ids and a titled copy button', async () => {
+  it('keeps Explore coverage as an anchor with a URL-encoded id and a titled copy button', async () => {
     await show(job({ id: 'j 1' }))
     toggle()
     const summary = document.querySelector('.card.detailed-summary') as HTMLElement
-    for (const [name, href] of [['Explore coverage', '/explore?job=j%201'], ['Open detailed analysis page', '/jobs/j%201/detail']]) {
-      const link = within(summary).getByRole('link', { name })
-      expect(link.tagName).toBe('A')
-      expect(link).toHaveAttribute('href', href)
-    }
+    const link = within(summary).getByRole('link', { name: 'Explore coverage' })
+    expect(link.tagName).toBe('A')
+    expect(link).toHaveAttribute('href', '/explore?job=j%201')
+    expect(within(summary).queryByRole('link', { name: 'Open detailed analysis page' })).toBeNull()
     expect(within(summary).getByRole('button', { name: 'Copy' })).toHaveAttribute('title')
   })
 

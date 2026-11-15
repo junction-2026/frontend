@@ -4,7 +4,6 @@ import { initRouter, useRoute, type RouteName } from './router'
 import { Shell } from './ui/Shell'
 import AnalyzingView from './views/AnalyzingView'
 import AskView from './views/AskView'
-import DetailView from './views/DetailView'
 import ExploreView from './views/ExploreView'
 import HistoryView from './views/HistoryView'
 import HomeView from './views/HomeView'
@@ -21,7 +20,7 @@ import './styles/hosting-badge.css'
 type ViewProps = { id: string }
 // Job routes always carry an id; the others ignore it.
 const VIEWS: Record<RouteName, ComponentType<ViewProps>> = {
-  home: HomeView, analyzing: AnalyzingView, results: ResultsView, detail: DetailView, history: HistoryView,
+  home: HomeView, analyzing: AnalyzingView, results: ResultsView, history: HistoryView,
   explore: ExploreView, region: RegionView, ask: AskView, states: StatesView,
 }
 

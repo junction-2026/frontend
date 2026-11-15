@@ -5,7 +5,7 @@ import { RiskMetric } from './RiskScore'
 import { claimCount, readTechniques } from './read'
 import { duration } from './text'
 
-// Metrics bar and JobView: the body shared by /jobs/:id/detail and the detailed region of /jobs/:id.
+// Metrics bar and JobView: the body of the detailed region of /jobs/:id.
 export function DetailedAnalysis({ job }: { job: Job }) {
   const t = useT()
   const { formatNumber: fmt } = useFormat()
