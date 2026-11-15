@@ -156,35 +156,44 @@
   padding: 0.1rem 0.7rem;
 }
 
-.try-expectation {
-  margin: 0.7rem auto 0;
-  max-width: 760px;
-  padding: 0.5rem 0.9rem;
+.try-row button[data-expectation] {
   border: 1px solid;
-  border-radius: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.15rem 0.75rem;
-  font-size: 0.85rem;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  text-decoration: none;
+  text-align: start;
 }
 
-.try-expectation[data-expectation='detected'] {
+.try-row button[data-expectation]:focus-visible {
+  outline: 2px solid var(--ink-2);
+  outline-offset: 2px;
+}
+
+.try-row button[data-expectation='detected'] {
   background: var(--verdict-detected-bg);
   border-color: var(--verdict-detected-border);
   color: var(--verdict-detected-pill-text);
 }
 
-.try-expectation[data-expectation='not_detected'] {
+.try-row button[data-expectation='not_detected'] {
   background: var(--verdict-not-detected-bg);
   border-color: var(--verdict-not-detected-border);
   color: var(--verdict-not-detected-pill-text);
 }
 
-.try-expectation[data-expectation='uncertain'] {
+.try-row button[data-expectation='uncertain'] {
   background: var(--verdict-uncertain-bg);
   border-color: var(--verdict-uncertain-border);
   color: var(--verdict-uncertain-pill-text);
+}
+
+.try-info {
+  margin: 0.7rem auto 0;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 /* ——— Analyzing ——— */
