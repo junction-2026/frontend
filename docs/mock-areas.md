@@ -6,6 +6,5 @@ backend". Real data is never wrapped in it. Each screen task appends its rows he
 
 | Route | Element | Why it is mock |
 | --- | --- | --- |
-| `/jobs/:id/live` | Ledger caption "Synchronous consensus pool" | No backend counterpart |
 | /explore/region | Selected-region map (Finland), statistics and region details (articles, wire items) | No region or publisher data in the backend |
 | /states | Whole page ("Example states") and the disabled "Retry Wire Retrieval" button | Static showcase; real states render on results, analyzing and history |
