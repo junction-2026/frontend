@@ -1,6 +1,7 @@
 import type { Job } from '../api/types'
 import { useT } from '../i18n'
-import { readTermContext } from './read'
+import { useFocusPick } from './focusSelection'
+import { readTermContext, run } from './read'
 import { wikiHref } from './WikipediaLookup'
 
 const obj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
@@ -21,8 +22,9 @@ function Source({ href, label }: { href: string | null; label: string }) {
   return href ? <a href={href} target="_blank" rel="noopener noreferrer"><bdi dir="auto">{label}</bdi></a> : <bdi dir="auto">{label}</bdi>
 }
 
-function Card({ c }: { c: Record<string, unknown> }) {
+function Card({ c, index }: { c: Record<string, unknown>; index: number }) {
   const t = useT()
+  const ask = useFocusPick()('term_context', index)
   const enc = obj(c.encyclopedia) && text(c.encyclopedia.quote) !== '' ? c.encyclopedia : null // anything else reads as no_coverage
   // keep each item's original index: a QuoteRef's `index` addresses the unfiltered `elsewhere` array
   const elsewhere = (Array.isArray(c.elsewhere) ? c.elsewhere : []).map((e, index) => ({ e, index })).filter(({ e }) => obj(e) && text(e.snippet) !== '') as { e: Record<string, unknown>; index: number }[]
@@ -33,7 +35,7 @@ function Card({ c }: { c: Record<string, unknown> }) {
   const differs = (i: number) => refs.some((r) => r.source === 'elsewhere' && r.index === i)
   const marker = <span className="tag purple term-differs">{t('results.term.differs_marker')}</span>
   return (
-    <li className="tech-item term-card" data-sense={sense}>
+    <li className="tech-item term-card" data-sense={sense} data-focus-selected={ask?.selected || undefined}>
       <strong dir="auto">{text(c.term)}</strong>
       <div className="term-quote">
         <span className="term-label">{t('results.term.in_post')}</span>
@@ -68,6 +70,7 @@ function Card({ c }: { c: Record<string, unknown> }) {
         )}
       </div>
       <span className={`tag ${sense === 'differs' ? 'purple' : 'gray'}`} data-sense-label={sense}>{t(`results.term.sense.${sense}`)}</span>
+      {ask?.button}
     </li>
   )
 }
@@ -78,6 +81,7 @@ export function TermContext({ job }: { job: Job }) {
   const t = useT()
   const terms = readTermContext(job)
   if (terms === null) return null
+  const raw: unknown[] = (run(job, 'term_context')?.result as { terms?: unknown[] } | undefined)?.terms ?? [] // refs address the unfiltered array
   return (
     <section className="card tech-list term-context">
       <h3>{t('results.term.title')}</h3>
@@ -88,7 +92,7 @@ export function TermContext({ job }: { job: Job }) {
       ) : (
         <>
           <p className="tech-note">{t('results.term.note')}</p>
-          <ul className="wiki-claims">{terms.map((c, i) => <Card key={i} c={c} />)}</ul>
+          <ul className="wiki-claims">{terms.map((c, i) => <Card key={i} c={c} index={raw.indexOf(c)} />)}</ul>
         </>
       )}
     </section>

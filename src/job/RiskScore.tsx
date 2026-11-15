@@ -2,6 +2,7 @@ import { useId, useState, type ReactNode } from 'react'
 import type { Job } from '../api/types'
 import { useFormat, useLocale, useT } from '../i18n'
 import { CATALOGS } from '../i18n/translate'
+import { useFocusPick, useFocusSelection } from './focusSelection'
 import { techniqueText } from './read'
 import { readRisk, type RiskView } from './risk'
 import { enumLabel, percent } from './text'
@@ -39,7 +40,7 @@ function RiskInfo() {
 // Shared disclosure of Main drivers and Caveats: one collapsed-by-default button with the section-heading style.
 function Disclosure({ label, region, items }: { label: string; region: string; items: ReactNode[] }) {
   const id = useId()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(useFocusSelection() !== null) // toggles inside must be visible
   return (
     <div className="risk-block">
       <button type="button" className="risk-toggle" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
@@ -93,6 +94,7 @@ export function RiskSection({ risk }: { risk: RiskView }) {
   const sentence = (d: RiskView['drivers'][number]) =>
     d.kind === 'technique' ? (d.technique ? t('results.risk.driver.technique', { technique: nameOf(d.technique) }) : d.text) : known(`results.risk.driver.${d.kind}`) ? t(`results.risk.driver.${d.kind}`) : d.text
   const heading = useId()
+  const pick = useFocusPick()
   return (
     <section className="card risk" aria-labelledby={heading} data-risk={risk.scored ? 'scored' : 'unavailable'}>
       <div className="risk-head">
@@ -114,13 +116,15 @@ export function RiskSection({ risk }: { risk: RiskView }) {
             const label = t(`results.risk.dim.${d.key}`)
             const pct = d.score === null ? 0 : Math.round(d.score * 100)
             const reason = known(`results.risk.reason.${d.reason}`) ? d.reason : 'unknown'
+            const ask = d.available ? pick('risk_dimension', d.key) : null
             const short = d.available ? '' : t(`results.risk.reason_short.${known(`results.risk.reason_short.${d.reason}`) ? d.reason : 'unknown'}`)
             return (
-              <li key={d.key} className="risk-dim">
+              <li key={d.key} className="risk-dim" data-focus-selected={ask?.selected || undefined}>
                 <div className="risk-dim-row">
                   <span className="risk-dim-label">{label}</span>
                   {d.available && d.low && <span className="risk-low">{t('results.risk.low_confidence')}</span>}
                   <span className={d.available ? 'risk-dim-value' : 'risk-dim-value risk-dim-na'}>{d.available ? percent(fmt, pct / 100) : t('results.risk.na')}</span>
+                  {ask?.button}
                 </div>
                 {d.available ? (
                   <div className="risk-meter" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-valuetext={percent(fmt, pct / 100)}>
@@ -164,14 +168,20 @@ export function RiskSection({ risk }: { risk: RiskView }) {
         <Disclosure
           label={t('results.risk.drivers_count', { n: fmt(risk.drivers.length) })}
           region={t('results.risk.drivers')}
-          items={risk.drivers.map((d, i) => <li key={i}>{sentence(d)}</li>)}
+          items={risk.drivers.map((d, i) => {
+            const ask = pick('risk_driver', d.index) // raw index: unreadable entries before it still count
+            return <li key={i} data-focus-selected={ask?.selected || undefined}>{sentence(d)}{ask?.button}</li>
+          })}
         />
       )}
 
       <Disclosure
         label={t('results.risk.caveats')}
         region={t('results.risk.caveats')}
-        items={risk.caveats.map((c) => <li key={c.id}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}</li>)}
+        items={risk.caveats.map((c) => {
+          const ask = pick('risk_caveat', c.id)
+          return <li key={c.id} data-focus-selected={ask?.selected || undefined}>{known(`results.risk.caveat.${c.id}`) ? t(`results.risk.caveat.${c.id}`) : c.text}{ask?.button}</li>
+        })}
       />
     </section>
   )
