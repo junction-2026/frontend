@@ -131,6 +131,7 @@
     flex-direction: row;
   }
 }
-.toolbar > .mock {
+.toolbar > .mock,
+.toolbar > .btn-secondary {
   align-self: flex-start;
 }

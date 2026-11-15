@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { coverage, json } from '../job/fixtures'
 import { I18nProvider, formatDate, useLocale } from '../i18n'
 import HistoryView from './HistoryView'
+import { readFileSync } from 'node:fs'
 
 const fetchMock = vi.fn()
 const NOW = new Date(2026, 10, 14, 12, 0, 0) // local noon
@@ -211,6 +212,9 @@ describe('History', () => {
   })
 
   describe('export', () => {
+    it('keeps the toolbar Export button from stretching (align-self: flex-start)', () => {
+      expect(readFileSync('src/history/history.css', 'utf8')).toMatch(/\.toolbar > \.btn-secondary[^{]*\{[^}]*align-self:\s*flex-start/)
+    })
     const files: { name: string; bytes: Uint8Array }[] = []
     const read = (blob: Blob) => new Promise<Uint8Array>((resolve) => { const fr = new FileReader(); fr.onload = () => resolve(new Uint8Array(fr.result as ArrayBuffer)); fr.readAsArrayBuffer(blob) })
     beforeEach(() => {
