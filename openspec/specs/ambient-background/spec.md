@@ -13,11 +13,11 @@ Defines the decorative animated pastel gradient layer shown behind the Analyze h
 - **THEN** there is one `.ambient-bg` with `aria-hidden="true"` whose children are `.ambient-glows` (4 `.ambient-glow`), `.ambient-cards` (4 to 6 `.ambient-card`) and `.ambient-veil` in that order, and no focusable element or `tabindex`
 
 ### Requirement: Home-only mounting
-`HomeView` SHALL render `AmbientBackground` as a sibling preceding its `<section className="view">`, not inside `.view`, whose `rise` transform animation would become the containing block of a fixed layer. No other view SHALL render it.
+`HomeView` SHALL render `<AmbientBackground />` directly before its `<section className="view">`, as a sibling and not inside `.view`, whose `rise` transform animation would become the containing block of a fixed layer. No other decorative layer (in particular no `.noise-headline`) SHALL be rendered behind the home view, and no other view SHALL render `AmbientBackground`.
 
 #### Scenario: Home
 - **WHEN** `HomeView` is rendered
-- **THEN** exactly one `.ambient-bg` exists and it directly precedes the `.view` section
+- **THEN** exactly one `.ambient-bg` exists, it directly precedes the `.view` section, nothing precedes it and no `.noise-headline` exists
 
 #### Scenario: Other views
 - **WHEN** `HistoryView` or `AnalyzingView` is rendered
@@ -63,11 +63,11 @@ Glows SHALL use only Lavender #DDD6FE, Powder blue #BFDBFE, Mint #D1FAE5 and Pea
 - **THEN** there are four glows with the four palette colours once each, 5+ stops with non-increasing alpha and a transparent last stop
 
 ### Requirement: Glow shape and blur
-Each glow SHALL be 400px to 800px on its longer side with unequal width and height and `max-width: 90vw`. It SHALL use a static `filter: blur()` of 60px to 160px that is never animated, and opacity 0.5 to 0.8 so it is noticeably visible.
+Each glow SHALL be 400px to 800px on its longer side with unequal width and height and `max-width: 90vw`. It SHALL use a static `filter: blur()` of 60px to 160px that is never animated, and opacity 0.7 to 0.9 so the colours read as softly colourful, not washed out.
 
 #### Scenario: Shape
 - **WHEN** `ambient.css` is read
-- **THEN** every glow has unequal sides up to 800px, a static blur of 60px to 160px and opacity 0.5 to 0.8
+- **THEN** every glow has unequal sides up to 800px, a static blur of 60px to 160px and opacity 0.7 to 0.9
 
 ### Requirement: Glow animation
 Each glow SHALL have its own `@keyframes` declaring only `transform` (translate plus scale between 0.9 and 1.15) with equal 0% and 100% frames, an `animation-duration` of 20s to 40s, `ease-in-out` and `infinite`. No two glows SHALL share keyframe name and duration. Glows SHALL set `will-change: transform`.
@@ -91,18 +91,18 @@ Cards SHALL sit in edge columns with their horizontal centre outside the central
 - **THEN** every card centre lies within the outer 15% of the viewport on its side and its right or left edge, with drift margin, stays clear of the 760px composer column
 
 ### Requirement: Card motion
-Each card SHALL have its own `@keyframes` that animate only `transform` (translateY from above the viewport to below it, horizontal drift of 40px or less, rotation within 3deg) and `opacity` (0 at the start, rising to 0.35 to 0.6, back to 0 at the end). The 0% and 100% frames SHALL both be invisible so the loop never jumps. Durations SHALL be 25s to 45s and distinct per card, with negative `animation-delay` values, `linear` or `ease-in-out` timing and `infinite` iteration.
+Each card SHALL have its own `@keyframes` that animate only `transform` (translateY from above the viewport to below it, horizontal drift of 16px to 40px, rotation within 3deg) and `opacity` (0 at 0% and 100%, rising to a peak of 0.75 to 0.9 between 10% and 90%). The 0% and 100% frames SHALL both be invisible so the loop never jumps. Durations SHALL be 25s to 45s and distinct per card, with negative `animation-delay` values, `linear` timing and `infinite` iteration.
 
 #### Scenario: Card keyframes
 - **WHEN** `ambient.css` is read
-- **THEN** each card has distinct keyframes using only transform and opacity, a peak opacity of 0.35 to 0.6, opacity 0 at 0% and 100%, a distinct 25s to 45s duration and a negative delay
+- **THEN** each card has distinct keyframes using only transform and opacity, a peak opacity of 0.75 to 0.9, opacity 0 at 0% and 100%, a distinct 25s to 45s duration and a negative delay
 
 ### Requirement: Card depth
-Cards SHALL use a static `filter: blur()` of 0.5px to 3px that is never animated in keyframes, plus reduced opacity. `backdrop-filter`, `clip-path`, `contain` and SVG filters SHALL NOT be used.
+Cards SHALL use a static `filter: blur()` of 2px to 4px that is never animated in keyframes. `.ambient-card-body` SHALL keep the radius token, the #FFFFFF surface, `var(--shadow)` and the pastel avatar, highlight and badge colours. `backdrop-filter`, `clip-path`, `contain` and SVG filters SHALL NOT be used.
 
 #### Scenario: Depth
 - **WHEN** `ambient.css` is read
-- **THEN** the `.ambient-card` rule has a blur of 0.5px to 3px, no keyframes contain `filter` or `blur` and none of the forbidden properties appears
+- **THEN** the `.ambient-card` rule has a blur of 2px to 4px, no keyframes contain `filter` or `blur` and none of the forbidden properties appears
 
 ### Requirement: Propaganda-detection demo
 At least 2 cards SHALL contain a phrase span `.ambient-hl` and a badge `.ambient-badge`, with sequences offset on a shared cycle so at most one card shows it at a time. Each sequence runs in order: highlight fades in as a soft pastel background (palette colour with alpha); badge fades and scales in (0.96 to 1); glow intensifies for 1s to 2s; both fade out while the card keeps drifting. Only `opacity` and `transform` SHALL be animated. Badge text SHALL be the catalog `techniques.<id>.name` value.
@@ -123,11 +123,11 @@ At least 1 card SHALL show a neutral badge with the catalog text `ambient.no_sig
 - **THEN** a card without `.ambient-hl` shows a badge reading "No strong signals"
 
 ### Requirement: Readability veil
-`.ambient-veil` SHALL be a static white radial gradient centred behind the hero and composer, fading to transparent toward the edges, with no animation, no blur and `pointer-events: none`.
+`.ambient-veil` SHALL be a static white radial gradient centred behind the hero and composer, with no animation, no filter, no opacity and `pointer-events: none`. Its centre alpha SHALL be at most #FFFFFF99, it SHALL reach `transparent` by 75% of the ellipse and the ellipse SHALL be no larger than `50% 55%`, so the glows stay visible towards the edges while the hero and composer centre stays clean.
 
 #### Scenario: Veil
 - **WHEN** `ambient.css` is read
-- **THEN** `.ambient-veil` has a white `radial-gradient` ending in `transparent` and no animation, filter or opacity declaration
+- **THEN** `.ambient-veil` has a white `radial-gradient` of at most `50% 55%` with centre alpha at most 99 and `transparent` at 75% or earlier, and no animation, filter or opacity declaration
 
 ### Requirement: Small screens
 Below 768px viewport width at most 2 cards SHALL be shown, dimmer and placed at the edge outside the composer. Below 480px all cards SHALL be `display: none` while the glows and veil stay.
@@ -142,3 +142,10 @@ Under `dir=rtl` the decorative layer SHALL stay visually symmetric and without o
 #### Scenario: Arabic
 - **WHEN** the Home view is rendered in ar
 - **THEN** the layer is unchanged in geometry and card text elements have `dir="auto"`
+
+### Requirement: No decorative patterns
+No stylesheet under `src/styles/` SHALL use `repeating-linear-gradient`, `repeating-radial-gradient`, `mask-image` or a `background-image` pattern for decoration, nor `noise-shard` or `noise-flicker` keyframes. A unit test SHALL read `src/styles/*.css` and enforce this. Animation SHALL change only `transform` and `opacity` and no JS animation loop or dependency SHALL be added.
+
+#### Scenario: Stylesheets
+- **WHEN** every `src/styles/*.css` file is read
+- **THEN** none contains `repeating-linear-gradient`, `repeating-radial-gradient`, `mask-image`, `background-image` or `noise-shard`/`noise-flicker`

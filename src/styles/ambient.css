@@ -26,7 +26,7 @@
   position: absolute;
   max-width: 90vw;
   filter: blur(80px);
-  opacity: 0.65;
+  opacity: 0.8;
   will-change: transform;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
@@ -125,7 +125,7 @@
   top: 0;
   width: var(--w);
   opacity: 0;
-  filter: blur(1.5px);
+  filter: blur(2px);
   will-change: transform, opacity;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
@@ -356,7 +356,7 @@
   }
   12%,
   88% {
-    opacity: 0.55;
+    opacity: 0.9;
   }
   50% {
     transform: translate(24px, calc(50vh - 140px)) rotate(1deg);
@@ -374,7 +374,7 @@
   }
   12%,
   88% {
-    opacity: 0.5;
+    opacity: 0.85;
   }
   50% {
     transform: translate(-28px, calc(50vh - 140px)) rotate(-1deg);
@@ -392,7 +392,7 @@
   }
   12%,
   88% {
-    opacity: 0.45;
+    opacity: 0.8;
   }
   50% {
     transform: translate(20px, calc(50vh - 140px)) rotate(-2deg);
@@ -410,7 +410,7 @@
   }
   12%,
   88% {
-    opacity: 0.4;
+    opacity: 0.75;
   }
   50% {
     transform: translate(-32px, calc(50vh - 140px)) rotate(2deg);
@@ -428,7 +428,7 @@
   }
   12%,
   88% {
-    opacity: 0.5;
+    opacity: 0.85;
   }
   50% {
     transform: translate(26px, calc(50vh - 140px)) rotate(2deg);
@@ -446,7 +446,7 @@
   }
   12%,
   88% {
-    opacity: 0.45;
+    opacity: 0.8;
   }
   50% {
     transform: translate(-22px, calc(50vh - 140px)) rotate(-1deg);
@@ -459,7 +459,7 @@
 
 /* ---- Readability veil: static, behind the hero and composer ---- */
 .ambient-veil {
-  background: radial-gradient(ellipse 55% 60% at 50% 42%, #FFFFFFB3 0%, #FFFFFFA0 25%, #FFFFFF70 50%, #FFFFFF30 72%, transparent 100%);
+  background: radial-gradient(ellipse 50% 55% at 50% 42%, #FFFFFF99 0%, #FFFFFF80 25%, #FFFFFF50 50%, #FFFFFF20 65%, transparent 75%);
 }
 
 /* ---- Small screens ---- */

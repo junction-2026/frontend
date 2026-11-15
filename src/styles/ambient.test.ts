@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const css = readFileSync('src/styles/ambient.css', 'utf8')
@@ -52,7 +52,7 @@ describe('ambient.css', () => {
     }
   })
 
-  it('glows are 400-800px ellipses, 90vw max, with a static 60-160px blur and opacity 0.5-0.8', () => {
+  it('glows are 400-800px ellipses, 90vw max, with a static 80-140px blur and opacity 0.7-0.9', () => {
     for (const r of glowRules) {
       const w = num(r, 'width')
       const h = num(r, 'height')
@@ -67,8 +67,8 @@ describe('ambient.css', () => {
     expect(base).toContain('ease-in-out')
     expect(base).toContain('infinite')
     const blur = num(base, 'blur\\(')
-    expect(blur >= 60 && blur <= 160).toBe(true)
-    expect(num(base, 'opacity') >= 0.5 && num(base, 'opacity') <= 0.8).toBe(true)
+    expect(blur >= 80 && blur <= 140).toBe(true)
+    expect(num(base, 'opacity') >= 0.7 && num(base, 'opacity') <= 0.9).toBe(true)
   })
 
   it('each glow has its own transform-only 20-40s keyframes with equal 0% and 100% frames', () => {
@@ -85,13 +85,13 @@ describe('ambient.css', () => {
     }
   })
 
-  it('has 4-6 cards, 200-280px wide, with a design-token radius and a static 0.5-3px blur', () => {
+  it('has 4-6 cards, 200-280px wide, with a design-token radius and a static 2-4px blur', () => {
     expect(cardRules.length).toBeGreaterThanOrEqual(4)
     expect(cardRules.length).toBeLessThanOrEqual(6)
     const base = rule('.ambient-card')
     expect(base).toContain('will-change: transform, opacity')
     const blur = num(base, 'blur\\(')
-    expect(blur >= 0.5 && blur <= 3).toBe(true)
+    expect(blur >= 2 && blur <= 4).toBe(true)
     expect(base).toMatch(/--w: \d+px/)
     for (const r of cardRules) {
       const w = num(r, '--w')
@@ -135,9 +135,10 @@ describe('ambient.css', () => {
       expect(frame(body, '0%')).toMatch(/translate\(0, -\d+px\)/) // starts above the viewport
       expect(frame(body, '100%')).toMatch(/translate\(0, calc\(100vh \+ \d+px\)\)/) // ends below it
       const peak = num(frame(body, '12%'), 'opacity')
-      expect(peak >= 0.35 && peak <= 0.6).toBe(true)
+      expect(peak >= 0.75 && peak <= 0.9).toBe(true)
       for (const m of body.matchAll(/rotate\((-?[\d.]+)deg\)/g)) expect(Math.abs(+m[1])).toBeLessThanOrEqual(3)
-      const xs = [...body.matchAll(/translate\((-?[\d.]+)px,/g)].map((m) => +m[1])
+      const xs = [...body.matchAll(/translate\((-?[\d.]+)(?:px)?,/g)].map((m) => +m[1])
+      expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThanOrEqual(16)
       expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(40)
     }
   })
@@ -157,9 +158,18 @@ describe('ambient.css', () => {
     expect(rule('.ambient-card .ambient-badge-neutral')).toContain('opacity: 1')
   })
 
-  it('has a static white veil: no animation, no blur', () => {
+  it('has a static white veil: no animation, no blur, light centre, transparent by 75% of a small ellipse', () => {
     const r = rule('.ambient-veil')
-    expect(r).toMatch(/radial-gradient\(ellipse[^;]*#FFFFFF[^;]*transparent 100%\)/)
+    expect(r).toMatch(/radial-gradient\(ellipse[^;]*#FFFFFF[^;]*transparent \d+%\)/)
+    const m = /ellipse (\d+)% (\d+)% at [^,]*, ([^;]*)\);/.exec(r)!
+    const [rx, ry] = [m[1], m[2]]
+    const stops = m[3].split(/,\s*(?![^(]*\))/)
+    const [centre, last] = [stops[0], stops.at(-1)!]
+    expect(+rx).toBeLessThanOrEqual(50)
+    expect(+ry).toBeLessThanOrEqual(55)
+    expect(parseInt(centre.trim().slice(7, 9), 16)).toBeLessThanOrEqual(0x99)
+    expect(+/(\d+)%$/.exec(last.trim())![1]).toBeLessThanOrEqual(75)
+    expect(last.trim()).toMatch(/^transparent/)
     expect(r).not.toMatch(/animation|filter|blur|opacity/)
     expect(rule('.ambient-glows,\n.ambient-cards,\n.ambient-veil')).toContain('position: absolute')
   })
@@ -201,5 +211,14 @@ describe('ambient.css', () => {
     // nothing in this stylesheet may target real UI elements
     const selectors = [...css.replace(/\/\*[^]*?\*\//g, '').replace(/@keyframes[^{]*{(?:[^{}]*{[^}]*})+\s*}/g, '').matchAll(/(?:^|[{}])\s*([^{}@]+){/g)].map((m) => m[1].trim()).filter(Boolean)
     for (const s of selectors.flatMap((x) => x.split(','))) expect(s.trim()).toMatch(/\.ambient-/)
+  })
+})
+
+describe('stylesheets', () => {
+  it('no stylesheet draws a decorative pattern: repeating gradients, masks or background-image', () => {
+    const dir = 'src/styles'
+    const files = readdirSync(dir).filter((f) => f.endsWith('.css'))
+    expect(files).toContain('ambient.css')
+    for (const f of files) expect(readFileSync(`${dir}/${f}`, 'utf8'), f).not.toMatch(/repeating-(linear|radial|conic)-gradient|mask-image|background-image|noise-(shard|flicker)/)
   })
 })
