@@ -31,18 +31,18 @@ Defines the decorative animated pastel gradient layer shown behind the Analyze h
 - **THEN** the `.ambient-bg` rule has the declarations above and `.ambient-bg + .view` has `position: relative` and `z-index: 1`
 
 ### Requirement: Blob palette
-Blobs SHALL use only lavender #C4B5FD, sky blue #93C5FD, mint #86EFAC, soft peach #FDBA9A and light pink #F9A8D4, each painted as a `radial-gradient` from the colour to transparent, and each of the five colours SHALL appear at least once.
+Blobs SHALL use only the colours #C4B5FD, #93C5FD, #86EFAC, #FDBA9A and #F9A8D4, each at least once. A colour stop SHALL be a palette colour as `#RRGGBB`, a palette colour with alpha as `#RRGGBBAA`, or `transparent`. No other colour notation and no other hex colour SHALL appear in ambient.css.
 
 #### Scenario: Palette
 - **WHEN** `ambient.css` is read
-- **THEN** every colour appears in a `radial-gradient(... , transparent)` and no other hex colour is present
+- **THEN** every hex colour is a palette colour with optional alpha suffix and no rgb(), hsl() or other hex is present
 
 ### Requirement: Blob shape, blur and placement
-Each blob SHALL be absolutely positioned, between 300px and 600px on its longer side (it MAY shrink with `vw` on narrow viewports), have unequal width and height, `filter: blur()` between 100px and 160px and opacity between 0.35 and 0.45. At least one blob SHALL be anchored past the left edge and one past the right edge of the viewport, and at least one SHALL sit behind the hero and composer area.
+Each blob SHALL be absolutely positioned, between 300px and 600px on its longer side (`max-width: 90vw` MAY shrink it), have unequal width and height and opacity 0.4. `filter: blur()` on `.ambient-blob` SHALL be 40px to 160px (60px chosen). At least one blob SHALL be anchored past the left edge and one past the right edge of the viewport, and at least one SHALL sit behind the hero and composer area.
 
 #### Scenario: Shape
 - **WHEN** `ambient.css` is read
-- **THEN** every blob width and height is 300px to 600px, width differs from height, blur is 100px to 160px and opacity is 0.35 to 0.45
+- **THEN** every blob width and height is 300px to 600px, width differs from height, blur is 40px to 160px and opacity is 0.4
 
 #### Scenario: Placement
 - **WHEN** `ambient.css` is read
@@ -56,11 +56,11 @@ The `body` rule SHALL keep the solid `var(--bg)` background with no gradient. Am
 - **THEN** the `body` rule has `background: var(--bg)` and no gradient
 
 ### Requirement: Blob animation
-Each blob SHALL have its own `@keyframes` drift (translate plus scale between 0.9 and 1.15) with `animation-duration` between 18s and 35s, `infinite` iteration and an `ease-in-out` easing. The 0% and 100% keyframes SHALL be equal. No two blobs SHALL share keyframe name and duration. Only `transform` SHALL be animated and blobs SHALL set `will-change: transform`.
+Each blob SHALL have its own `@keyframes` drift (translate plus scale between 0.9 and 1.15) with `animation-duration` between 18s and 35s, `infinite` iteration and an `ease-in-out` easing. The 0% and 100% keyframes SHALL be equal. No two blobs SHALL share keyframe name and duration. Only `transform` SHALL be animated and blobs SHALL set `will-change: transform`. No `backdrop-filter`, 3D hack, extra layer or SVG filter SHALL be added.
 
 #### Scenario: Motion
 - **WHEN** `ambient.css` is read
-- **THEN** every blob has a distinct keyframe name and a duration of 18s to 35s, keyframes declare only `transform`, and 0% and 100% match
+- **THEN** every blob has a distinct keyframe name and a duration of 18s to 35s, keyframes declare only `transform`, 0% and 100% match, and no backdrop-filter or 3D hack is present
 
 ### Requirement: Reduced motion
 Under `@media (prefers-reduced-motion: reduce)` every blob SHALL have `animation: none` while remaining rendered at its static position and opacity.
@@ -75,3 +75,17 @@ No `filter`, `backdrop-filter`, `opacity` or blur SHALL be added to the topbar, 
 #### Scenario: Scope
 - **WHEN** `ambient.css` is read
 - **THEN** every `filter` and `opacity` declaration is inside an `.ambient-blob` rule
+
+### Requirement: Gradient falloff
+Each `.ambient-blob-N` background SHALL be one `radial-gradient(closest-side, ...)` of a single palette colour with at least 5 colour stops. Alpha SHALL decrease monotonically along an eased, non-linear curve from the centre. The last stop SHALL be `transparent` at 100% or earlier and no stop past 30% SHALL be fully opaque.
+
+#### Scenario: Falloff
+- **WHEN** `ambient.css` is read
+- **THEN** every blob gradient has 5+ stops, non-increasing alpha, ends in transparent and has no opaque stop past 30%
+
+### Requirement: Blur not clipped
+The blurred blob SHALL NOT be visibly clipped by its own box or layer. Neither `.ambient-blob` nor `.ambient-bg` SHALL set `contain: paint`, `clip-path` or `overflow` other than the existing `overflow: hidden` on `.ambient-bg`.
+
+#### Scenario: No clipping
+- **WHEN** `ambient.css` is read
+- **THEN** it has no `contain`, `clip-path` and exactly one `overflow` declaration, on `.ambient-bg`
