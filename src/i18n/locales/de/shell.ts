@@ -5,7 +5,6 @@ export default {
   'nav.explore': 'Entdecken',
   'nav.history': 'Verlauf',
   'language': 'Sprache',
-  'new_analysis': '+ Neue Analyse',
   'account': 'Konto',
   'health.checking': 'Backend wird geprüft…',
   'health.offline': 'Backend offline',
