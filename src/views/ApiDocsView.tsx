@@ -1,5 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { rich, useT } from '../i18n'
+import CodeBlock from './apiDocs/CodeBlock'
+import Playground from './apiDocs/Playground'
 
 const POST = 'Vote no! They are hiding the truth.'
 const COMMENTS = ['Agreed, wake up!', 'Source?']
@@ -45,31 +47,6 @@ const FRAGMENTS: Record<string, string> = {
 }
 const CODE = Object.fromEntries(Object.entries(FRAGMENTS).map(([k, v]) => [k, <code dir="ltr">{v}</code>]))
 
-// A code block that is always LTR, with a button that copies its exact text; a missing or rejecting clipboard is ignored.
-function CodeBlock({ text, label }: { text: string; label: string }) {
-  const t = useT()
-  const [copied, setCopied] = useState(false)
-  useEffect(() => {
-    if (!copied) return
-    const timer = setTimeout(() => setCopied(false), 2000)
-    return () => clearTimeout(timer)
-  }, [copied])
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-    } catch {
-      /* clipboard unavailable or denied: nothing to report */
-    }
-  }
-  return (
-    <div className="api-code">
-      <button type="button" className="btn-link api-copy" aria-label={`${copied ? t('apiDocs.copied') : t('apiDocs.copy')}: ${label}`} onClick={copy}>{copied ? t('apiDocs.copied') : t('apiDocs.copy')}</button>
-      <pre dir="ltr"><code>{text}</code></pre>
-    </div>
-  )
-}
-
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="api-section">
     <h2>{title}</h2>
@@ -77,7 +54,7 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
   </section>
 )
 
-// Public, login-free docs of the public analysis API (public-analysis-api). Static: it calls no endpoint.
+// Public, login-free docs of the public analysis API (public-analysis-api). Calls an endpoint only when the user presses Send in the playground.
 export default function ApiDocsView() {
   const t = useT()
   const text = (key: string) => rich(t(`apiDocs.${key}`), CODE)
@@ -125,6 +102,10 @@ export default function ApiDocsView() {
           </div>
         ))}
         <p>{text('request.notes')}</p>
+      </Section>
+
+      <Section title={t('apiDocs.playground.title')}>
+        <Playground base={base} example={JSON.stringify(BODIES[2].body, null, 2)} />
       </Section>
 
       <Section title={t('apiDocs.curl.title')}>
