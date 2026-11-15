@@ -1,7 +1,7 @@
 # secondary-screens Specification
 
 ## Purpose
-Defines the Explore, Region, Ask, States and Settings screens: their layout and navigation, which parts are mock data marked with MockBadge, and the one backend-connected block (the Settings analyzers list).
+Defines the Explore, Region, Ask and States screens: their layout and navigation, and which parts are mock data marked with MockBadge. None of these screens has a backend-connected analyzer block; the analyzer list lives in the Analyze screen (analyze-flow-ui).
 
 ## Requirements
 
@@ -149,7 +149,7 @@ Country names SHALL be shown with `Intl.DisplayNames` (region) in the active loc
 ### Requirement: Secondary screens right-to-left layout
 `secondary.css` SHALL use logical properties so the screens mirror under `dir=rtl`; the map SVG SHALL NOT be mirrored.
 
-#### Scenario: Arabic Settings
+#### Scenario: Removed Settings path in Arabic (rtl)
 - **WHEN** the locale is `ar` and `/settings` is requested
 - **THEN** Home is rendered (the page no longer exists) with the document direction rtl
 
@@ -160,7 +160,7 @@ Country names SHALL be shown with `Intl.DisplayNames` (region) in the active loc
 ### Requirement: Region without literals
 The Region mock (stat cards, wire sources, tags) SHALL take every static string, including proper-noun outlet names, from the catalogs in all six locales. Percentages and outlet names SHALL be isolated with `<bdi>`. Directional glyphs (↗, ⌕) SHALL mirror under `[dir=rtl]`.
 
-#### Scenario: Settings in Arabic
+#### Scenario: Removed Settings path in Arabic (no Settings text)
 - **WHEN** `/settings` is requested in ar
 - **THEN** Home is rendered with dir rtl and no Settings text
 
