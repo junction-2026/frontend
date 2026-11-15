@@ -108,7 +108,6 @@ export default function HistoryView() {
       <label className="search-lg">
         <span aria-hidden="true" className="mirror-rtl">⌕</span>
         <input type="search" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') setQ(text.trim()) }} placeholder={t('history.search_placeholder')} aria-label={t('history.search_aria')} />
-        <span className="kbd">⌘ K</span>
       </label>
       {exportError && <ErrorAlert error={exportError} />}
 

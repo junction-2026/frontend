@@ -5,7 +5,7 @@ export default {
   'exporting': 'Viedään…',
   'export_hint': 'Vie kaikki aktiivisen tilasuodattimen ja haun mukaiset analyysit CSV-tiedostoon.',
   'search_aria': 'Hae analyyseistä',
-  'search_placeholder': 'Hae analyyseistä avainsanalla, tuomiolla tai aiheella...',
+  'search_placeholder': 'Hae tekstillä, linkillä tai työn tunnuksella...',
   'filter.label': 'Suodata tilan mukaan',
   'filter.all': 'Kaikki',
   'filter.running': 'Käynnissä',

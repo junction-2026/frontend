@@ -5,7 +5,7 @@ export default {
   'exporting': 'Exporting…',
   'export_hint': 'Exports every analysis matching the active status filter and search as a CSV file.',
   'search_aria': 'Search analyses',
-  'search_placeholder': 'Search analyses by keyword, verdict, or topic...',
+  'search_placeholder': 'Search by text, link or job ID...',
   'filter.label': 'Filter by status',
   'filter.all': 'All',
   'filter.running': 'Running',

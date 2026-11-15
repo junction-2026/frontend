@@ -5,7 +5,7 @@ export default {
   'exporting': 'Exportation…',
   'export_hint': 'Exporte toutes les analyses correspondant au filtre de statut et à la recherche actifs dans un fichier CSV.',
   'search_aria': 'Rechercher des analyses',
-  'search_placeholder': 'Rechercher par mot-clé, verdict ou sujet...',
+  'search_placeholder': 'Rechercher par texte, lien ou identifiant...',
   'filter.label': 'Filtrer par statut',
   'filter.all': 'Toutes',
   'filter.running': 'En cours',

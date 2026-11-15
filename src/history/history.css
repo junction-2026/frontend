@@ -22,13 +22,6 @@
   outline: none;
   background: transparent;
 }
-.kbd {
-  padding: 0.15rem 0.4rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--faint);
-  font-size: 0.72rem;
-}
 .filter-row {
   display: flex;
   flex-wrap: wrap;

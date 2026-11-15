@@ -5,7 +5,7 @@ export default {
   'exporting': 'Экспорт…',
   'export_hint': 'Экспортирует в файл CSV все анализы, подходящие под активный фильтр статуса и поиск.',
   'search_aria': 'Поиск по анализам',
-  'search_placeholder': 'Поиск по ключевому слову, вердикту или теме...',
+  'search_placeholder': 'Поиск по тексту, ссылке или ID задачи...',
   'filter.label': 'Фильтр по статусу',
   'filter.all': 'Все',
   'filter.running': 'Выполняются',
