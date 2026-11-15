@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { I18nProvider, translate } from '../i18n'
+import { I18nProvider, LOCALES, translate } from '../i18n'
 import HistoryView from '../views/HistoryView'
 import AnalyzingView from '../views/AnalyzingView'
 import HomeView from '../views/HomeView'
@@ -66,6 +66,11 @@ describe('AmbientBackground', () => {
     }
     expect(translate('en', 'ambient.no_signals')).toBe('No strong signals')
     expect(translate('de', 'ambient.no_signals')).not.toBe('No strong signals')
+  })
+
+  it('keeps each highlighted phrase a substring of its card text in every locale', () => {
+    for (const { code } of LOCALES)
+      for (const n of [1, 2, 5]) expect(translate(code, `ambient.card.${n}.text`), `${code} card ${n}`).toContain(translate(code, `ambient.card.${n}.phrase`))
   })
 
   it('is mounted by HomeView as a sibling directly before section.view', () => {
