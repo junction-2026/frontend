@@ -34,7 +34,6 @@ export default {
   'focus.help': 'Utilisez les boutons + des sections ci-dessous pour choisir le sujet de votre prochaine question.',
   'focus.select': 'Poser une question sur {label}',
   'focus.choose': 'Choisir des éléments du résultat',
-  'focus.clear': 'Effacer la sélection',
   'focus.select_all': 'Tout sélectionner',
   'focus.remove': 'Retirer {label}',
   'focus.limit': 'Vous pouvez choisir au plus {max} éléments.',

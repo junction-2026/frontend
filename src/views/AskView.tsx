@@ -47,9 +47,9 @@ function ContextBar({ job }: { job: Job }) {
 }
 
 // The result screen's Verdict and detailed region, always open, with a toggle on each element the chat can focus on.
-function ResultPane({ job, items, selected, disabled, headingRef, onToggle, onClear, onSelectAll }: {
+function ResultPane({ job, items, selected, disabled, headingRef, onToggle, onSelectAll }: {
   job: Job; items: FocusEntry[]; selected: ReadonlySet<string>; disabled: boolean
-  headingRef: Ref<HTMLHeadingElement>; onToggle: (key: string) => void; onClear: () => void; onSelectAll: (all: boolean) => void
+  headingRef: Ref<HTMLHeadingElement>; onToggle: (key: string) => void; onSelectAll: (all: boolean) => void
 }) {
   const t = useT()
   const { formatNumber } = useFormat()
@@ -70,7 +70,6 @@ function ResultPane({ job, items, selected, disabled, headingRef, onToggle, onCl
             {t('ask.focus.select_all')}
           </label>
         )}
-        {selected.size > 0 && <button type="button" className="btn-secondary focus-clear" onClick={onClear} disabled={disabled}>{t('ask.focus.clear')}</button>}
         {!completed || !selection ? (
           <p className="chat-note" role="note">{t(completed ? 'ask.focus.empty' : 'ask.focus.not_completed')}</p>
         ) : (
@@ -125,7 +124,7 @@ function JobChat({ id }: { id: string }) {
       {job && (
         <ResultPane
           job={job} items={items} selected={new Set(focus.map((f) => f.key))} disabled={disabled}
-          headingRef={heading} onToggle={toggle} onClear={() => setChosen([])} onSelectAll={(all) => setChosen(all ? keysOf() : [])}
+          headingRef={heading} onToggle={toggle} onSelectAll={(all) => setChosen(all ? keysOf() : [])}
         />
       )}
     </div>
