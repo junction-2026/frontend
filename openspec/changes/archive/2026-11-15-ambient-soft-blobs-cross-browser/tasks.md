@@ -1,0 +1,4 @@
+- [x] Rewrite blob gradients and blur in ambient.css
+- [x] Update ambient.test.ts
+- [x] Update delta spec
+- [x] Run lint, typecheck, test, build, validate-openspec
