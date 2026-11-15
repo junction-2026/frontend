@@ -306,10 +306,10 @@ describe('job result view (Detail)', () => {
   })
   describe('Detail screen', () => {
     const topic = (claims: unknown, status = 'succeeded') => ({ id: 'topic_extraction', name: 'Topic extraction', status, result: status === 'succeeded' ? { topics: [], news: [], claims } : null })
-    const metric = (label: string) => (screen.getByText(label).parentElement as HTMLElement).querySelector('strong, .metrics-mock') as HTMLElement
+    const metric = (label: string) => (screen.getByText(label).parentElement as HTMLElement).querySelector('strong') as HTMLElement
     const inMock = (el: HTMLElement) => el.closest('[data-mock]')
 
-    it('shows Patterns, Claims and Risk as real values and Latency as Mock, with no confidence', async () => {
+    it('shows Patterns, Claims, Risk and Latency as real values, with no confidence', async () => {
       const c = 'They are LYING.'
       const j = job(c, { span_status: 'ok', detected: [det('Doubt', []), det('Loaded_Language', [])] }, { finalization: { status: 'completed', result: { verdict: 'detected', confidence: 0.86, user_text: 'x' } } })
       await show({ ...j, analyzers: [...j.analyzers, topic([{ text: 'a' }, { text: 'b' }, { text: 'c' }])] })
@@ -318,9 +318,30 @@ describe('job result view (Detail)', () => {
       expect(inMock(metric('Patterns'))).toBeNull()
       expect(inMock(metric('Claims'))).toBeNull()
       expect(metric('Risk')).toHaveTextContent('—')
-      expect(inMock(screen.getByText('412ms'))).not.toBeNull()
+      expect(metric('Latency')).toHaveTextContent('—') // fixture job has no finished_at
+      expect(screen.queryByText(/412/)).toBeNull()
+      expect(document.querySelector('[data-mock]')).toBeNull()
       expect(screen.queryByText(/confidence|0\.86|86 ?%/i)).toBeNull()
       expect(screen.getByRole('link', { name: /Back to summary/ })).toHaveAttribute('href', '/jobs/j1')
+    })
+
+    describe('Latency', () => {
+      const timed = (created_at: string, finished_at: string | null, done = true) => job('They are LYING.', { span_status: 'ok', detected: [det('Doubt', [])] }, { created_at, finished_at, done })
+      const C = '2026-11-14T10:00:00Z'
+      it.each([
+        ['a seconds-scale job', C, '2026-11-14T10:00:03.200Z', '3.2 s'],
+        ['an under-1-s job', C, '2026-11-14T10:00:00.284Z', '284 ms'],
+        ['an unfinished job', C, null, '—'],
+        ['an unparseable timestamp', 'nope', '2026-11-14T10:00:03Z', '—'],
+        ['a negative span', C, '2026-11-14T09:59:59Z', '—'],
+      ])('shows %s as %s, with no Mock ancestor', async (_n, created, finished, text) => {
+        await show(timed(created, finished, finished !== null))
+        const latency = metric('Latency')
+        expect(latency).toHaveTextContent(text)
+        expect(latency.textContent).toBe(text)
+        expect(inMock(latency)).toBeNull()
+        expect(screen.queryByText(/412/)).toBeNull()
+      })
     })
 
     describe('Risk cell and overview', () => {
@@ -334,7 +355,6 @@ describe('job result view (Detail)', () => {
         expect(riskCell().querySelector('.risk-chip')).toHaveAttribute('data-band', 'high')
         expect(inMock(riskCell())).toBeNull()
         expect(riskCell().parentElement?.querySelector('[data-mock]')).toBeNull()
-        expect(screen.getByText('412ms').closest('[data-mock]')).not.toBeNull()
       })
 
       it.each([
