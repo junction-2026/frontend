@@ -1,4 +1,5 @@
-/* Ambient pastel blobs behind the Analyze homepage. The body stays a solid var(--bg); only this layer carries colour. */
+/* Cinematic ambient layer behind the Analyze homepage: pastel glows, drifting demo cards, readability veil.
+   The body stays a solid var(--bg); only this layer carries colour. */
 .ambient-bg {
   position: fixed;
   inset: 0;
@@ -13,83 +14,69 @@
   z-index: 1;
 }
 
-.ambient-blob {
+.ambient-glows,
+.ambient-cards,
+.ambient-veil {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---- Glows ---- */
+.ambient-glow {
   position: absolute;
   max-width: 90vw;
-  filter: blur(60px);
-  opacity: 0.4;
+  filter: blur(80px);
+  opacity: 0.65;
   will-change: transform;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
 
-.ambient-blob-1 {
+.ambient-glow-1 {
   left: -180px;
-  top: 4%;
-  width: 560px;
-  height: 420px;
-  background: radial-gradient(closest-side, #C4B5FD 0%, #C4B5FDE7 20%, #C4B5FDA7 40%, #C4B5FD58 60%, #C4B5FD18 80%, transparent 100%);
-  animation-name: ambient-drift-1;
+  top: 2%;
+  width: 640px;
+  height: 480px;
+  background: radial-gradient(closest-side, #DDD6FE 0%, #DDD6FEE7 20%, #DDD6FEA7 40%, #DDD6FE58 60%, #DDD6FE18 80%, transparent 100%);
+  animation-name: ambient-glow-1;
   animation-duration: 26s;
   animation-delay: 0s;
 }
 
-.ambient-blob-2 {
+.ambient-glow-2 {
   right: -170px;
-  top: 8%;
-  width: 520px;
-  height: 400px;
-  background: radial-gradient(closest-side, #93C5FD 0%, #93C5FDE7 20%, #93C5FDA7 40%, #93C5FD58 60%, #93C5FD18 80%, transparent 100%);
-  animation-name: ambient-drift-2;
+  top: 6%;
+  width: 600px;
+  height: 460px;
+  background: radial-gradient(closest-side, #BFDBFE 0%, #BFDBFEE7 20%, #BFDBFEA7 40%, #BFDBFE58 60%, #BFDBFE18 80%, transparent 100%);
+  animation-name: ambient-glow-2;
   animation-duration: 31s;
   animation-delay: -7s;
 }
 
-.ambient-blob-3 {
-  left: -120px;
-  bottom: -60px;
-  width: 480px;
-  height: 360px;
-  background: radial-gradient(closest-side, #86EFAC 0%, #86EFACE7 20%, #86EFACA7 40%, #86EFAC58 60%, #86EFAC18 80%, transparent 100%);
-  animation-name: ambient-drift-3;
+.ambient-glow-3 {
+  left: -140px;
+  bottom: -80px;
+  width: 680px;
+  height: 500px;
+  background: radial-gradient(closest-side, #D1FAE5 0%, #D1FAE5E7 20%, #D1FAE5A7 40%, #D1FAE558 60%, #D1FAE518 80%, transparent 100%);
+  animation-name: ambient-glow-3;
+  animation-duration: 36s;
+  animation-delay: -12s;
+}
+
+.ambient-glow-4 {
+  right: -150px;
+  bottom: -40px;
+  width: 620px;
+  height: 440px;
+  background: radial-gradient(closest-side, #FFE4D6 0%, #FFE4D6E7 20%, #FFE4D6A7 40%, #FFE4D658 60%, #FFE4D618 80%, transparent 100%);
+  animation-name: ambient-glow-4;
   animation-duration: 22s;
   animation-delay: -4s;
 }
 
-.ambient-blob-4 {
-  right: -140px;
-  bottom: 2%;
-  width: 540px;
-  height: 380px;
-  background: radial-gradient(closest-side, #FDBA9A 0%, #FDBA9AE7 20%, #FDBA9AA7 40%, #FDBA9A58 60%, #FDBA9A18 80%, transparent 100%);
-  animation-name: ambient-drift-4;
-  animation-duration: 34s;
-  animation-delay: -12s;
-}
-
-.ambient-blob-5 {
-  left: 34%;
-  top: 2%;
-  width: 460px;
-  height: 320px;
-  background: radial-gradient(closest-side, #F9A8D4 0%, #F9A8D4E7 20%, #F9A8D4A7 40%, #F9A8D458 60%, #F9A8D418 80%, transparent 100%);
-  animation-name: ambient-drift-5;
-  animation-duration: 19s;
-  animation-delay: -3s;
-}
-
-.ambient-blob-6 {
-  left: 46%;
-  top: 38%;
-  width: 440px;
-  height: 340px;
-  background: radial-gradient(closest-side, #93C5FD 0%, #93C5FDE7 20%, #93C5FDA7 40%, #93C5FD58 60%, #93C5FD18 80%, transparent 100%);
-  animation-name: ambient-drift-6;
-  animation-duration: 28s;
-  animation-delay: -9s;
-}
-
-@keyframes ambient-drift-1 {
+@keyframes ambient-glow-1 {
   0%,
   100% {
     transform: translate(0, 0) scale(1);
@@ -99,7 +86,7 @@
   }
 }
 
-@keyframes ambient-drift-2 {
+@keyframes ambient-glow-2 {
   0%,
   100% {
     transform: translate(0, 0) scale(1);
@@ -109,7 +96,7 @@
   }
 }
 
-@keyframes ambient-drift-3 {
+@keyframes ambient-glow-3 {
   0%,
   100% {
     transform: translate(0, 0) scale(1);
@@ -119,38 +106,399 @@
   }
 }
 
-@keyframes ambient-drift-4 {
+@keyframes ambient-glow-4 {
   0%,
   100% {
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(-90px, -50px) scale(1.1);
+    transform: translate(-90px, -50px) scale(0.92);
   }
 }
 
-@keyframes ambient-drift-5 {
+/* ---- Cards ----
+   --w is the card width. A left card sits at the lower of two lefts: centre inside the outer 15% of the viewport,
+   or its right edge (+56px for drift and tilt) clear of the 760px composer column. Right cards mirror it. */
+.ambient-card {
+  --w: 240px;
+  position: absolute;
+  top: 0;
+  width: var(--w);
+  opacity: 0;
+  filter: blur(1.5px);
+  will-change: transform, opacity;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.ambient-card:nth-child(odd) {
+  left: min(calc(15% - var(--w) / 2), calc(50% - min(380px, 50% - 16px) - 56px - var(--w)));
+}
+
+.ambient-card:nth-child(even) {
+  right: min(calc(15% - var(--w) / 2), calc(50% - min(380px, 50% - 16px) - 56px - var(--w)));
+}
+
+.ambient-card-body {
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #FFFFFF;
+  box-shadow: var(--shadow);
+  color: var(--ink-2);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.ambient-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.ambient-avatar {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: var(--radius-pill);
+  background: #DDD6FE;
+}
+
+.ambient-card:nth-child(4n + 2) .ambient-avatar {
+  background: #BFDBFE;
+}
+
+.ambient-card:nth-child(4n + 3) .ambient-avatar {
+  background: #D1FAE5;
+}
+
+.ambient-card:nth-child(4n) .ambient-avatar {
+  background: #FFE4D6;
+}
+
+.ambient-text {
+  margin: 0;
+}
+
+.ambient-meta {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.ambient-hl {
+  position: relative;
+}
+
+.ambient-card .ambient-hl::before,
+.ambient-card .ambient-hl::after {
+  content: '';
+  position: absolute;
+  inset: -1px -3px;
+  z-index: -1;
+  border-radius: 4px;
+  opacity: 0;
+  background: var(--hl);
+}
+
+/* The glow is a static shadow on its own pseudo-element; only its opacity animates. */
+.ambient-card .ambient-hl::after {
+  background: transparent;
+  box-shadow: 0 0 14px 4px var(--hl);
+}
+
+.ambient-card .ambient-badge {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0.12rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--hl);
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.ambient-card .ambient-badge-neutral {
+  --hl: #D1FAE5B3;
+  opacity: 1;
+}
+
+/* Highlight sequences share one 180s cycle, 10s each, offset so only one card shows it at a time.
+   The cycle is a multiple of 30, 36 and 45s, so each fires at the same point of its card's loop. */
+.ambient-card .ambient-hl::before,
+.ambient-card .ambient-hl::after,
+.ambient-card .ambient-badge:not(.ambient-badge-neutral) {
+  animation-duration: 180s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-delay: var(--seq);
+}
+
+.ambient-card .ambient-hl::before {
+  animation-name: ambient-hl-fill;
+}
+
+.ambient-card .ambient-hl::after {
+  animation-name: ambient-hl-glow;
+}
+
+.ambient-card .ambient-badge:not(.ambient-badge-neutral) {
+  opacity: 0;
+  transform: scale(0.96);
+  animation-name: ambient-badge-pop;
+}
+
+@keyframes ambient-hl-fill {
   0%,
   100% {
-    transform: translate(0, 0) scale(1);
+    opacity: 0;
   }
-  50% {
-    transform: translate(80px, 50px) scale(1.12);
+  0.6%,
+  4.4% {
+    opacity: 1;
+  }
+  5%,
+  99% {
+    opacity: 0;
   }
 }
 
-@keyframes ambient-drift-6 {
+@keyframes ambient-hl-glow {
   0%,
+  1.1% {
+    opacity: 0;
+  }
+  1.7%,
+  2.8% {
+    opacity: 0.9;
+  }
+  3.6%,
   100% {
-    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes ambient-badge-pop {
+  0%,
+  0.8%,
+  100% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  1.4%,
+  4.4% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  5% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.ambient-card-1 {
+  --w: 240px;
+  --hl: #FFE4D6E6;
+  --seq: -174s;
+  animation-name: ambient-card-1;
+  animation-duration: 30s;
+  animation-delay: -6s;
+}
+
+.ambient-card-2 {
+  --w: 232px;
+  --hl: #DDD6FEE6;
+  --seq: -104s;
+  animation-name: ambient-card-2;
+  animation-duration: 36s;
+  animation-delay: -14s;
+}
+
+.ambient-card-3 {
+  --w: 224px;
+  animation-name: ambient-card-3;
+  animation-duration: 27s;
+  animation-delay: -19s;
+}
+
+.ambient-card-4 {
+  --w: 256px;
+  animation-name: ambient-card-4;
+  animation-duration: 41s;
+  animation-delay: -33s;
+}
+
+.ambient-card-5 {
+  --w: 248px;
+  --hl: #BFDBFEE6;
+  --seq: -47s;
+  animation-name: ambient-card-5;
+  animation-duration: 45s;
+  animation-delay: -20s;
+}
+
+.ambient-card-6 {
+  --w: 216px;
+  animation-name: ambient-card-6;
+  animation-duration: 33s;
+  animation-delay: -11s;
+}
+
+@keyframes ambient-card-1 {
+  0% {
+    transform: translate(0, -320px) rotate(-2deg);
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 0.55;
   }
   50% {
-    transform: translate(-60px, -70px) scale(0.92);
+    transform: translate(24px, calc(50vh - 140px)) rotate(1deg);
+  }
+  100% {
+    transform: translate(0, calc(100vh + 40px)) rotate(-2deg);
+    opacity: 0;
+  }
+}
+
+@keyframes ambient-card-2 {
+  0% {
+    transform: translate(0, -320px) rotate(2deg);
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-28px, calc(50vh - 140px)) rotate(-1deg);
+  }
+  100% {
+    transform: translate(0, calc(100vh + 40px)) rotate(2deg);
+    opacity: 0;
+  }
+}
+
+@keyframes ambient-card-3 {
+  0% {
+    transform: translate(0, -320px) rotate(1deg);
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(20px, calc(50vh - 140px)) rotate(-2deg);
+  }
+  100% {
+    transform: translate(0, calc(100vh + 40px)) rotate(1deg);
+    opacity: 0;
+  }
+}
+
+@keyframes ambient-card-4 {
+  0% {
+    transform: translate(0, -320px) rotate(-1deg);
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-32px, calc(50vh - 140px)) rotate(2deg);
+  }
+  100% {
+    transform: translate(0, calc(100vh + 40px)) rotate(-1deg);
+    opacity: 0;
+  }
+}
+
+@keyframes ambient-card-5 {
+  0% {
+    transform: translate(0, -320px) rotate(-2deg);
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(26px, calc(50vh - 140px)) rotate(2deg);
+  }
+  100% {
+    transform: translate(0, calc(100vh + 40px)) rotate(-2deg);
+    opacity: 0;
+  }
+}
+
+@keyframes ambient-card-6 {
+  0% {
+    transform: translate(0, -320px) rotate(2deg);
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-22px, calc(50vh - 140px)) rotate(-1deg);
+  }
+  100% {
+    transform: translate(0, calc(100vh + 40px)) rotate(2deg);
+    opacity: 0;
+  }
+}
+
+/* ---- Readability veil: static, behind the hero and composer ---- */
+.ambient-veil {
+  background: radial-gradient(ellipse 55% 60% at 50% 42%, #FFFFFFB3 0%, #FFFFFFA0 25%, #FFFFFF70 50%, #FFFFFF30 72%, transparent 100%);
+}
+
+/* ---- Small screens ---- */
+@media (max-width: 767px) {
+  .ambient-card:nth-child(n + 3) {
+    display: none;
+  }
+
+  /* Peek in from the edge, under the composer's own surface. */
+  .ambient-card:nth-child(odd) {
+    left: calc(24px - var(--w));
+  }
+
+  .ambient-card:nth-child(even) {
+    right: calc(24px - var(--w));
+  }
+
+  .ambient-card .ambient-card-body {
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 479px) {
+  .ambient-card {
+    display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ambient-blob {
+  .ambient-glow,
+  .ambient-card,
+  .ambient-card .ambient-hl::before,
+  .ambient-card .ambient-hl::after,
+  .ambient-card .ambient-badge:not(.ambient-badge-neutral) {
     animation: none;
+  }
+
+  /* Glows and veil stay at rest; cards are hidden rather than frozen over the content. */
+  .ambient-card {
+    display: none;
   }
 }

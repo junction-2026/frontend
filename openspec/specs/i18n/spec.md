@@ -39,7 +39,7 @@ Catalogs SHALL be one TS module per locale and namespace at `src/i18n/locales/<l
 
 #### Scenario: Russian namespaces
 - **WHEN** the files of `locales/ru` and `locales/en` are listed
-- **THEN** both hold the same namespaces (analysis, ask, common, compose, explore, history, home, results, settings, shell, techniques)
+- **THEN** both hold the same namespaces (ambient, analysis, ask, common, compose, explore, history, home, results, settings, shell, techniques)
 
 ### Requirement: Fallback and catalog consistency
 A key that is absent or empty in the active locale SHALL fall back to the `en` value; a key that no catalog defines SHALL render as "…". `translate` SHALL NEVER return the key, `undefined` or an empty string and SHALL NOT throw. In development each missing `locale:key` SHALL log one `console.warn`; production logs nothing. Non-en keys and placeholders SHALL exist in the en catalog (a plural form `<key>_<category>` is valid when en has `<key>_other`).
@@ -241,3 +241,14 @@ All catalogs (ar, de, en, fi, fr, ru) SHALL NOT contain the keys `history.ledger
 #### Scenario: Complete catalogs
 - **WHEN** the key-completeness test runs
 - **THEN** every locale has the same History keys and placeholders as en
+
+### Requirement: Ambient demo catalog
+A namespace `ambient` SHALL exist as `src/i18n/locales/<lng>/ambient.ts` for en, fr, ar, de, fi and ru with identical keys: `card.<n>.source`, `card.<n>.text`, `card.<n>.meta`, `card.<n>.phrase` (a substring of the text) for each highlighted card, and `no_signals`. Every value SHALL be non-empty fictional demo copy. The completeness and static-string tests SHALL pass without extending their allow-lists.
+
+#### Scenario: Neutral badge text
+- **WHEN** `t('ambient.no_signals')` is called in en
+- **THEN** it returns "No strong signals"
+
+#### Scenario: Completeness
+- **WHEN** the catalog completeness test runs
+- **THEN** every locale has the `ambient` namespace with the same keys and non-empty values as en

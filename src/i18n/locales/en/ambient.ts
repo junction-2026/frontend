@@ -1,0 +1,26 @@
+// Fictional demo copy for the decorative Analyze background cards: no real outlets, people or analysis data.
+// A `phrase` is a substring of its card's `text`, shown highlighted during the demo.
+export default {
+  'no_signals': 'No strong signals',
+  'card.1.source': '@riverside_voice',
+  'card.1.text': 'They are quietly taking over everything. If we do nothing now, our children will pay the price.',
+  'card.1.phrase': 'our children will pay the price',
+  'card.1.meta': 'Just now · Social post',
+  'card.2.source': '@hot_take_hub',
+  'card.2.text': 'Another disgraceful, shameless stunt from the so-called experts, as usual.',
+  'card.2.phrase': 'disgraceful, shameless stunt',
+  'card.2.meta': 'Earlier today · Social post',
+  'card.3.source': 'Town Bulletin',
+  'card.3.text': 'The council meets on Thursday to discuss the new bus timetable and road repairs.',
+  'card.3.meta': 'Today · News brief',
+  'card.4.source': 'Library Notes',
+  'card.4.text': 'The local library extends its opening hours over the summer, with weekend story sessions.',
+  'card.4.meta': 'This week · News brief',
+  'card.5.source': '@truth_corner',
+  'card.5.text': 'Absolutely everyone agrees this is the biggest disaster in the history of the town.',
+  'card.5.phrase': 'the biggest disaster in the history of the town',
+  'card.5.meta': 'Earlier today · Social post',
+  'card.6.source': 'Weather Desk',
+  'card.6.text': 'Light rain in the morning, clearing by the afternoon with mild winds.',
+  'card.6.meta': 'Today · News brief',
+}
