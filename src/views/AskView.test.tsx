@@ -1,7 +1,9 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { richJob } from '../ask/askFixtures'
 import { I18nProvider } from '../i18n'
-import { job, json } from '../job/fixtures'
+import { job, json, run } from '../job/fixtures'
 import AskView from './AskView'
 
 const fetchMock = vi.fn()
@@ -10,7 +12,7 @@ const reply = (content: string, extra: Record<string, unknown> = {}) =>
 const err = (status: number, code: string, details?: Record<string, unknown>) => json({ error: { code, message: `server says ${code}`, ...(details ? { details } : {}) } }, status)
 
 let jobBody: unknown
-let chat: (body: { messages: unknown[]; language: string }) => Response | Promise<Response>
+let chat: (body: { messages: unknown[]; language: string; focus?: unknown[] }) => Response | Promise<Response>
 beforeEach(() => {
   jobBody = job()
   chat = () => reply('An answer.')
@@ -58,7 +60,8 @@ describe('context bar and states', () => {
   it('names the job (verdict, input, link back) outside any Mock', async () => {
     await show()
     expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/jobs/j1')
-    expect(screen.getByText('Manipulation detected')).toBeInTheDocument()
+    const bar = within(document.querySelector('.context-bar') as HTMLElement) // the result panel lists the same verdict label
+    expect(bar.getByText('Manipulation detected')).toBeInTheDocument()
     expect(screen.getByText('Everyone knows these people are destroying our future.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to summary/ })).toHaveAttribute('href', '/jobs/j1')
     expect(document.querySelector('[data-mock]')).toBeNull()
@@ -297,5 +300,213 @@ describe('errors', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
     expect(await screen.findByText('An answer.')).toBeInTheDocument()
     expect(chats()[0].body.messages).toEqual([{ role: 'user', content: 'unanswered' }])
+  })
+})
+
+describe('focus: split layout and panel', () => {
+  const box = (name: string) => screen.getByRole('checkbox', { name }) as HTMLInputElement
+  const css = readFileSync('src/ask/ask.css', 'utf8')
+
+  it('puts the chat first and the result panel second in a grid, logical and with a 960px breakpoint', async () => {
+    jobBody = richJob()
+    await show()
+    const split = document.querySelector('.ask-split') as HTMLElement
+    expect([...split.children].map((c) => c.className)).toEqual(['ask-chat', expect.stringContaining('focus-panel')])
+    expect(split.children[0].querySelector('textarea')).not.toBeNull()
+    const panel = screen.getByRole('region', { name: 'Result elements to ask about' })
+    expect(panel).toBe(split.children[1])
+    expect(within(panel).getByRole('heading', { level: 2 })).toHaveTextContent('Result elements')
+    expect(css).toMatch(/@media \(min-width: 960px\)[^}]*\{[^}]*grid-template-columns/)
+    expect(css).not.toMatch(/\b(left|right|margin-left|margin-right|padding-left|padding-right)\s*:/)
+  })
+
+  it('moves focus to the panel heading with the narrow toggle', async () => {
+    jobBody = richJob()
+    await show()
+    fireEvent.click(screen.getByRole('button', { name: 'Choose result elements' }))
+    expect(screen.getByRole('heading', { level: 2, name: 'Result elements' })).toHaveFocus()
+  })
+
+  it('lists every kind as a native checkbox, focusable, with a visible focus ring, toggled as Space does', async () => {
+    jobBody = richJob()
+    await show()
+    const all = screen.getAllByRole('checkbox')
+    expect(all).toHaveLength(15)
+    expect(all.every((c) => c.tagName === 'INPUT' && c.getAttribute('type') === 'checkbox')).toBe(true)
+    const doubt = box('Doubt')
+    doubt.focus()
+    expect(doubt).toHaveFocus()
+    fireEvent.click(doubt) // the click a browser sends for Space on a focused checkbox (jsdom has no key activation)
+    expect(doubt.checked).toBe(true)
+    fireEvent.click(doubt)
+    expect(doubt.checked).toBe(false)
+    expect(css).toMatch(/\.focus-item input:focus-visible[^{]*\{[^}]*outline: 2px solid var\(--blue\)/)
+  })
+
+  it.each([['running'], ['completed']])('shows a note and no checkboxes for a %s job without elements', async (status) => {
+    jobBody = status === 'completed' ? job({ finalization: { status: 'failed', result: null } }) : richJob({ status, done: false })
+    await show()
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
+    const note = status === 'completed' ? 'This analysis has no result elements to choose from.' : 'Result elements can be chosen once the analysis has finished.'
+    expect(within(screen.getByRole('region', { name: 'Result elements to ask about' })).getByText(note)).toBeInTheDocument()
+  })
+
+  it('disables the checkboxes while the composer is disabled after a 409', async () => {
+    jobBody = richJob()
+    chat = () => err(409, 'job_not_completed', { status: 'failed' })
+    await show()
+    await ask('why?')
+    await screen.findByText('This analysis did not finish, so there is nothing to ask about.')
+    expect(box('Doubt')).toBeDisabled()
+  })
+
+  it('renders labels as literal text', async () => {
+    const text = '<img src=x onerror=alert(1)>'
+    jobBody = richJob({ input: { content: text }, analyzers: [run('techniques', 'succeeded', { result: { detected: [{ name: 'X', display: 'X', explanation: '', spans: [{ technique: 'X', text, start: 0, end: text.length }] }] } })] })
+    await show()
+    fireEvent.click(box(text))
+    expect(screen.getByRole('button', { name: `Remove ${text}` }).previousElementSibling).toHaveAttribute('dir', 'auto')
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(document.querySelector('.ask-split img, .ask-split b')).toBeNull()
+    expect(document.querySelector('.bubble-focus li')).toHaveTextContent(text)
+    expect(chats()[0].body.focus).toEqual([{ kind: 'passage', ref: `0:${text.length}:X`, label: text }])
+  })
+})
+
+describe('focus: selection and requests', () => {
+  const T = { kind: 'technique', ref: 'Doubt', label: 'Doubt' }
+  const P = { kind: 'passage', ref: '0:14:Loaded_Language', label: 'Everyone knows' }
+  const box = (name: string) => screen.getByRole('checkbox', { name }) as HTMLInputElement
+  const sent = (i = 0) => chats()[i].body
+  const checked = () => screen.getAllByRole('checkbox').filter((c) => (c as HTMLInputElement).checked)
+  beforeEach(() => { jobBody = richJob() })
+
+  it('omits focus without a selection and says the question is about the whole analysis', async () => {
+    await show()
+    expect(screen.getByText('Your question is about the whole analysis.')).toBeInTheDocument()
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(sent()).not.toHaveProperty('focus')
+    expect(document.querySelector('.bubble-focus')).toBeNull()
+  })
+
+  it('sends one selected element as focus, keeps it selected and marks the bubble', async () => {
+    await show()
+    fireEvent.click(box('Doubt'))
+    expect(screen.queryByText('Your question is about the whole analysis.')).toBeNull()
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(sent().focus).toEqual([T])
+    expect(box('Doubt').checked).toBe(true)
+    const bubble = document.querySelector('.bubble-user') as HTMLElement
+    expect(within(bubble).getByText('About:')).toBeInTheDocument()
+    expect(within(bubble).getByText('Doubt')).toHaveAttribute('dir', 'auto')
+  })
+
+  it('sends several elements in panel order whatever the click order, with plain messages', async () => {
+    await show()
+    fireEvent.click(box('Doubt'))
+    fireEvent.click(box('Everyone knows'))
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(sent().focus).toEqual([P, T])
+    expect(sent().messages).toEqual([{ role: 'user', content: 'q' }])
+  })
+
+  it('deselects, clears and removes through chips', async () => {
+    await show()
+    fireEvent.click(box('Doubt'))
+    fireEvent.click(box('Everyone knows'))
+    fireEvent.click(box('Doubt'))
+    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Everyone knows' }))
+    expect(box('Everyone knows').checked).toBe(false)
+    expect(screen.queryByRole('button', { name: 'Clear selection' })).toBeNull()
+    fireEvent.click(box('Doubt'))
+    fireEvent.click(box('Everyone knows'))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }))
+    expect(checked()).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: /^Remove / })).toBeNull()
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(sent()).not.toHaveProperty('focus')
+  })
+
+  it('allows at most 20 elements and says so politely', async () => {
+    jobBody = richJob({ analyzers: [run('term_context', 'succeeded', { result: { terms: Array.from({ length: 25 }, (_, i) => ({ term: `term ${i}` })) } })] })
+    await show()
+    for (let i = 0; i < 19; i++) fireEvent.click(box(`term ${i}`))
+    expect(screen.queryByText('You can choose at most 20 elements.')).toBeNull()
+    expect(box('term 20')).toBeEnabled()
+    fireEvent.click(box('term 19'))
+    expect(box('term 20')).toBeDisabled()
+    expect(box('term 0')).toBeEnabled()
+    expect(screen.getByText('You can choose at most 20 elements.')).toHaveAttribute('aria-live', 'polite')
+    fireEvent.click(box('term 0'))
+    expect(box('term 20')).toBeEnabled()
+    fireEvent.click(box('term 20'))
+    await ask('q')
+    await screen.findByText('An answer.')
+    expect(sent().focus).toHaveLength(20)
+  })
+
+  it('keeps the original focus on Retry and leaves earlier bubbles alone when the selection changes', async () => {
+    chat = () => err(503, 'chat_unavailable')
+    await show()
+    fireEvent.click(box('Doubt'))
+    await ask('first')
+    await screen.findByRole('alert')
+    fireEvent.click(box('Doubt'))
+    fireEvent.click(box('Everyone knows'))
+    chat = () => reply('now it works')
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    await screen.findByText('now it works')
+    expect(sent(1).focus).toEqual([T])
+    expect(sent(1)).toEqual(sent(0))
+    expect(document.querySelectorAll('.bubble-user')[0]).toHaveTextContent('Doubt')
+    await ask('second')
+    await waitFor(() => expect(chats()).toHaveLength(3))
+    expect(sent(2).focus).toEqual([P])
+    const bubbles = document.querySelectorAll('.bubble-user')
+    expect(bubbles[0].querySelectorAll('.bubble-focus li')).toHaveLength(1)
+    expect(bubbles[0]).not.toHaveTextContent('Everyone knows')
+  })
+
+  it('stores focus per turn in sessionStorage and restores it, but not the selection', async () => {
+    await show()
+    fireEvent.click(box('Doubt'))
+    await ask('remember')
+    await screen.findByText('An answer.')
+    expect(JSON.parse(sessionStorage.getItem('veil.ask.j1') as string)[0]).toEqual({ role: 'user', content: 'remember', focus: [T] })
+    cleanup()
+    await show()
+    expect(document.querySelector('.bubble-focus')).toHaveTextContent('Doubt')
+    expect(checked()).toHaveLength(0)
+  })
+
+  it('loads threads stored without focus and drops malformed focus entries', async () => {
+    sessionStorage.setItem('veil.ask.j1', JSON.stringify([{ role: 'user', content: 'old' }, { role: 'assistant', content: 'older answer' }, { role: 'user', content: 'odd', focus: [{ kind: 1 }, 'x', T] }, { role: 'assistant', content: 'a2' }]))
+    await show()
+    expect(screen.getByText('older answer')).toBeInTheDocument()
+    const bubbles = document.querySelectorAll('.bubble-user')
+    expect(bubbles[0].querySelector('.bubble-focus')).toBeNull()
+    expect(bubbles[1].querySelectorAll('.bubble-focus li')).toHaveLength(1)
+  })
+})
+
+describe('focus: Arabic', () => {
+  it('renders right-to-left with the chat first and no static Latin text but the brand', async () => {
+    jobBody = richJob()
+    await show('j1', 'ar')
+    expect(document.documentElement.dir).toBe('rtl')
+    const split = document.querySelector('.ask-split') as HTMLElement
+    expect(split.children[0]).toHaveClass('ask-chat')
+    const panel = split.children[1] as HTMLElement
+    fireEvent.click(within(panel).getAllByRole('checkbox')[0])
+    const statics = [...split.querySelectorAll('.focus-panel h2, .focus-panel legend, .focus-panel .chat-note, .focus-clear, .focus-toggle')].map((e) => e.textContent ?? '')
+    statics.push(panel.getAttribute('aria-label') ?? '')
+    expect(statics.join(' ').replace(/VEIL/g, '')).not.toMatch(/[A-Za-z]/)
+    expect(statics.length).toBeGreaterThan(8)
   })
 })

@@ -1,18 +1,30 @@
 import { useEffect, useRef, useState } from 'react'
 import { postJobChat } from '../api/client'
-import type { ApiError, ChatMessage } from '../api/types'
+import type { ApiError, ChatFocusItem, ChatMessage } from '../api/types'
 
 export const MAX_SENT = 40 // the server accepts 1-40 messages
 export const MAX_CHARS = 2000 // code points of a question
+
+// A user turn keeps the focus it was sent with (the shown "About" line, and what Retry resends).
+export type Turn = ChatMessage & { focus?: ChatFocusItem[] }
 
 const key = (jobId: string) => `veil.ask.${jobId}`
 const valid = (m: unknown): m is ChatMessage =>
   typeof m === 'object' && m !== null && ((m as ChatMessage).role === 'user' || (m as ChatMessage).role === 'assistant') && typeof (m as ChatMessage).content === 'string'
 
-function load(jobId: string): ChatMessage[] {
+const isFocus = (f: unknown): f is ChatFocusItem =>
+  typeof f === 'object' && f !== null && ['kind', 'ref', 'label'].every((k) => typeof (f as Record<string, unknown>)[k] === 'string')
+
+// Entries stored before focus existed have no `focus` and load as turns without it.
+function load(jobId: string): Turn[] {
   try {
     const v: unknown = JSON.parse(sessionStorage.getItem(key(jobId)) ?? '[]')
-    return Array.isArray(v) ? v.filter(valid).map((m) => ({ role: m.role, content: m.content })) : []
+    if (!Array.isArray(v)) return []
+    return v.filter(valid).map((m) => {
+      const f: unknown = (m as Turn).focus
+      const focus = m.role === 'user' && Array.isArray(f) ? f.filter(isFocus).map(({ kind, ref, label }) => ({ kind, ref, label })) : []
+      return { role: m.role, content: m.content, ...(focus.length ? { focus } : {}) }
+    })
   } catch {
     return []
   }
@@ -42,12 +54,14 @@ export function useChat(jobId: string, language: string) {
     }
   }, [jobId, messages])
 
-  const post = async (thread: ChatMessage[]) => {
-    if (busy.current || thread.at(-1)?.role !== 'user') return // never start with an assistant message last
+  const post = async (thread: Turn[]) => {
+    const last = thread.at(-1)
+    if (busy.current || last?.role !== 'user') return // never start with an assistant message last
     busy.current = true
     setPending(true)
     setError(null)
-    const res = await postJobChat(jobId, { messages: thread.slice(-MAX_SENT), language })
+    const messages = thread.slice(-MAX_SENT).map(({ role, content }) => ({ role, content }))
+    const res = await postJobChat(jobId, { messages, language, ...(last.focus?.length ? { focus: last.focus } : {}) })
     busy.current = false
     if (!alive.current) return
     setPending(false)
@@ -59,10 +73,10 @@ export function useChat(jobId: string, language: string) {
     else setError(res.ok ? { status: 200, code: 'invalid_response', message: 'The reply had no message' } : res.error)
   }
 
-  const send = (text: string) => {
+  const send = (text: string, focus: ChatFocusItem[] = []) => {
     const content = text.trim()
     if (!content || busy.current) return false
-    const thread = [...messages, { role: 'user' as const, content }]
+    const thread: Turn[] = [...messages, { role: 'user', content, ...(focus.length ? { focus } : {}) }]
     setMessages(thread)
     void post(thread)
     return true
