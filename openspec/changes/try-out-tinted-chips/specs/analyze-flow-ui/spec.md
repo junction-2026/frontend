@@ -107,5 +107,5 @@ Home SHALL hold no selected-expectation state. The expectation of a chip SHALL N
 **Migration**: See "Try-out chip tint".
 
 ### Requirement: Expectation indicator lifecycle
-**Reason**: Home holds no selected-expectation state; non-propagation to `createJob`, the router and result views moves to "Try-out chips".
+**Reason**: Home holds no selected-expectation state; non-propagation to `createJob`, the router and result views moves to "Try-out expectation not propagated".
 **Migration**: None.
