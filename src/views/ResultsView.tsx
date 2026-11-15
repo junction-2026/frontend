@@ -1,24 +1,16 @@
+import type { Job } from '../api/types'
 import { useId, useState } from 'react'
-import { verdictOf, type Job } from '../api/types'
 import { useFormat, useLocale, useT } from '../i18n'
 import { Coverage } from '../job/Coverage'
 import { DetailedAnalysis } from '../job/DetailedAnalysis'
 import { techniqueInfo, readTechniques } from '../job/read'
-import { seconds } from '../job/text'
-import { resultOf, Verdict } from '../job/Verdict'
+import { duration } from '../job/text'
+import { Verdict } from '../job/Verdict'
 import { WithJob } from '../job/WithJob'
 import { Link } from '../router'
-import { Mock } from '../ui/MockBadge'
 import '../job/results.css'
 
 const EXCERPT_MAX = 400
-
-// "3.2 s" / "284 ms" (unit text from the catalog); null while the job is unfinished or the timestamps are unusable.
-function duration(job: Job, t: ReturnType<typeof useT>, fmt: ReturnType<typeof useFormat>['formatNumber']): string | null {
-  const ms = job.finished_at ? Date.parse(job.finished_at) - Date.parse(job.created_at) : NaN
-  if (!(ms >= 0)) return null
-  return ms < 1000 ? t('results.duration.ms', { v: fmt(Math.round(ms)) }) : seconds(t, fmt, 'results.duration.s', ms / 1000)
-}
 
 const TAG_TONES = ['orange', 'pink', 'purple']
 
@@ -26,12 +18,10 @@ const TAG_TONES = ['orange', 'pink', 'purple']
 function Detailed({ job, id }: { job: Job; id: string }) {
   const t = useT()
   const { locale } = useLocale()
-  const { formatNumber } = useFormat()
   const [copied, setCopied] = useState(false)
   const content = typeof job.input?.content === 'string' ? job.input.content : ''
   const read = readTechniques(job)
   const techniques = read?.detected ?? []
-  const r = resultOf(job)
   const copy = () => navigator.clipboard?.writeText(window.location.href).then(() => setCopied(true), () => undefined)
   return (
     <div id={id} role="region" aria-label={t('results.detailed_region')} className="detailed-region">
@@ -41,19 +31,6 @@ function Detailed({ job, id }: { job: Job; id: string }) {
         </div>
       )}
       <div className="card detailed-summary">
-        {r && verdictOf(r.verdict) === 'detected' && r.produced_by !== 'orchestrator' && (
-          <div className="verdict-sub"><Mock label={t('results.mock.bias')}>{t('results.bias')}</Mock></div>
-        )}
-        {r && (
-          <Mock block label={t('results.mock.polarity')}>
-            <div className="signal-row">
-              <div className="signal-bar" aria-hidden="true"><span /><span /><span /></div>
-              <span className="signal-text">
-                {t('results.polarity', { polarity: formatNumber(-0.84, { minimumFractionDigits: 2 }), intensity: formatNumber(0.92, { minimumFractionDigits: 2 }) })}
-              </span>
-            </div>
-          </Mock>
-        )}
         {techniques.length > 0 && (
           <div className="tags">
             {techniques.map((d, i) => (
@@ -68,9 +45,6 @@ function Detailed({ job, id }: { job: Job; id: string }) {
           <button type="button" className="icon-btn" aria-label={copied ? t('results.copied') : t('results.copy')} title={t('results.copy_title')} onClick={() => void copy()}>
             {copied ? '✓' : '⧉'}
           </button>
-          <Mock label={t('results.share')}>
-            <button type="button" className="icon-btn" aria-label={t('results.share')}>↗</button>
-          </Mock>
         </div>
       </div>
       <DetailedAnalysis job={job} />

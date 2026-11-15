@@ -32,11 +32,6 @@
 .verdict-card {
   padding: 1.25rem 1.35rem;
 }
-.verdict-sub {
-  margin-bottom: 0.6rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
 .verdict-card h2 {
   margin: 0.35rem 0 0.7rem;
   font-size: clamp(1.25rem, 2.4vw, 1.65rem);
@@ -63,39 +58,6 @@
   margin: 0 0 1rem;
   color: var(--muted);
   line-height: 1.55;
-}
-.signal-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.3rem 0.5rem;
-}
-.signal-bar {
-  display: flex;
-  height: 8px;
-  width: min(220px, 40vw);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-.signal-bar span:nth-child(1) {
-  flex: 1.2;
-  background: #f0b56a;
-}
-.signal-bar span:nth-child(2) {
-  flex: 1;
-  background: #e89ab4;
-}
-.signal-bar span:nth-child(3) {
-  flex: 0.85;
-  background: #b59adf;
-}
-.signal-text {
-  color: var(--muted);
-  font-size: 0.88rem;
-}
-.detailed-summary > .mock-block {
-  margin: 0.9rem 0;
 }
 .tags {
   display: flex;
@@ -227,14 +189,6 @@
 .metrics-bar > div > span {
   color: var(--muted);
   font-size: 0.8rem;
-}
-.metrics-mock {
-  margin-top: 0.35rem;
-}
-.metrics-latency {
-  color: var(--muted);
-  font-size: 0.95rem;
-  padding: 0 0.3rem;
 }
 @media (max-width: 960px) {
   .metrics-bar {
