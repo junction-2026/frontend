@@ -10,7 +10,6 @@ import HistoryView from './views/HistoryView'
 import HomeView from './views/HomeView'
 import RegionView from './views/RegionView'
 import ResultsView from './views/ResultsView'
-import SettingsView from './views/SettingsView'
 import StatesView from './views/StatesView'
 import './styles/fonts.css'
 import './styles/tokens.css'
@@ -22,7 +21,7 @@ type ViewProps = { id: string }
 // Job routes always carry an id; the others ignore it.
 const VIEWS: Record<RouteName, ComponentType<ViewProps>> = {
   home: HomeView, analyzing: AnalyzingView, results: ResultsView, detail: DetailView, history: HistoryView,
-  explore: ExploreView, region: RegionView, ask: AskView, settings: SettingsView, states: StatesView,
+  explore: ExploreView, region: RegionView, ask: AskView, states: StatesView,
 }
 
 export default function App() {

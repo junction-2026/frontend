@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import HomeView from './HomeView'
 import { CATALOGS } from '../i18n/translate'
@@ -16,9 +16,10 @@ afterEach(() => {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
 const err = (status: number, code: string, message: string, details?: object) => json({ error: { code, message, details } }, status)
 const ANALYZERS = [
-  { id: 'translation', name: 'Translation', category: 'text', enabled: true, selectable: true },
-  { id: 'techniques', name: 'Techniques', category: 'rhetoric', enabled: false, selectable: true },
-  { id: 'final_synthesis', name: 'Final synthesis', category: 'verdict', enabled: true, selectable: false },
+  { id: 'translation', name: 'Translation', category: 'text', enabled: true, selectable: true, extra: 'SECRET-UNKNOWN' },
+  { id: 'techniques', name: 'Techniques', category: 'rhetoric', enabled: false, selectable: true, depends_on: ['translation', 'x'] },
+  { id: 'language', name: 'Language', category: 'text', enabled: true, selectable: false, depends_on: 'oops' },
+  { id: 'final_synthesis', name: 'Final synthesis', category: 'verdict', enabled: true, selectable: false, trigger: 'after_all_analyzers_settled' },
 ]
 // POST /jobs answers `post`; GET /analyzers answers `analyzers`.
 const route = (post: Response = json({ id: 'job 1' }, 201), analyzers: Response = json({ items: ANALYZERS })) =>
@@ -117,21 +118,79 @@ describe('HomeView composer', () => {
 })
 
 describe('HomeView advanced options', () => {
-  it('lists selectable analyzers, all checked, with the disabled hint, and omits analyzers when all are checked', async () => {
+  const row = (name: string) => screen.getByText(name).closest('.advanced-row') as HTMLElement
+
+  it('lists every item in response order with name, id, category, dependencies and state', async () => {
     route()
     render(<HomeView />)
     await openAdvanced()
-    expect(screen.queryByLabelText(/Final synthesis/)).not.toBeInTheDocument()
-    expect(screen.getByLabelText(/Translation/)).toBeChecked()
-    expect(screen.getByLabelText(/Techniques/)).toBeChecked()
-    expect(screen.getByText('disabled')).toBeInTheDocument()
+    const rows = [...document.querySelectorAll('.advanced-row')]
+    expect(rows.map((r) => r.querySelector('label')!.textContent)).toEqual(['Translation', 'Techniques', 'Language', 'Final synthesis'])
+    const tech = within(row('Techniques'))
+    expect(tech.getByText('techniques').closest('bdi')).not.toBeNull()
+    expect(tech.getByText('techniques').closest('.id-badge')).not.toBeNull()
+    expect(tech.getByText('rhetoric').closest('bdi')).not.toBeNull()
+    expect(tech.getByText('translation, x').closest('bdi')).not.toBeNull()
+    expect(row('Techniques')).toHaveTextContent('Depends on: translation, x')
+    expect(tech.getByText('Disabled')).toBeInTheDocument()
+    expect(within(row('Translation')).getByText('Enabled')).toBeInTheDocument()
+    expect(row('Translation')).not.toHaveTextContent('Depends on')
+    expect(row('Language')).not.toHaveTextContent('Depends on') // a non-array depends_on counts as empty
+    expect(screen.queryByText('disabled')).not.toBeInTheDocument()
+    expect(document.body).not.toHaveTextContent('SECRET-UNKNOWN')
+  })
+
+  it('counts enabled over all items in the header', async () => {
+    route()
+    render(<HomeView />)
+    await openAdvanced()
+    expect(screen.getByText('3 of 4 analyzers enabled')).toBeInTheDocument()
+  })
+
+  it('shows an empty list', async () => {
+    route(undefined, json({ items: [] }))
+    render(<HomeView />)
+    fireEvent.click(screen.getByRole('button', { name: /Advanced options/ }))
+    expect(await screen.findByText('No analyzers are configured.')).toBeInTheDocument()
+    expect(screen.getByText('0 of 0 analyzers enabled')).toBeInTheDocument()
+  })
+
+  it('shows the loading status while the list is pending', () => {
+    fetchMock.mockImplementation(() => new Promise(() => {}))
+    render(<HomeView />)
+    fireEvent.click(screen.getByRole('button', { name: /Advanced options/ }))
+    expect(screen.getByRole('status')).toHaveTextContent('Loading analyzers…')
+  })
+
+  it('renders non-selectable rows checked, disabled and Always on, the finalizer also tagged', async () => {
+    route()
+    render(<HomeView />)
+    await openAdvanced()
+    for (const name of ['Language', 'Final synthesis']) {
+      const box = within(row(name)).getByRole('checkbox')
+      expect(box).toBeChecked()
+      expect(box).toBeDisabled()
+      expect(document.getElementById(box.getAttribute('aria-describedby')!)).toHaveTextContent('Always on')
+      fireEvent.click(box)
+      expect(box).toBeChecked()
+    }
+    expect(within(row('Final synthesis')).getByText('Final assessment')).toBeInTheDocument()
+    expect(within(row('Language')).queryByText('Final assessment')).not.toBeInTheDocument()
+    expect(within(row('Translation')).getByRole('checkbox')).toBeEnabled()
+    expect(within(row('Translation')).queryByText('Always on')).not.toBeInTheDocument()
+  })
+
+  it('omits analyzers when every selectable item is checked', async () => {
+    route()
+    render(<HomeView />)
+    await openAdvanced()
     type('hello')
     analyze()
     await waitFor(() => expect(posts()).toHaveLength(1))
     expect(body()).toEqual({ input: { content: 'hello' } })
   })
 
-  it('sends only the checked ids', async () => {
+  it('sends only the checked selectable ids, never a non-selectable id or options', async () => {
     route()
     render(<HomeView />)
     await openAdvanced()
@@ -140,20 +199,19 @@ describe('HomeView advanced options', () => {
     analyze()
     await waitFor(() => expect(posts()).toHaveLength(1))
     expect(body()).toEqual({ input: { content: 'hello' }, analyzers: ['translation'] })
+    expect(body()).not.toHaveProperty('options')
   })
 
-  it('offers no Final assessment control and never sends options', async () => {
+  it('sends [] when every selectable item is unchecked', async () => {
     route()
     render(<HomeView />)
     await openAdvanced()
-    expect(screen.queryByLabelText('Final assessment')).not.toBeInTheDocument()
-    expect(screen.queryByText('Final assessment')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText(/Translation/))
     fireEvent.click(screen.getByLabelText(/Techniques/))
     type('hello')
     analyze()
     await waitFor(() => expect(posts()).toHaveLength(1))
-    expect(body()).not.toHaveProperty('options')
-    expect(body()).toHaveProperty('analyzers')
+    expect(body()).toEqual({ input: { content: 'hello' }, analyzers: [] })
   })
 
   it('omits options in link mode', async () => {
@@ -171,6 +229,7 @@ describe('HomeView advanced options', () => {
     render(<HomeView />)
     fireEvent.click(screen.getByRole('button', { name: /Advanced options/ }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong on the server')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
     type('hello')
     analyze()
     await waitFor(() => expect(posts()).toHaveLength(1))

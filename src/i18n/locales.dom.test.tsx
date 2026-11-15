@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
 import { article, exploreJob, factCheck, outlet, query } from '../explore/fixtures'
@@ -21,7 +21,7 @@ const fetchMock = vi.fn()
 beforeEach(() => {
   fetchMock.mockImplementation(async (url: string) => {
     if (url === '/healthz') return json({ status: 'ok' })
-    if (url === '/api/v1/analyzers') return json({ items: [{ id: 'rhetoric', name: 'Rhetoric', category: 'linguistic', enabled: true, selectable: true, depends_on: [], trigger: 'on_input' }] })
+    if (url === '/api/v1/analyzers') return json({ items: [{ id: 'rhetoric', name: 'Rhetoric', category: 'linguistic', enabled: true, selectable: true, depends_on: [], trigger: 'on_input' }, { id: 'final', name: 'Final synthesis', category: 'verdict', enabled: false, selectable: false, depends_on: ['rhetoric'], trigger: 'after_all_analyzers_settled' }] })
     if (url.startsWith('/api/v1/jobs?')) {
       const completed = url.includes('status=completed')
       return json({ items: completed ? [summary('job-ok', 'completed')] : [summary('job-ok', 'completed'), summary('job-run', 'running')], next_cursor: null })
@@ -65,7 +65,6 @@ const PAGES: Page[] = [
   { name: 'Ask', path: '/jobs/job-ok/ask', ready: () => screen.findByRole('textbox'), h1: 'ask.title' },
   { name: 'Ask without a job', path: '/ask', ready: async () => {}, h1: 'ask.title' },
   { name: 'Region', path: '/explore/region', ready: async () => {}, h1: 'explore.title' },
-  { name: 'Settings', path: '/settings', ready: () => waitFor(() => expect(document.querySelector('.analyzer-row')).not.toBeNull()), h1: 'settings.title' },
 ]
 
 describe.each(PAGES)('$name in every locale', ({ path, ready, h1 }) => {
@@ -76,13 +75,29 @@ describe.each(PAGES)('$name in every locale', ({ path, ready, h1 }) => {
     expect(document.documentElement).toHaveAttribute('dir', lng === 'ar' ? 'rtl' : 'ltr')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(CATALOGS[lng][h1])
     expect(screen.getByRole('link', { name: CATALOGS[lng]['shell.nav.history'] })).toBeInTheDocument()
-    expect(document.body.textContent).not.toMatch(/\b(home|explore|history|settings|shell|common)\.[a-z_]+/)
+    expect(document.body.textContent).not.toMatch(/\b(home|explore|history|shell|common)\.[a-z_]+/)
     expect(document.body.textContent).not.toMatch(/undefined|null|…$/)
   })
 
   it('ar: has no Latin-script static text other than the brand', async () => {
     open(path, 'ar')
     await ready()
+    expect(staticText().match(/[A-Za-z][A-Za-z.,'’ -]*/g) ?? []).toEqual([])
+  })
+})
+
+describe('Home Advanced options panel in Arabic', () => {
+  it('mirrors, shows localized panel strings and isolates API values in bdi', async () => {
+    open('/', 'ar')
+    fireEvent.click(screen.getByRole('button', { name: CATALOGS.ar['home.advanced'] }))
+    await screen.findByText('Rhetoric')
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+    const panel = document.getElementById('advanced-options')!
+    expect(panel).toHaveTextContent('1 من 2 محلِّلات مفعّلة')
+    for (const v of ['Rhetoric', 'rhetoric', 'linguistic', 'Final synthesis', 'final']) expect(within(panel).getAllByText(v)[0].closest('bdi')).not.toBeNull()
+    expect(panel).toHaveTextContent(CATALOGS.ar['home.analyzer_always_on'])
+    expect(panel).toHaveTextContent(CATALOGS.ar['home.analyzer_final'])
+    expect(panel).toHaveTextContent('يعتمد على: rhetoric')
     expect(staticText().match(/[A-Za-z][A-Za-z.,'’ -]*/g) ?? []).toEqual([])
   })
 })

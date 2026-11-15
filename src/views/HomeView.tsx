@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { createJob, listAnalyzers } from '../api/client'
 import { errorMessage } from '../api/errors'
 import type { AnalyzerInfo, ApiError, CreateJobBody } from '../api/types'
-import { useT } from '../i18n'
+import { rich, useT } from '../i18n'
 import { navigate } from '../router'
 import { AmbientBackground } from '../ui/AmbientBackground'
 import '../styles/analyze.css'
@@ -51,7 +51,7 @@ export default function HomeView() {
     let stale = false
     listAnalyzers().then((r) => {
       if (stale) return
-      if (r.ok) setAnalyzers(r.data.items.filter((a) => a.selectable))
+      if (r.ok) setAnalyzers(Array.isArray(r.data.items) ? r.data.items : [])
       else setListError(r.error)
     })
     return () => {
@@ -66,7 +66,8 @@ export default function HomeView() {
       if (bad) return setProblem({ url: bad })
     }
     const body: CreateJobBody = mode === 'text' ? { input: { content: value } } : { scrape: { url: value.trim() } }
-    if (analyzers && unchecked.size) body.analyzers = analyzers.filter((a) => !unchecked.has(a.id)).map((a) => a.id)
+    // Only selectable ids are ever sent; `options` never is, so the server default (finalize) applies.
+    if (analyzers && unchecked.size) body.analyzers = analyzers.filter((a) => a.selectable === true && !unchecked.has(a.id)).map((a) => a.id)
     if (!isPublic) body.public = false
     setBusy(true)
     setProblem(null)
@@ -149,15 +150,29 @@ export default function HomeView() {
           {open && (
             <div className="advanced-panel" id="advanced-options">
               {listError && <div className="form-error" role="alert">{errorMessage(listError)}</div>}
-              {!analyzers && !listError && <span>{t('home.analyzers_loading')}</span>}
-              {analyzers?.map((a) => (
-                <label key={a.id}>
-                  <input type="checkbox" checked={!unchecked.has(a.id)} onChange={() => toggle(a.id)} />
-                  <span><bdi>{a.name}</bdi></span>
-                  <span className="badge-soft"><bdi>{a.category}</bdi></span>
-                  {!a.enabled && <span className="hint">{t('home.analyzer_disabled')}</span>}
-                </label>
-              ))}
+              {!analyzers && !listError && <span role="status">{t('home.analyzers_loading')}</span>}
+              {analyzers && (
+                <div className="advanced-head">
+                  <span>{t('home.analyzers_summary', { enabled: analyzers.filter((a) => a.enabled === true).length, total: analyzers.length })}</span>
+                  {analyzers.length === 0 && <span className="hint">{t('home.analyzers_none')}</span>}
+                </div>
+              )}
+              {analyzers?.map((a, i) => {
+                const fixed = a.selectable !== true
+                const deps = Array.isArray(a.depends_on) ? a.depends_on : []
+                return (
+                  <div className="advanced-row" key={a.id}>
+                    <input type="checkbox" id={`analyzer-${i}`} checked={fixed || !unchecked.has(a.id)} disabled={fixed} aria-describedby={fixed ? `analyzer-fixed-${i}` : undefined} onChange={() => toggle(a.id)} />
+                    <label htmlFor={`analyzer-${i}`}><bdi>{a.name}</bdi></label>
+                    <span className="badge-soft id-badge"><bdi>{a.id}</bdi></span>
+                    <span className="badge-soft"><bdi>{a.category}</bdi></span>
+                    {a.trigger === 'after_all_analyzers_settled' && <span className="badge-blue">{t('home.analyzer_final')}</span>}
+                    {fixed && <span className="badge-soft" id={`analyzer-fixed-${i}`}>{t('home.analyzer_always_on')}</span>}
+                    {deps.length > 0 && <span className="hint">{rich(t('home.analyzer_depends_on'), { ids: <bdi>{deps.join(', ')}</bdi> })}</span>}
+                    <span className={a.enabled === true ? 'status-pill green' : 'status-pill gray'}>{a.enabled === true ? t('home.analyzer_enabled') : t('home.analyzer_disabled')}</span>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
