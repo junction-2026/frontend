@@ -252,3 +252,10 @@ A namespace `ambient` SHALL exist as `src/i18n/locales/<lng>/ambient.ts` for en,
 #### Scenario: Completeness
 - **WHEN** the catalog completeness test runs
 - **THEN** every locale has the `ambient` namespace with the same keys and non-empty values as en
+
+### Requirement: No New Analysis shell key
+The `shell` namespace SHALL NOT define `new_analysis` in any locale (en, de, fi, fr, ar, ru); the catalog-parity test continues to pass.
+
+#### Scenario: Key removed
+- **WHEN** the `shell` catalogs of all locales are inspected
+- **THEN** none defines `new_analysis`
