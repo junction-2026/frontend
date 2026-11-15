@@ -130,3 +130,14 @@ The types in `src/api/mapTypes.ts` SHALL follow shared capability `propaganda-ma
 #### Scenario: Tolerant parsing
 - **WHEN** the response items carry unknown members, a technique without `strength` and `verdict: null`
 - **THEN** the call resolves `ok` with those items, the technique has no `strength` and the verdict is null
+
+### Requirement: Job list search and excerpt
+`JobSummary` SHALL have the optional member `excerpt?: string | null`. `listJobs` SHALL accept an optional `q` and send it as the `q` query parameter only when it is non-empty. This reads the shared capability `analysis-jobs-api` (shared-specs@d4745c605a5b00999884130a9b08823a04c2c4e9).
+
+#### Scenario: q sent
+- **WHEN** `listJobs({ limit: 20, q: 'needle' })` is called
+- **THEN** the request is `/api/v1/jobs?limit=20&q=needle`
+
+#### Scenario: Empty q
+- **WHEN** `listJobs({ q: '' })` is called
+- **THEN** the request has no `q` parameter
