@@ -8,4 +8,4 @@ Hostinger provides hosting for the project (junction-2026/project#82). The app s
 - Emblem asset `src/assets/hostinger-emblem.svg` and `docs/third-party-assets.md` (already committed on this branch; source, date and applied guidelines are recorded there).
 
 ## Impact
-Local capability `hosting-badge` (new). No shared contract change (shared change id empty, shared-specs@bd681f5668c056b0cfa7b45a5e413233aec386bc). Existing breakpoints, topbar contents and the shell/settings catalogs are untouched.
+Local capability `hosting-badge` (new). No shared contract change (shared change id empty, shared-specs@bd681f5668c056b0cfa7b45a5e413233aec386bc). Existing breakpoints, topbar contents and the shell catalog are untouched.

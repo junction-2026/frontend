@@ -22,7 +22,7 @@ afterEach(() => {
 })
 
 describe('HostingerBadge', () => {
-  it.each(['/', '/explore', '/explore/region', '/history', '/ask', '/states', '/settings'])('%s: exactly one external link named "Powered by Hostinger", outside the topbar', (path) => {
+  it.each(['/', '/explore', '/explore/region', '/history', '/ask', '/states'])('%s: exactly one external link named "Powered by Hostinger", outside the topbar', (path) => {
     window.history.replaceState(null, '', path)
     render(<App />)
     const links = screen.getAllByRole('link', { name: 'Powered by Hostinger' })

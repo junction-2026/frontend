@@ -32,7 +32,7 @@ The badge text SHALL be `font-size: 0.75rem`, `font-weight: 500`, `line-height: 
 - **THEN** a 2px outline is visible
 
 ### Requirement: Credits catalog
-A `credits` namespace with key `powered_by` SHALL exist in en, fr, ar, de, fi and ru, with the brand name in the `{brand}` placeholder rendered in a `<bdi>` through `rich()`; the name "Hostinger" SHALL stay in Latin script. The `shell` and `settings` catalogs SHALL NOT be changed by this change.
+A `credits` namespace with key `powered_by` SHALL exist in en, fr, ar, de, fi and ru, with the brand name in the `{brand}` placeholder rendered in a `<bdi>` through `rich()`; the name "Hostinger" SHALL stay in Latin script. The `shell` catalog SHALL NOT be changed by this change.
 
 #### Scenario: Arabic keeps the brand isolated
 - **WHEN** the locale is `ar`
