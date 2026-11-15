@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { I18nProvider } from '../i18n'
 import { CATALOGS } from '../i18n/translate'
 import { job, risk } from './fixtures'
-import { RiskScore } from './RiskScore'
+import { RiskMetric, RiskScore } from './RiskScore'
 import type { Job } from '../api/types'
 
 afterEach(() => {
@@ -16,19 +16,22 @@ const show = (r: unknown, lng = 'en') => {
   localStorage.setItem('veil.locale', lng)
   return render(<I18nProvider><RiskScore job={job({ risk: r }) as unknown as Job} /></I18nProvider>)
 }
+const showMetric = (r: unknown, lng = 'en') => {
+  localStorage.setItem('veil.locale', lng)
+  return render(<I18nProvider><RiskMetric job={job({ risk: r }) as unknown as Job} /></I18nProvider>)
+}
 const section = () => document.querySelector('.risk') as HTMLElement
-const chip = () => section().querySelector('.risk-chip') as HTMLElement
+const chip = () => document.querySelector('.risk-chip') as HTMLElement
+const openCaveats = () => fireEvent.click(screen.getByRole('button', { name: /Caveats/ }))
 const unavailable = (extra: Record<string, unknown> = {}) =>
   risk({ status: 'unavailable', reason: 'no_content_signals', score: null, raw_score: null, band: null, drivers: [], techniques: [], ...extra,
     dimensions: { intensity: { available: false, score: null, reason: 'analyzer_unavailable' }, confirmation: { available: false, score: null, reason: 'analyzer_unavailable' }, amplification: { available: false, score: null, reason: 'no_author_context' } } })
 
 describe('RiskScore: scored', () => {
-  it('shows percent, band chip, summary, info button, three bars, techniques, drivers and caveats', () => {
+  it('shows summary, info button, three bars, techniques, drivers and caveats', () => {
     show(risk())
-    expect(screen.getByRole('heading', { level: 2, name: 'Manipulation Risk Score' })).toBeInTheDocument()
-    expect(section().querySelector('.risk-score')).toHaveTextContent('68%')
-    expect(chip()).toHaveTextContent('High risk')
-    expect(chip().dataset.band).toBe('high')
+    expect(screen.getByRole('heading', { level: 3, name: 'Manipulation Risk Score' })).toBeInTheDocument()
+    expect(section().querySelector('.risk-score, .risk-chip')).toBeNull() // headline lives in the metrics bar
     expect(section().querySelector('.risk-summary')).toHaveTextContent('Clear signs of manipulation were found. Main signal: signs of artificial amplification.')
     expect(screen.getByRole('button', { name: 'What does the risk score mean?' })).toBeInTheDocument()
     const meters = screen.getAllByRole('meter')
@@ -37,13 +40,14 @@ describe('RiskScore: scored', () => {
     expect([...rows].map((r) => r.textContent)).toEqual(['Appeal to fear90%High impact', 'Loaded language70%High impact', 'Doubt35%Lower impact'])
     expect(screen.getByText('The source shows signs of artificial amplification.')).toBeInTheDocument()
     expect(screen.getByText('The writing follows patterns typical of propaganda.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Caveats/ })).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByText('This rating describes the content, not whether a reader will be manipulated.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Caveats/ })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('This rating describes the content, not whether a reader will be manipulated.')).toBeNull()
   })
 
   it.each([['low', 'low'], ['moderate', 'moderate'], ['high', 'high'], ['critical', 'critical']])('styles band %s', (band, v) => {
-    show(risk({ band }))
+    showMetric(risk({ band }))
     expect(chip().dataset.band).toBe(v)
+    expect(chip()).toHaveTextContent(`${band[0].toUpperCase()}${band.slice(1)} risk`)
   })
 
   it('names a technique driver with the technique name', () => {
@@ -59,8 +63,10 @@ describe('RiskScore: scored', () => {
   })
 
   it('translates technique names and texts outside English', () => {
-    show(risk(), 'de')
+    showMetric(risk(), 'de')
     expect(chip()).toHaveTextContent('Hohes Risiko')
+    cleanup()
+    show(risk(), 'de')
     expect(section().querySelectorAll('.risk-techniques li')[1]).toHaveTextContent(CATALOGS.de['techniques.Loaded_Language.name'])
   })
 })
@@ -96,17 +102,20 @@ describe('RiskScore: degraded', () => {
 
   it('dampened score is still shown with its caveat', () => {
     show(risk({ score: 0.1669, raw_score: 0.2782, band: 'low', dampened: true, caveats: [{ id: 'content_not_reader', text: 'a' }, { id: 'weak_signal', text: 'b' }] }))
-    expect(section().querySelector('.risk-score')).toHaveTextContent('17%')
-    expect(chip()).toHaveTextContent('Low risk')
+    openCaveats()
     expect(screen.getByText('The propaganda-pattern signal was weak, so the overall rating was lowered.')).toBeInTheDocument()
+    cleanup()
+    showMetric(risk({ score: 0.1669, band: 'low' }))
+    expect(document.querySelector('strong')).toHaveTextContent('17%')
+    expect(chip()).toHaveTextContent('Low risk')
   })
 
   it('unavailable: no percentage or band, reason explained, caveats and info button kept', () => {
     show(unavailable({ caveats: [{ id: 'content_not_reader', text: 'a' }] }))
-    expect(section().querySelector('.risk-score')).toBeNull()
-    expect(chip()).toBeNull()
+    expect(section().querySelector('.risk-chip')).toBeNull()
     expect(section()).toHaveTextContent('No risk score could be given. There were not enough signals in the content to rate it.')
     expect(screen.getByRole('button', { name: 'What does the risk score mean?' })).toBeInTheDocument()
+    openCaveats()
     expect(screen.getByText('This rating describes the content, not whether a reader will be manipulated.')).toBeInTheDocument()
     expect(section()).not.toHaveTextContent('No manipulative techniques were detected.')
   })
@@ -118,9 +127,12 @@ describe('RiskScore: degraded', () => {
     ['scored without drivers', { drivers: [] }],
   ])('%s is shown as unavailable', (_n, extra) => {
     show(risk(extra))
-    expect(section().querySelector('.risk-score')).toBeNull()
-    expect(chip()).toBeNull()
+    expect(section().querySelector('.risk-chip')).toBeNull()
     expect(section()).toHaveTextContent('The rating was not available for this job.')
+    cleanup()
+    showMetric(risk(extra))
+    expect(document.querySelector('strong')).toHaveTextContent(/^—$/)
+    expect(chip()).toBeNull()
   })
 
   it.each([['null', null], ['undefined', undefined], ['a string', 'x']])('risk %s renders nothing', (_n, r) => {
@@ -130,22 +142,26 @@ describe('RiskScore: degraded', () => {
 
   it('survives a risk with missing members', () => {
     show({ status: 'scored', score: 0.5, band: 'high', drivers: [{ kind: 'amplification' }], dimensions: null, techniques: 'x', caveats: null })
-    expect(section().querySelector('.risk-score')).toHaveTextContent('50%')
+    expect(section().querySelector('.risk-summary')).toBeInTheDocument()
     expect(screen.queryAllByRole('meter')).toHaveLength(0)
+    openCaveats()
     expect(screen.getByText('This rating describes the content, not whether a reader will be manipulated.')).toBeInTheDocument()
   })
 })
 
 describe('RiskScore: unknown ids and plain text', () => {
   it('unknown band: moderate colours, the id and the server summary', () => {
-    show(risk({ band: 'extreme' }))
+    showMetric(risk({ band: 'extreme' }))
     expect(chip()).toHaveTextContent('extreme')
     expect(chip().dataset.band).toBe('moderate')
+    cleanup()
+    show(risk({ band: 'extreme' }))
     expect(section().querySelector('.risk-summary')).toHaveTextContent('Server summary: high risk.')
   })
 
   it('unknown driver kind and caveat id use the server text, as plain text', () => {
     show(risk({ drivers: [{ kind: 'novel', technique: null, text: '<b>driver</b>' }], caveats: [{ id: 'content_not_reader', text: 'x' }, { id: 'novel', text: '<b>caveat</b>' }] }))
+    openCaveats()
     expect(screen.getByText('<b>driver</b>')).toBeInTheDocument()
     expect(screen.getByText('<b>caveat</b>')).toBeInTheDocument()
     expect(section().querySelector('b')).toBeNull()
@@ -159,6 +175,7 @@ describe('RiskScore: unknown ids and plain text', () => {
 
   it('always lists content_not_reader, also when the server omits it', () => {
     show(risk({ caveats: [{ id: 'bot_not_intent', text: 'x' }] }))
+    openCaveats()
     const items = section().querySelectorAll('.risk-block [role=region] li')
     expect(items[0]).toHaveTextContent('describes the content')
     expect(items).toHaveLength(2)
@@ -188,17 +205,47 @@ describe('RiskScore: interaction', () => {
     expect(screen.queryByRole('tooltip')).toBeNull()
   })
 
-  it('collapses and expands the caveats', () => {
+  it('keeps the caveats collapsed by default and expands and collapses them', () => {
     show(risk())
     const btn = screen.getByRole('button', { name: /Caveats/ })
-    expect(within(section()).getByRole('region', { name: 'Caveats' })).toBeInTheDocument()
-    fireEvent.click(btn)
     expect(btn).toHaveAttribute('aria-expanded', 'false')
+    expect(btn).toHaveAttribute('aria-controls')
     expect(screen.queryByRole('region', { name: 'Caveats' })).toBeNull()
-    expect(screen.queryByText(/describes the content/)).toBeNull()
     fireEvent.click(btn)
     expect(btn).toHaveAttribute('aria-expanded', 'true')
+    expect(within(section()).getByRole('region', { name: 'Caveats' })).toBeInTheDocument()
     expect(screen.getByText(/describes the content/)).toBeInTheDocument()
+    fireEvent.click(btn)
+    expect(btn).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText(/describes the content/)).toBeNull()
+  })
+
+  const five = [0.9, 0.8, 0.7, 0.6, 0.5].map((probability, i) => ({ label: `T${i}`, display: `Tech ${i}`, probability, impact: 'high' }))
+  const drivers = ['propaganda_pattern', 'amplification', 'a', 'b'].map((kind) => ({ kind, technique: null, text: `driver ${kind}` }))
+
+  it('shows 3 techniques and toggles Show all (N) / Show less with aria-expanded and aria-controls', () => {
+    show(risk({ techniques: five }))
+    const list = () => section().querySelectorAll('.risk-techniques li')
+    expect(list()).toHaveLength(3)
+    const btn = screen.getByRole('button', { name: 'Show all (5)' })
+    expect(btn).toHaveAttribute('aria-expanded', 'false')
+    expect(document.getElementById(btn.getAttribute('aria-controls')!)).toBe(section().querySelector('.risk-techniques'))
+    fireEvent.click(btn)
+    expect(list()).toHaveLength(5)
+    expect(btn).toHaveAttribute('aria-expanded', 'true')
+    expect(btn).toHaveTextContent('Show less')
+    fireEvent.click(btn)
+    expect(list()).toHaveLength(3)
+  })
+
+  it('shows 3 drivers with a toggle and no toggle for 3 or fewer entries', () => {
+    show(risk({ drivers }))
+    expect(section().querySelectorAll('.risk-drivers li')).toHaveLength(3)
+    fireEvent.click(screen.getByRole('button', { name: 'Show all (4)' }))
+    expect(section().querySelectorAll('.risk-drivers li')).toHaveLength(4)
+    cleanup()
+    show(risk())
+    expect(screen.queryByRole('button', { name: /Show all/ })).toBeNull()
   })
 })
 
@@ -228,8 +275,10 @@ describe('risk texts in every locale', () => {
     expect(screen.getByRole('tooltip').textContent).toBe(CATALOGS[lng]['results.risk.info_tip'])
   })
   it('renders in Arabic (right-to-left) without catalog fallbacks', () => {
-    show(risk(), 'ar')
+    showMetric(risk(), 'ar')
     expect(chip()).toHaveTextContent(CATALOGS.ar['results.risk.band.high'])
+    cleanup()
+    show(risk(), 'ar')
     expect(section().textContent).not.toContain('…')
   })
 })

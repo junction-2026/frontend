@@ -565,18 +565,23 @@ describe('Results verdict card in Arabic', () => {
   })
 })
 
-describe('Results: risk score section', () => {
-  it('renders above the verdict card when the job has a risk score', async () => {
-    fetchMock.mockResolvedValue(json(job({ risk: risk() })))
-    render(<ResultsView id="j1" />)
-    await screen.findByRole('heading', { name: 'Manipulation Risk Score' })
-    const section = document.querySelector('.risk') as HTMLElement
+describe('Results: risk score placement', () => {
+  it('has no risk section in the results stack and shows it inside the expanded detailed region after the technique list', async () => {
+    await show(job({ risk: risk() }))
+    expect(document.querySelector('.results-stack > .risk')).toBeNull()
+    expect(document.querySelector('.results-stack')?.firstElementChild).toBe(verdictEl())
+    expect(document.querySelector('.risk')).toBeNull()
+    toggle()
+    const region = screen.getByRole('region', { name: 'Detailed analysis' })
+    const section = region.querySelector('.risk') as HTMLElement
     expect(section).not.toBeNull()
-    expect(section.compareDocumentPosition(verdictEl()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(section.previousElementSibling).toBe(region.querySelector('.tech-list'))
+    expect(within(section).getByRole('heading', { name: 'Manipulation Risk Score' })).toBeInTheDocument()
   })
 
-  it.each([['null', { risk: null }], ['missing', {}]])('shows no risk section and no error when risk is %s', async (_n, extra) => {
+  it.each([['null', { risk: null }], ['missing', {}]])('shows no risk overview and no error when risk is %s', async (_n, extra) => {
     await show(job(extra))
+    toggle()
     expect(document.querySelector('.risk')).toBeNull()
     expect(screen.queryByRole('alert')).toBeNull()
     expect(verdictEl()).not.toBeNull()

@@ -4,6 +4,7 @@ import { useFormat, useLocale, useT } from '../i18n'
 import { findingEntry, useLoc, useLocalizedText } from './localize'
 import { plain, readLlm, readTechniques, str, techniqueInfo, techniqueText, whyText, type Finding } from './read'
 import { segment, validSpans, type Span } from './segments'
+import { RiskScore } from './RiskScore'
 import { TermContext } from './TermContext'
 import { WikipediaLookup } from './WikipediaLookup'
 import './job.css'
@@ -161,6 +162,7 @@ export default function JobView({ job }: { job: Job }) {
           </ul>
         )}
       </div>
+      <RiskScore job={job} />
       {llm && (llm.unavailable || llm.findings.length > 0) && (
         <section className="card tech-list job-llm-group">
           <h3>{t('results.jobview.llm_title')}</h3>
