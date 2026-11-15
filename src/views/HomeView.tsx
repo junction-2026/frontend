@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { createJob, listAnalyzers } from '../api/client'
 import { errorMessage } from '../api/errors'
 import type { AnalyzerInfo, ApiError, CreateJobBody } from '../api/types'
 import { rich, useT } from '../i18n'
-import { draw, loadRaw, truncate, validItems, type Expectation, type TryItem } from '../home/tryCorpus'
+import { draw, loadRaw, truncate, validItems, type TryItem } from '../home/tryCorpus'
 import { navigate } from '../router'
 import { AmbientBackground } from '../ui/AmbientBackground'
 import '../styles/analyze.css'
@@ -48,7 +48,6 @@ export default function HomeView() {
   // null corpus = loading or failed: the four fallback samples show.
   const [corpus, setCorpus] = useState<TryItem[] | null>(null)
   const [chips, setChips] = useState<TryItem[]>([])
-  const [expected, setExpected] = useState<Expectation | null>(null)
 
   useEffect(() => {
     let stale = false
@@ -121,7 +120,7 @@ export default function HomeView() {
           <div className="composer-top">
             <div className="mode-tabs" role="tablist" aria-label={t('home.mode.label')}>
               {(['text', 'link'] as const).map((m) => (
-                <button key={m} type="button" role="tab" aria-selected={mode === m} className={mode === m ? 'active' : undefined} onClick={() => { setMode(m); setProblem(null); if (m === 'link') setExpected(null) }}>
+                <button key={m} type="button" role="tab" aria-selected={mode === m} className={mode === m ? 'active' : undefined} onClick={() => { setMode(m); setProblem(null) }}>
                   {t(`home.mode.${m}`)}
                 </button>
               ))}
@@ -137,7 +136,7 @@ export default function HomeView() {
             dir="auto"
             placeholder={t(`home.placeholder_${mode}`)}
             value={value}
-            onChange={(e) => { setValue(e.target.value); if (!e.target.value.trim()) setExpected(null) }}
+            onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
               if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault()
@@ -200,31 +199,33 @@ export default function HomeView() {
         <div className="try-row">
           <span>{t('home.try')}</span>
           {corpus
-            ? chips.map((c, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  dir="auto"
-                  title={c.statement}
-                  aria-label={truncate(c.statement, 300)}
-                  onClick={() => { setMode('text'); setValue(c.statement); setExpected(c.expectation) }}
-                >
-                  {truncate(c.statement, 60)}
-                </button>
-              ))
+            ? chips.map((c, i) => {
+                const note = t('home.try.chip_expectation', { value: t(`home.try.expectation.${c.expectation}`) })
+                return (
+                  <Fragment key={i}>
+                    <button
+                      type="button"
+                      dir="auto"
+                      data-expectation={c.expectation}
+                      title={`${c.statement}\n${note}`}
+                      aria-label={truncate(c.statement, 300)}
+                      aria-describedby={`try-exp-${i}`}
+                      onClick={() => { setMode('text'); setValue(c.statement) }}
+                    >
+                      {truncate(c.statement, 60)}
+                    </button>
+                    <span className="sr-only" id={`try-exp-${i}`}>{note}</span>
+                  </Fragment>
+                )
+              })
             : SAMPLES.map((s) => (
                 <button key={s} type="button" onClick={() => { setMode('text'); setValue(t(`home.sample.${s}.text`)) }}>{t(`home.sample.${s}.label`)}</button>
               ))}
           {corpus && (
-            <button type="button" className="try-shuffle" onClick={() => { setChips(draw(corpus, 5)); setExpected(null) }}>{t('home.try.shuffle')}</button>
+            <button type="button" className="try-shuffle" onClick={() => setChips(draw(corpus, 5))}>{t('home.try.shuffle')}</button>
           )}
         </div>
-        {expected && (
-          <div className="try-expectation" role="status" data-expectation={expected}>
-            <strong>{t('home.try.expectation.prefix')} {t(`home.try.expectation.${expected}`)}</strong>
-            <span>{t('home.try.expectation.note')}</span>
-          </div>
-        )}
+        {corpus && <p className="try-info">{t('home.try.info')}</p>}
       </div>
 
     </section>

@@ -363,6 +363,7 @@ describe('HomeView try-out corpus', () => {
     expectation: (['detected', 'not_detected', 'uncertain'] as const)[i % 3],
   }))
   const chipButtons = () => screen.getByText('Try:').parentElement!.querySelectorAll<HTMLButtonElement>('button:not(.try-shuffle)')
+  const info = () => document.querySelector('.try-info') as HTMLElement
   const withCorpus = async (items: unknown = ITEMS) => {
     loadRaw.mockResolvedValue(items)
     render(<HomeView />)
@@ -378,58 +379,82 @@ describe('HomeView try-out corpus', () => {
     expect(screen.getByRole('button', { name: 'Shuffle' }).closest('[data-mock]')).toBeNull()
   })
 
-  it('Shuffle redraws and clears the indicator', async () => {
+  it('Shuffle redraws the chips and keeps the explainer', async () => {
     const rnd = vi.spyOn(Math, 'random')
     rnd.mockReturnValue(0)
     await withCorpus()
     const before = [...chipButtons()].map((c) => c.textContent)
-    fireEvent.click(chipButtons()[0])
-    expect(screen.getByRole('status')).toBeInTheDocument()
     rnd.mockReturnValue(0.99)
     fireEvent.click(screen.getByRole('button', { name: 'Shuffle' }))
     expect([...chipButtons()].map((c) => c.textContent)).not.toEqual(before)
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(info()).toHaveTextContent(CATALOGS.en['home.try.info'])
     rnd.mockRestore()
   })
 
-  it.each([
-    ['detected', 'Expected for this demo: Detected'],
-    ['not_detected', 'Expected for this demo: Not detected'],
-    ['uncertain', 'Expected for this demo: Uncertain'],
-  ] as const)('a chip click fills the statement and shows the %s indicator without submitting', async (expectation, label) => {
-    await withCorpus([{ statement: 'S', expectation }, ...ITEMS.slice(0, 4).map((x) => ({ ...x, expectation: 'detected' as const }))].slice(0, 5))
+  const VALUE_LABEL = { detected: 'Detected', not_detected: 'Not detected', uncertain: 'Uncertain' } as const
+
+  it('each chip carries its expectation as attribute, title and description', async () => {
+    await withCorpus(ITEMS.slice(0, 5))
+    for (const chip of chipButtons()) {
+      const item = ITEMS.find((x) => chip.textContent === x.statement)!
+      const note = `Expected result predicted by the LLM: ${VALUE_LABEL[item.expectation]}`
+      expect(chip).toHaveAttribute('data-expectation', item.expectation)
+      expect(chip).toHaveAttribute('title', `${item.statement}\n${note}`)
+      expect(chip).toHaveAccessibleDescription(note)
+      const desc = document.getElementById(chip.getAttribute('aria-describedby')!)!
+      expect(desc).toHaveTextContent(note)
+      expect(desc.closest('[data-mock]')).toBeNull()
+    }
+  })
+
+  it('the explainer is permanent: unchanged after chip click, Shuffle, clearing and link mode', async () => {
+    await withCorpus(ITEMS.slice(0, 5))
+    const text = CATALOGS.en['home.try.info']
+    expect(info()).toHaveTextContent(text)
+    expect(info()).not.toHaveAttribute('role')
+    expect(info()).not.toHaveAttribute('aria-live')
+    expect(info().closest('[data-mock]')).toBeNull()
+    expect(info().previousElementSibling).toHaveClass('try-row')
+    const same = () => {
+      expect(document.querySelectorAll('.try-info')).toHaveLength(1)
+      expect(info().textContent).toBe(text)
+    }
+    fireEvent.click(chipButtons()[0]); same()
+    fireEvent.click(screen.getByRole('button', { name: 'Shuffle' })); same()
+    type('x'); type(''); same()
+    fireEvent.click(screen.getByRole('tab', { name: 'Social Link' })); same()
+    expect(document.querySelector('[role=status][data-expectation]')).toBeNull()
+    expect(document.body).not.toHaveTextContent('Expected for this demo:')
+  })
+
+  it('a chip click fills the statement in text mode without submitting', async () => {
+    await withCorpus(ITEMS.slice(0, 5))
     fireEvent.click(screen.getByRole('tab', { name: 'Social Link' }))
-    fireEvent.click(screen.getByRole('button', { name: 'S' }))
+    fireEvent.click(chipButtons()[1])
     expect(screen.getByRole('tab', { name: 'Text' })).toHaveAttribute('aria-selected', 'true')
-    expect(box()).toHaveValue('S')
-    const status = screen.getByRole('status')
-    expect(status).toHaveAttribute('data-expectation', expectation)
-    expect(status).toHaveTextContent(label)
-    expect(status).toHaveTextContent('A demo guide')
-    expect(status.closest('[data-mock]')).toBeNull()
+    expect(box()).toHaveValue(chipButtons()[1].textContent)
+    expect(document.querySelector('[role=status][data-expectation]')).toBeNull()
     expect(posts()).toHaveLength(0)
   })
 
-  it('a second click replaces the indicator; clearing or link mode removes it', async () => {
-    await withCorpus(ITEMS.slice(0, 5))
-    const [a, b] = chipButtons()
-    fireEvent.click(a)
-    fireEvent.click(b)
-    expect(screen.getAllByRole('status')).toHaveLength(1)
-    expect(screen.getByRole('status')).toHaveAttribute('data-expectation', ITEMS.find((x) => x.statement === b.textContent)!.expectation)
-    type('edited')
-    expect(screen.getByRole('status')).toBeInTheDocument()
-    type('  ')
-    expect(screen.queryByRole('status')).toBeNull()
-    fireEvent.click(a)
-    fireEvent.click(screen.getByRole('tab', { name: 'Social Link' }))
-    expect(screen.queryByRole('status')).toBeNull()
+  it('maps each data-expectation value to its verdict tokens in analyze.css', async () => {
+    const { readFileSync } = await import('node:fs')
+    const css = readFileSync('src/styles/analyze.css', 'utf8')
+    for (const [v, tok] of [['detected', 'detected'], ['not_detected', 'not-detected'], ['uncertain', 'uncertain']]) {
+      const rule = css.match(new RegExp(`button\\[data-expectation='${v}'\\]\\s*\\{([^}]*)\\}`))![1]
+      expect(rule).toContain(`background: var(--verdict-${tok}-bg)`)
+      expect(rule).toContain(`border-color: var(--verdict-${tok}-border)`)
+      expect(rule).toContain(`color: var(--verdict-${tok}-pill-text)`)
+    }
+    expect(css).toContain('button[data-expectation]:focus-visible')
+    expect(css).not.toContain('.try-expectation')
   })
 
   it('truncates long labels to 60 code points but keeps the full statement', async () => {
     const long = '😀'.repeat(70) + 'x'.repeat(1730)
     await withCorpus([{ statement: long, expectation: 'detected' }, ...ITEMS.slice(0, 4)])
-    const chip = screen.getByTitle(long)
+    const chip = [...chipButtons()].find((c) => c.textContent!.startsWith('😀'))!
+    expect(chip).toHaveAttribute('title', `${long}\nExpected result predicted by the LLM: Detected`)
     expect(chip.textContent).toBe('😀'.repeat(60) + '…')
     expect(chip).toHaveAttribute('dir', 'auto')
     expect([...chip.getAttribute('aria-label')!]).toHaveLength(301)
@@ -441,7 +466,7 @@ describe('HomeView try-out corpus', () => {
     ['load rejection', () => loadRaw.mockRejectedValue(new Error('x'))],
     ['invalid payload', () => loadRaw.mockResolvedValue([...ITEMS.slice(0, 4), { statement: ' ', expectation: 'detected' }, { statement: 'q', expectation: 'bad' }])],
     ['non-array payload', () => loadRaw.mockResolvedValue({ a: 1 })],
-  ])('falls back to the four samples on %s, with no indicator and no Shuffle', async (_n, setup) => {
+  ])('falls back to the four samples on %s, with no tint, no explainer and no Shuffle', async (_n, setup) => {
     setup()
     render(<HomeView />)
     await waitFor(() => expect(loadRaw).toHaveBeenCalled())
@@ -449,17 +474,20 @@ describe('HomeView try-out corpus', () => {
     expect(screen.queryByRole('button', { name: 'Shuffle' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Breaking news rhetoric' }))
     expect(box()).toHaveValue(CATALOGS.en['home.sample.breaking.text'])
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(document.querySelector('[data-expectation]')).toBeNull()
+    expect(document.querySelector('.try-info')).toBeNull()
   })
 
   it('has the new keys in every locale, with no Latin letters in ar', () => {
-    const keys = ['shuffle', 'expectation.prefix', 'expectation.note', 'expectation.detected', 'expectation.not_detected', 'expectation.uncertain']
+    const keys = ['shuffle', 'info', 'chip_expectation', 'expectation.detected', 'expectation.not_detected', 'expectation.uncertain']
     for (const [l, c] of Object.entries(CATALOGS))
       for (const k of keys) {
         const v = c[`home.try.${k}`]
         expect(v, `${l} ${k}`).toBeTruthy()
-        if (l === 'ar') expect(v).not.toMatch(/\p{Script=Latin}/u)
+        if (l === 'ar') expect(v.replace(/\{\w+\}/g, '')).not.toMatch(/\p{Script=Latin}/u) // {placeholders} are interpolation syntax
       }
+    for (const [l, c] of Object.entries(CATALOGS))
+      for (const k of ['expectation.prefix', 'expectation.note']) expect(c, `${l} ${k}`).not.toHaveProperty(`home.try.${k}`)
   })
 
   it('keeps the corpus out of the main chunk (dynamic import)', async () => {
