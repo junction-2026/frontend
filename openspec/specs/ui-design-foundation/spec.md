@@ -94,11 +94,15 @@ Each of `src/views/{Home,Analyzing,Results,Detail,History,Explore,Region,Ask,Sta
 - **THEN** an h1 "History" is shown in the shell
 
 ### Requirement: Mock areas register
-`docs/mock-areas.md` SHALL list every marked mock area by route and element; each screen task appends its rows. The top-bar language selector is functional and SHALL NOT be marked mock or listed.
+`docs/mock-areas.md` SHALL list every marked mock area by route and element; each screen task appends its rows. The top-bar language selector is functional and SHALL NOT be marked mock or listed. The register SHALL have no row for the `/jobs/:id` detailed-region items "Polarity / Intensity", "High rhetorical bias factor" and Share (removed from the screen), and none for the `/jobs/:id/detail` metrics bar (Risk and Latency are real).
 
 #### Scenario: Language selector not listed
 - **WHEN** a reader opens `docs/mock-areas.md`
 - **THEN** it has no row for the top-bar language selector or the Home language chip
+
+#### Scenario: Removed Results items not listed
+- **WHEN** a reader opens `docs/mock-areas.md`
+- **THEN** it has no row for Polarity / Intensity, the bias factor, the Share button or the `/jobs/:id/detail` metrics bar
 
 ### Requirement: Product brand
 The document `<title>` SHALL be "VEIL / Intelligence". The top-bar brand link SHALL read "VEIL" followed by the translated brand subtitle ("Intelligence" in `en`) and point to `/`. The brand name "VEIL" SHALL NOT be translated in any locale.
