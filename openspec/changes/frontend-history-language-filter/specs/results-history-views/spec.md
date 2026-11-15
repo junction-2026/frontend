@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: History export
-The Export button SHALL be enabled. Clicking it SHALL page `GET /api/v1/jobs` with `limit=100` and the active `status`, `q` and `language` until `next_cursor` is null, then download one file `history-YYYY-MM-DD.csv` (local date): UTF-8 with BOM, CRLF line ends, RFC 4180 quoting, header `id,created_at,status,finalization_status,verdict,excerpt,language`, one row per job in list order, null or missing values as empty cells. Header names are fixed and not translated. An empty history SHALL download a header-only file.
+The enabled Export button SHALL page `GET /api/v1/jobs` with `limit=100` and the active `status`, `q` and `language` until `next_cursor` is null, then download one file `history-YYYY-MM-DD.csv` (local date): UTF-8 with BOM, CRLF, RFC 4180 quoting, header `id,created_at,status,finalization_status,verdict,excerpt,language`, one row per job in list order, null or missing values as empty cells. Header names are fixed and not translated. An empty history SHALL give a header-only file.
 
 #### Scenario: Several pages
 - **WHEN** the filter is Completed and the list has three pages
