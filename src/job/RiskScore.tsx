@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import type { Job } from '../api/types'
 import { useFormat, useLocale, useT } from '../i18n'
 import { CATALOGS } from '../i18n/translate'
@@ -39,7 +39,7 @@ function RiskInfo() {
 function Caveats({ risk }: { risk: RiskView }) {
   const t = useT()
   const id = useId()
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   return (
     <div className="risk-block">
       <button type="button" className="risk-toggle" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
@@ -56,6 +56,25 @@ function Caveats({ risk }: { risk: RiskView }) {
         </div>
       )}
     </div>
+  )
+}
+
+// First COMPACT entries; the rest behind a Show all / Show less toggle (all entries stay reachable).
+const COMPACT = 3
+function Collapsible({ className, items }: { className: string; items: ReactNode[] }) {
+  const t = useT()
+  const fmt = useFormat().formatNumber
+  const id = useId()
+  const [all, setAll] = useState(false)
+  return (
+    <>
+      <ul id={id} className={`risk-list ${className}`}>{all ? items : items.slice(0, COMPACT)}</ul>
+      {items.length > COMPACT && (
+        <button type="button" className="risk-more" aria-expanded={all} aria-controls={id} onClick={() => setAll(!all)}>
+          {all ? t('results.risk.show_less') : t('results.risk.show_all', { n: fmt(items.length) })}
+        </button>
+      )}
+    </>
   )
 }
 
@@ -81,20 +100,16 @@ export function RiskSection({ risk }: { risk: RiskView }) {
   return (
     <section className="card risk" aria-labelledby={heading} data-risk={risk.scored ? 'scored' : 'unavailable'}>
       <div className="risk-head">
-        <h2 id={heading} className="risk-title">{t('results.risk.title')}</h2>
+        <h3 id={heading} className="risk-title">{t('results.risk.title')}</h3>
         <RiskInfo />
       </div>
-      {risk.scored && risk.score !== null ? (
-        <div className="risk-headline">
-          <span className="risk-score">{percent(fmt, risk.score)}</span>
-          <span className="risk-chip" data-band={bandKnown ? risk.band : 'moderate'}>{bandKnown ? t(`results.risk.band.${risk.band}`) : risk.band}</span>
-        </div>
+      {risk.scored ? (
+        <p className="risk-summary">{summary}</p>
       ) : (
         <p className="risk-unavailable">
           {t('results.risk.unavailable')} {t(known(`results.risk.unavailable_reason.${risk.reason}`) ? `results.risk.unavailable_reason.${risk.reason}` : 'results.risk.unavailable_reason.unknown')}
         </p>
       )}
-      {risk.scored && <p className="risk-summary">{summary}</p>}
 
       <div className="risk-block">
         <h3 className="risk-subtitle">{t('results.risk.breakdown')}</h3>
@@ -131,15 +146,16 @@ export function RiskSection({ risk }: { risk: RiskView }) {
         {risk.techniques.length === 0 ? (
           <p className="risk-note">{t('results.risk.techniques_none')}</p>
         ) : (
-          <ul className="risk-list risk-techniques">
-            {risk.techniques.map((x) => (
+          <Collapsible
+            className="risk-techniques"
+            items={risk.techniques.map((x) => (
               <li key={x.label}>
                 <span className="risk-tech-name">{techniqueText(x.label, locale, 'en', { name: x.display || undefined }).name}</span>
                 <span className="risk-tech-pct">{percent(fmt, x.probability)}</span>
                 <span className="risk-tech-impact">{enumLabel(t, 'results.risk.impact', x.impact)}</span>
               </li>
             ))}
-          </ul>
+          />
         )}
       </div>
       )}
@@ -147,9 +163,7 @@ export function RiskSection({ risk }: { risk: RiskView }) {
       {risk.scored && (
         <div className="risk-block">
           <h3 className="risk-subtitle">{t('results.risk.drivers')}</h3>
-          <ul className="risk-list">
-            {risk.drivers.map((d, i) => <li key={i}>{sentence(d)}</li>)}
-          </ul>
+          <Collapsible className="risk-drivers" items={risk.drivers.map((d, i) => <li key={i}>{sentence(d)}</li>)} />
         </div>
       )}
 
@@ -161,4 +175,19 @@ export function RiskSection({ risk }: { risk: RiskView }) {
 export function RiskScore({ job }: { job: Job }) {
   const risk = readRisk(job)
   return risk ? <RiskSection risk={risk} /> : null
+}
+
+// Risk cell of the metrics bar: percentage + band chip for a scored risk, otherwise an em dash.
+export function RiskMetric({ job }: { job: Job }) {
+  const t = useT()
+  const fmt = useFormat().formatNumber
+  const risk = readRisk(job)
+  if (!risk?.scored || risk.score === null) return <strong>—</strong>
+  const bandKnown = BANDS.includes(risk.band ?? '')
+  return (
+    <strong className="metrics-risk">
+      {percent(fmt, risk.score)}
+      <span className="risk-chip" data-band={bandKnown ? risk.band : 'moderate'}>{bandKnown ? t(`results.risk.band.${risk.band}`) : risk.band}</span>
+    </strong>
+  )
 }
