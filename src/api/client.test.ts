@@ -148,6 +148,15 @@ describe('postJobChat', () => {
     expect(JSON.parse(init.body)).toEqual(body)
   })
 
+  it('sends focus unchanged and leaves it out when not given', async () => {
+    fetchMock.mockResolvedValue(json({ job_id: 'j', message: { role: 'assistant', content: 'yo' }, history_truncated: false, created_at: 't' }))
+    const focus = [{ kind: 'technique', ref: 'Doubt', label: 'Doubt' }, { kind: 'passage', ref: '12:40:Loaded_Language', label: '“a disaster”' }]
+    await postJobChat('j', { ...body, focus })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ ...body, focus })
+    await postJobChat('j', body)
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).not.toHaveProperty('focus')
+  })
+
   it('maps an error envelope and a network failure without throwing', async () => {
     fetchMock.mockResolvedValueOnce(json({ error: { code: 'rate_limited', message: 'slow down', details: { retry_after_s: 3 } } }, 429))
     expect(await postJobChat('j', body)).toEqual({ ok: false, error: { status: 429, code: 'rate_limited', message: 'slow down', details: { retry_after_s: 3 } } })

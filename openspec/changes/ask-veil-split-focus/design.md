@@ -1,0 +1,6 @@
+## Decisions
+- **State.** `JobChat` (AskView) owns the thread (`useChat`) and the selection (component state only, a list of element keys `<kind>:<ref>`), so the panel and the composer share them. Chat receives the thread, the live selection and callbacks.
+- **Items.** `focusItems.ts` builds the ordered element list from the Job with the same read helpers and catalog texts as the result view. Refs index the *raw* arrays (`risk.drivers`, `wikipedia.claims`, `term_context.terms`) as the shared spec requires, not the filtered views the result view renders. Items with a blank label or a duplicate `kind:ref` are skipped. The selection sent is the items whose key is selected, in panel order, so stale keys (job refreshed) drop out silently.
+- **Labels.** Whitespace runs collapse to one space; shown labels are at most 120 code points and sent labels at most 500, the last code point being `…` when cut.
+- **Per-turn focus** is stored on the user turn (`{role, content, focus?}`) in the existing sessionStorage entry; the request strips it from messages and sends the last turn's focus as `focus`, so Retry resends the turn's own focus.
+- **Layout.** CSS grid with logical properties and a `min-width: 960px` media query; DOM order chat first, so the chat sits at inline-start in both directions. The narrow toggle is hidden at >= 960px with CSS.

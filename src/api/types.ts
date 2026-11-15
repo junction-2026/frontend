@@ -154,7 +154,9 @@ export type WikipediaLookup = { languages: string[]; claims: ClaimLookup[]; requ
 
 // POST /jobs/{id}/chat (shared analysis-chat-api). A reply's `content` is untrusted model output: render as plain text only.
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
-export type ChatRequest = { messages: ChatMessage[]; language?: string }
+// A result element the question is about (shared "ChatFocusItem object"): kind, ref within the job and the label the user saw.
+export type ChatFocusItem = { kind: string; ref: string; label: string }
+export type ChatRequest = { messages: ChatMessage[]; language?: string; focus?: ChatFocusItem[] }
 export type ChatReply = { job_id: string; message: ChatMessage; history_truncated: boolean; created_at: Timestamp; [k: string]: unknown }
 
 export type CreateJobBody =
