@@ -5,7 +5,6 @@ export default {
   'nav.explore': 'Обзор',
   'nav.history': 'История',
   'language': 'Язык',
-  'account': 'Аккаунт',
   'health.checking': 'Проверка бэкенда…',
   'health.offline': 'Бэкенд недоступен',
   'health.online': 'Бэкенд работает',

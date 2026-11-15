@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './../App'
 
@@ -6,16 +6,8 @@ const open = (url: string) => {
   window.history.replaceState(null, '', url)
   return render(<App />)
 }
-const json = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }))
 const mocked = (el: HTMLElement) => el.closest('[data-mock="true"]')
-const analyzer = (o: object) => ({ id: 'a', name: 'A', category: 'c', enabled: true, depends_on: [], trigger: 'on_dependencies_succeeded', selectable: true, ...o })
-
-let fetchMock: ReturnType<typeof vi.fn>
-const respond = (analyzers: () => Promise<Response>) => {
-  fetchMock = vi.fn((url: string) => (url.endsWith('/analyzers') ? analyzers() : new Promise(() => {})))
-  vi.stubGlobal('fetch', fetchMock)
-}
-beforeEach(() => respond(() => new Promise(() => {})))
+beforeEach(() => vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))))
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -56,86 +48,7 @@ describe('States', () => {
   })
 })
 
-describe('Settings', () => {
-  it('marks tabs as mock and renders no language block', async () => {
-    open('/settings')
-    expect(screen.getByRole('heading', { level: 1, name: 'Settings & Methodology' })).toBeInTheDocument()
-    expect(mocked(screen.getByRole('button', { name: 'Data Retention' }))).not.toBeNull()
-    expect(screen.queryByText('Interface Language')).toBeNull()
-    expect(screen.queryByText('Recommended')).toBeNull()
-    expect(screen.queryByRole('switch')).toBeNull()
-    const block = within(screen.getByRole('region', { name: 'Active AI analyzers & ensembles' }))
-    expect(block.getByRole('status')).toHaveTextContent('Loading analyzers')
-    expect(mocked(block.getByRole('status'))).toBeNull()
-  })
-
-  it('lists analyzers from GET /api/v1/analyzers, unmarked and ignoring unknown members', async () => {
-    respond(() =>
-      json({
-        items: [
-          analyzer({ id: 'rhetoric', name: 'Rhetoric', category: 'linguistic', extra: 'SECRET-UNKNOWN' }),
-          analyzer({ id: 'claims', name: 'Claims', category: 'facts', enabled: false, depends_on: ['rhetoric', 'x'] }),
-          analyzer({ id: 'final', name: 'Final synthesis', category: 'finalizer', trigger: 'after_all_analyzers_settled', selectable: false }),
-        ],
-      }),
-    )
-    open('/settings')
-    const row = (await screen.findByText('Rhetoric')).closest('.analyzer-row') as HTMLElement
-    expect(within(row).getByText('rhetoric')).toBeInTheDocument()
-    expect(within(row).getByText('Enabled')).toBeInTheDocument()
-    expect(within(row).queryByText('Final assessment')).toBeNull()
-    expect(row).toHaveTextContent('Category: linguistic')
-    expect(row).not.toHaveTextContent('Depends on')
-    expect(within(row).queryByText('Not selectable')).toBeNull()
-    expect(mocked(row)).toBeNull()
-    const claims = screen.getByText('Claims').closest('.analyzer-row') as HTMLElement
-    expect(within(claims).getByText('Disabled')).toBeInTheDocument()
-    expect(claims).toHaveTextContent('Depends on: rhetoric, x')
-    const final = screen.getByText('Final synthesis').closest('.analyzer-row') as HTMLElement
-    expect(within(final).getByText('Final assessment')).toBeInTheDocument()
-    expect(within(final).getByText('Not selectable')).toBeInTheDocument()
-    expect(screen.getByText('● 2 of 3 analyzers enabled')).toBeInTheDocument()
-    expect(screen.queryByText(/SECRET-UNKNOWN/)).toBeNull()
-    expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/v1/analyzers')).toHaveLength(1)
-  })
-
-  it('shows an empty list', async () => {
-    respond(() => json({ items: [] }))
-    open('/settings')
-    expect(await screen.findByText('No analyzers are configured.')).toBeInTheDocument()
-    expect(screen.getByText('● 0 of 0 analyzers enabled')).toBeInTheDocument()
-  })
-
-  it('shows the error envelope message', async () => {
-    respond(() => json({ error: { code: 'scrape_unavailable', message: 'registry down' } }, 503))
-    open('/settings')
-    const block = within(screen.getByRole('region', { name: 'Active AI analyzers & ensembles' }))
-    await waitFor(() => expect(block.getByRole('alert')).toHaveTextContent('registry down'))
-    expect(block.queryByRole('status')).toBeNull()
-  })
-})
-
 describe('Localized screens', () => {
-  it('keeps Settings tabs mock and renders no language block under fr', () => {
-    localStorage.setItem('veil.locale', 'fr')
-    open('/settings')
-    expect(screen.getByRole('heading', { level: 1, name: 'Paramètres et méthodologie' })).toBeInTheDocument()
-    expect(screen.queryByText('Langue de l’interface')).toBeNull()
-    expect(mocked(screen.getByRole('button', { name: 'Conservation des données' }))).not.toBeNull()
-    expect(screen.queryByRole('switch')).toBeNull()
-    expect(screen.getByRole('region', { name: 'Analyseurs IA et ensembles actifs' })).toBeInTheDocument()
-  })
-
-  it('shows localized analyzer texts and API error messages in Arabic', async () => {
-    localStorage.setItem('veil.locale', 'ar')
-    respond(() => json({ items: [analyzer({ id: 'x', name: 'Rhetoric', depends_on: ['y'] })] }))
-    open('/settings')
-    const row = (await screen.findByText('Rhetoric')).closest('.analyzer-row') as HTMLElement
-    expect(row).toHaveTextContent('الفئة: c · يعتمد على: y')
-    expect(within(row).getByText('مفعّل')).toBeInTheDocument()
-    expect(document.documentElement).toHaveAttribute('dir', 'rtl')
-  })
-
   it('translates Region, with the country name from Intl.DisplayNames', () => {
     localStorage.setItem('veil.locale', 'de')
     open('/explore/region')

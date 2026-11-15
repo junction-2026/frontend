@@ -440,14 +440,38 @@
   font-size: 0.86rem;
 }
 
-.advanced-panel label {
+.advanced-head {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   align-items: center;
-  gap: 0.5rem;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.advanced-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  padding-block: 0.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.advanced-row label {
+  font-weight: 600;
+}
+
+.advanced-row .id-badge {
+  font-family: ui-monospace, monospace;
+}
+
+.advanced-row .status-pill {
+  margin-inline-start: auto;
 }
 
 .advanced-panel .hint {
-  color: var(--orange);
+  color: var(--muted);
   font-size: 0.75rem;
 }
 

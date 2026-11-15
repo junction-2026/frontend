@@ -5,7 +5,6 @@ export default {
   'nav.explore': 'Tutki',
   'nav.history': 'Historia',
   'language': 'Kieli',
-  'account': 'Tili',
   'health.checking': 'Tarkistetaan taustajärjestelmää…',
   'health.offline': 'Taustajärjestelmä ei ole yhteydessä',
   'health.online': 'Taustajärjestelmä on yhteydessä',
