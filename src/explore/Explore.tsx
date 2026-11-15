@@ -5,12 +5,12 @@ import { ErrorAlert, Skeleton } from '../job/WithJob'
 import { useJob } from '../job/useJob'
 import { Link } from '../router'
 import { WorldMap } from '../secondary/WorldMap'
-import { SELECTABLE, countryName, type Coverage } from '../secondary/worldMapData'
+import { countryName, type Coverage } from '../secondary/worldMapData'
 import '../job/results.css'
 import '../secondary/secondary.css'
 import { readExplore } from './adapter'
-import { aggregateByCountry, filterItems, options, publisherCount, topicsOf } from './filters'
-import { NO_FILTERS, type ExploreData, type ExploreItem, type Filters, type RunState } from './model'
+import { aggregateByCountry, filterItems, publisherCount, topicsOf } from './filters'
+import type { ExploreData, ExploreItem, RunState } from './model'
 
 type T = ReturnType<typeof useT>
 
@@ -87,42 +87,15 @@ function geoNotice(data: ExploreData, job: Job, t: T): string | null {
   return data.items.some((i) => i.countryCode) ? null : t('explore.geo.unavailable')
 }
 
-function Multi({ label, opts, value, onChange }: { label: string; opts: ReturnType<typeof options>; value: string[]; onChange: (v: string[]) => void }) {
-  const t = useT()
-  if (!opts.length) return <button type="button" className="field" disabled>{t('explore.filter.no_data', { label })}</button>
-  return (
-    <details className="field multi">
-      <summary>{t('explore.filter.value', { label, value: value.length ? value.length : t('explore.filter.all') })} <span aria-hidden="true">▾</span></summary>
-      <div className="multi-list">
-        {opts.map((o) => (
-          <label key={o.value}>
-            <input
-              type="checkbox"
-              checked={value.includes(o.value)}
-              onChange={(e) => onChange(e.target.checked ? [...value, o.value] : value.filter((v) => v !== o.value))}
-            />
-            <bdi>{o.label}</bdi> ({o.count})
-          </label>
-        ))}
-      </div>
-    </details>
-  )
-}
-
 function ExploreBody({ job }: { job: Job }) {
   const t = useT()
-  const { locale } = useLocale()
   const data = useMemo(() => readExplore(job), [job])
-  const [filters, setFilters] = useState<Filters>(NO_FILTERS)
-  const set = (patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch }))
+  const [sel, setSel] = useState<string | null>(null)
   const topics = useMemo(() => topicsOf(data.queries), [data.queries])
 
-  const filtered = filterItems(data.items, filters)
-  const shaded = filterItems(data.items, { ...filters, country: null }) // other countries stay shaded
-  const mapCoverage: Coverage = aggregateByCountry(shaded)
+  const filtered = filterItems(data.items, sel)
+  const mapCoverage: Coverage = aggregateByCountry(data.items) // other countries stay shaded
   const stats = aggregateByCountry(filtered)
-  const sel = filters.country
-  const base = data.items.filter((i) => (i.kind === 'fact_check') === filters.verifiedOnly)
   const factOk = data.factStatus.status === 'succeeded' && data.items.some((i) => i.kind === 'fact_check')
   const notice = newsNotice(data.newsStatus, job, data, t)
   const geo = geoNotice(data, job, t)
@@ -132,39 +105,12 @@ function ExploreBody({ job }: { job: Job }) {
   const subtitle = countryCount
     ? t('explore.subtitle', { publishers: t('explore.publisher', { count: publisherCount(filtered.filter((i) => i.countryCode)) }), countries: t('explore.country', { count: countryCount }) })
     : t('explore.subtitle_none')
-  const countryOptions = SELECTABLE.map((c) => ({ code: c.code, name: countryName(c.code, mapCoverage, locale) })).sort((a, b) => a.name.localeCompare(b.name, locale))
 
   return (
     <section className="view">
       <Head id={job.id} topics={topics} />
       {job.status === 'failed' && <p role="status" className="explore-note">{t('explore.job_failed')}</p>}
       {job.status === 'cancelled' && <p role="status" className="explore-note">{t('explore.job_cancelled')}</p>}
-
-      <div className="filters" aria-label={t('explore.filters')}>
-        <label className="field">
-          <span aria-hidden="true" className="mirror-rtl">⌕</span>
-          <input aria-label={t('explore.search_aria')} placeholder={t('explore.search_placeholder')} value={filters.text} disabled={none} onChange={(e) => set({ text: e.target.value })} />
-        </label>
-        <span className="field">
-          <select dir="auto" aria-label={t('explore.filter.topic')} value={filters.topic ?? ''} disabled={!topics.length} onChange={(e) => set({ topic: e.target.value || null })}>
-            <option value="">{topics.length ? t('explore.all_topics') : t('explore.no_data')}</option>
-            {topics.map((topic) => <option key={topic} value={topic}>{topic}</option>)}
-          </select>
-        </span>
-        <span className="field">
-          <select aria-label={t('explore.filter.country')} value={sel ?? ''} onChange={(e) => set({ country: e.target.value || null })}>
-            <option value="">{t('explore.all_regions')}</option>
-            {countryOptions.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
-          </select>
-          {sel && <button type="button" className="field-clear" aria-label={t('explore.clear_country')} onClick={() => set({ country: null })}>×</button>}
-        </span>
-        <Multi label={t('explore.filter.languages')} opts={options(base, 'language')} value={filters.languages} onChange={(languages) => set({ languages })} />
-        <Multi label={t('explore.filter.publishers')} opts={options(base, 'publisher')} value={filters.publishers} onChange={(publishers) => set({ publishers })} />
-        <label className="verified-chip" title={factOk ? undefined : t('explore.no_fact_checks')}>
-          <input type="checkbox" checked={filters.verifiedOnly} disabled={!factOk} onChange={(e) => set({ verifiedOnly: e.target.checked })} />
-          {' '}{t('explore.verified_only')}
-        </label>
-      </div>
 
       {notice && <p role="status" className="explore-note">{notice}</p>}
       {geo && <p role="status" className="explore-note">{geo}</p>}
@@ -176,12 +122,12 @@ function ExploreBody({ job }: { job: Job }) {
             <p>{unknown > 0 ? t('explore.subtitle_unknown', { subtitle, articles: t('explore.article', { count: unknown }) }) : subtitle}</p>
           </div>
         </div>
-        <WorldMap coverage={mapCoverage} selected={sel} onSelect={(country) => set({ country })} />
-        {sel && <CountryPanel code={sel} stats={stats} items={filtered} onClear={() => set({ country: null })} />}
+        <WorldMap coverage={mapCoverage} selected={sel} onSelect={setSel} />
+        {sel && <CountryPanel code={sel} stats={stats} items={filtered} onClear={() => setSel(null)} />}
         <Legend />
       </div>
 
-      {!none && base.length > 0 && <Related items={filtered} verified={filters.verifiedOnly} coverage={mapCoverage} />}
+      {!none && data.items.length > 0 && <Related items={filtered} coverage={mapCoverage} />}
     </section>
   )
 }
@@ -213,16 +159,15 @@ function CountryPanel({ code, stats, items, onClear }: { code: string; stats: Co
   )
 }
 
-function Related({ items, verified, coverage }: { items: ExploreItem[]; verified: boolean; coverage: Coverage }) {
+function Related({ items, coverage }: { items: ExploreItem[]; coverage: Coverage }) {
   const t = useT()
   const { locale } = useLocale()
-  const noun = verified ? 'explore.fact_check' : 'explore.article'
   return (
     <div className="card related">
       <div className="map-card-head">
         <div>
           <h2>{t('explore.related.title')}</h2>
-          <p>{t('explore.related.counts', { items: t(noun, { count: items.length }), publishers: t('explore.publisher', { count: publisherCount(items) }) })}</p>
+          <p>{t('explore.related.counts', { items: t('explore.article', { count: items.length }), publishers: t('explore.publisher', { count: publisherCount(items) }) })}</p>
         </div>
       </div>
       {items.length === 0 ? <p className="explore-note">{t('explore.related.none')}</p> : (

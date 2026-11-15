@@ -94,8 +94,7 @@ describe('Arabic isolation', () => {
     const title = screen.getByText('Grid outage in Helsinki')
     expect(title.closest('a')).toHaveAttribute('dir', 'auto')
     for (const e of screen.getAllByText('Helsingin Sanomat')) expect(e.closest('bdi')).not.toBeNull()
-    expect(screen.getByRole('option', { name: 'فنلندا' })).toBeInTheDocument()
-    expect(document.querySelector('.mirror-rtl')).not.toBeNull() // the search glyph mirrors
+    expect(screen.getAllByText('فنلندا').length).toBeGreaterThan(0)
   })
 
   it('keeps History ids and excerpts inside bdi', async () => {
@@ -119,22 +118,20 @@ describe('Arabic isolation', () => {
 describe('switching the language', () => {
   const pick = (code: string) => fireEvent.change(document.querySelector('.lang-select')!, { target: { value: code } })
 
-  it('keeps the Explore route, country filter and search text and requests nothing new', async () => {
+  it('keeps the Explore route and country selection and requests nothing new', async () => {
     open('/explore?job=j1', 'en')
     await screen.findByRole('list')
-    fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'FI' } })
-    fireEvent.change(screen.getByLabelText('Search topic text'), { target: { value: 'grid' } })
+    fireEvent.click(document.querySelector('path[data-code="FI"]')!)
     const before = requests()
     pick('ar')
     expect(document.documentElement).toHaveAttribute('dir', 'rtl')
     expect(window.location.pathname + window.location.search).toBe('/explore?job=j1')
-    expect(document.querySelector<HTMLSelectElement>('select[aria-label="' + CATALOGS.ar['explore.filter.country'] + '"]')).toHaveValue('FI')
-    expect(screen.getByLabelText(CATALOGS.ar['explore.search_aria'])).toHaveValue('grid')
-    expect(screen.getByRole('option', { name: 'فنلندا' })).toBeInTheDocument() // country names follow the locale
+    expect(document.querySelector('path[data-code="FI"]')).toHaveAttribute('data-selected', 'true')
+    expect(document.querySelector('.country-panel strong')).toHaveTextContent('فنلندا') // country names follow the locale
     expect(requests()).toEqual(before)
     expect(screen.getAllByRole('listitem').filter((li) => li.classList.contains('related-card'))).toHaveLength(1)
     pick('fr')
-    expect(screen.getByRole('option', { name: 'Finlande' })).toBeInTheDocument()
+    expect(document.querySelector('.country-panel strong')).toHaveTextContent('Finlande')
     expect(requests()).toEqual(before)
   })
 

@@ -38,16 +38,5 @@ export type ExploreData = {
   unknownCountry: number // articles without a verified country
 }
 
-export type Filters = {
-  topic: string | null
-  text: string
-  languages: string[]
-  publishers: string[]
-  country: string | null
-  verifiedOnly: boolean
-}
-
-export const NO_FILTERS: Filters = { topic: null, text: '', languages: [], publishers: [], country: null, verifiedOnly: false }
-
 // Distinct publishers are counted by Outlet domain for matched items, else by Article domain.
 export const publisherKey = (i: ExploreItem) => i.outletDomain ?? i.domain ?? i.publisher ?? i.id
