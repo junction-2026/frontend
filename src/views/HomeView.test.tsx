@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import HomeView from './HomeView'
+import { CATALOGS } from '../i18n/translate'
 
 const fetchMock = vi.fn()
 beforeEach(() => {
@@ -94,6 +95,20 @@ describe('HomeView composer', () => {
     render(<HomeView />)
     fireEvent.click(screen.getByRole('button', { name: 'Breaking news rhetoric' }))
     expect(box()).toHaveValue('Breaking: officials scramble as crisis deepens — sources say the public has been kept in the dark for months.')
+  })
+
+  it('renders four samples in order and springfield fills the exact quote', () => {
+    render(<HomeView />)
+    const labels = ['Viral social claim on energy grid', 'Breaking news rhetoric', 'Editorial framing comparison', 'Political rhetoric: Trump on Springfield (quote)']
+    const btns = labels.map((name) => screen.getByRole('button', { name }))
+    expect(btns[0].compareDocumentPosition(btns[3]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(btns[3])
+    expect(box()).toHaveValue(CATALOGS.en['home.sample.springfield.text'])
+    expect(box()).toHaveValue("In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.")
+  })
+
+  it('keeps the springfield quote identical in every locale', () => {
+    for (const c of Object.values(CATALOGS)) expect(c['home.sample.springfield.text']).toBe(CATALOGS.en['home.sample.springfield.text'])
   })
 })
 

@@ -22,6 +22,8 @@ export default {
   'sample.breaking.text': 'Breaking: officials scramble as crisis deepens — sources say the public has been kept in the dark for months.',
   'sample.editorial.label': 'Editorial framing comparison',
   'sample.editorial.text': 'While critics claim reform is urgent, a closer look at the numbers tells a quieter story about incentives and framing.',
+  'sample.springfield.label': 'Political rhetoric: Trump on Springfield (quote)',
+  'sample.springfield.text': "In Springfield, they're eating the dogs. The people that came in, they're eating the cats. They're eating the pets of the people that live there. And this is what's happening in our country, and it's a shame.",
   'url_too_long': 'The link is longer than {max} characters.',
   'url_invalid': 'Enter a full link starting with http:// or https://.',
 }
