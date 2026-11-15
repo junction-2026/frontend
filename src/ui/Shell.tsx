@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { LOCALES, useLocale, useT, type Locale } from '../i18n'
 import { Link, navFor, useRoute } from '../router'
 import { HealthIndicator } from './HealthIndicator'
+import { HostingerBadge } from './HostingerBadge'
 
 const TABS = [
   { key: 'analyze', label: 'shell.nav.analyze', href: '/' },
@@ -37,6 +38,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
       {children}
+      <HostingerBadge />
     </div>
   )
 }

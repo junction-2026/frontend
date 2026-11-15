@@ -17,6 +17,7 @@ import './styles/tokens.css'
 import './styles/base.css'
 import './styles/shell.css'
 import './styles/components.css'
+import './styles/hosting-badge.css'
 
 type ViewProps = { id: string }
 // Job routes always carry an id; the others ignore it.
