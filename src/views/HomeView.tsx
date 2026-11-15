@@ -4,6 +4,7 @@ import { errorMessage } from '../api/errors'
 import type { AnalyzerInfo, ApiError, CreateJobBody } from '../api/types'
 import { useT } from '../i18n'
 import { navigate } from '../router'
+import { NoiseHeadline } from '../ui/NoiseHeadline'
 import { AmbientBackground } from '../ui/AmbientBackground'
 import '../styles/analyze.css'
 
@@ -89,6 +90,7 @@ export default function HomeView() {
 
   return (
     <>
+    <NoiseHeadline />
     <AmbientBackground />
     <section className="view">
       <div className="home-hero">
