@@ -66,7 +66,7 @@ describe('Explore job loading', () => {
   it('treats a malformed escape as no job', () => {
     window.history.replaceState(null, '', '/explore?job=%E0%A4%A')
     render(<App />)
-    expect(screen.getByText(/Analyses with detected propaganda, by outlet country/)).toBeInTheDocument()
+    expect(screen.getByText(/Analyses with detected propaganda, by associated country/)).toBeInTheDocument()
   })
 
   it('shows "Job not found" for a 404', async () => {
