@@ -21,7 +21,7 @@ With no `job` parameter Explore SHALL show the global propaganda map (Global pro
 
 #### Scenario: No job
 - **WHEN** `/explore` is opened
-- **THEN** `GET /api/v1/map/countries` is requested, no job request is sent and the per-job filters are not shown
+- **THEN** `GET /api/v1/map/countries` is requested, no job request is sent and the per-job map and Related Coverage are not shown
 
 #### Scenario: With job
 - **WHEN** `/explore?job=j1` is opened
@@ -74,21 +74,18 @@ Each fact_check FactCheck with an `http`/`https` `url` SHALL become an ExploreIt
 
 #### Scenario: Isolation
 - **WHEN** an Article has the same URL as a FactCheck
-- **THEN** both exist as separate items of their own kind and only the FactCheck is listed with the filter on
-
-### Requirement: Verified fact-checks filter
-Fact-check items SHALL be shown only while the "Verified fact-checks only" filter is on, and that filter SHALL be enabled only when fact_check succeeded with at least one FactCheck.
-
-#### Scenario: No fact-checks
-- **WHEN** fact_check is missing, failed or has no FactCheck
-- **THEN** the filter is disabled
+- **THEN** both exist as separate items of their own kind and both are listed in Related Coverage
 
 ### Requirement: Single filter pipeline
-One function `filterItems(items, filters)` SHALL apply topic/query (the SearchQuery `original` the item was found by, or a free-text match on title and snippet), language, publisher, country and verified-only. The map coverage, tooltips, country panel, Related Coverage list, result counts and subtitle SHALL all derive from its output; the country filter is excluded only for map shading so other countries stay visible.
+One function `filterItems(items, country)` SHALL return all adapter items (articles and fact-checks), narrowed only by the country selected through a map click. The map coverage, tooltips, country panel, Related Coverage list, counts and subtitle SHALL all derive from it, except that map shading SHALL use all items so other countries stay visible. The Related Coverage count SHALL use the article noun for the mixed list.
 
 #### Scenario: Consistent counts
-- **WHEN** a language filter leaves 3 articles from Finland
-- **THEN** the tooltip, the panel, the list count and the subtitle all state 3 articles for Finland
+- **WHEN** Finland is selected on the map and has 3 items
+- **THEN** the tooltip, the panel, the list count and the subtitle all state the counts of those 3 items
+
+#### Scenario: No filter controls
+- **WHEN** Explore renders a loaded job
+- **THEN** it SHALL NOT render a search field, topic select, region/country select, Languages or Publishers multi-select or "Verified fact-checks only" toggle: there is no textbox, select, checkbox or `.filters` container and the list shows articles and fact-checks together
 
 ### Requirement: Aggregation
 `aggregateByCountry(items)` SHALL return per alpha-2 code `{ name, articles, publishers, languages, level }`. The level SHALL be relative to the maximum article count in the dataset (high above 2/3 of the maximum, medium above 1/3, else low) and no entry SHALL exist for a country with zero items.
@@ -96,13 +93,6 @@ One function `filterItems(items, filters)` SHALL apply topic/query (the SearchQu
 #### Scenario: Levels
 - **WHEN** countries have 9, 5, 3 and 2 articles
 - **THEN** their levels are high, medium, low and low
-
-### Requirement: Filter controls
-Topic SHALL be a select of the job's distinct SearchQuery `original` values ("All topics" by default) beside a text field for free-text search; Languages and Publishers SHALL be multi-selects populated only from values present in the items with their counts. A filter with no backing values SHALL be disabled and labelled "No data".
-
-#### Scenario: No languages
-- **WHEN** no item has a language
-- **THEN** the Languages control is disabled and reads "Languages: No data"
 
 ### Requirement: Map tooltip data
 Hovering a covered country SHALL show the white rounded tooltip with the country name and "N articles · M publishers" from the filtered aggregation; an uncovered country SHALL show "No verified publisher data". The existing palette, animation and tooltip styling SHALL be kept.
@@ -176,7 +166,7 @@ For source_info Explore SHALL show "Matching publishers…" while it is pending 
 - **THEN** the articles are listed, the map has no coverage and "Geographic data unavailable for this analysis" is shown
 
 ### Requirement: Live update
-Explore SHALL recompute the adapter output on every polled job update so that the map and list fill in when news_search and source_info settle. Filter and selection state SHALL be preserved across updates, and a selected country that loses all items SHALL show the uncovered panel.
+Explore SHALL recompute the adapter output on every polled job update so that the map and list fill in when news_search and source_info settle. Country selection state SHALL be preserved across updates, and a selected country that loses all items SHALL show the uncovered panel.
 
 #### Scenario: Settling while selected
 - **WHEN** Finland is selected while source_info is running and the next poll delivers its result
@@ -190,15 +180,15 @@ The 24px rounded map container, pastel-blue coverage levels, hover and selection
 - **THEN** the legend lists None, Low, Medium and High and the publisher-bureau notice
 
 ### Requirement: Explore fully localized and isolated
-Every static string, placeholder, aria-label, title, tooltip, empty and error state of Explore SHALL come from the catalogs in en, fr, ar, de and fi. Country names SHALL come from `formatCountryName`, counts and plurals from Intl. Article titles, publishers, snippets, claims, topics, provider dates and API codes are source material: they SHALL stay verbatim and be wrapped in `<bdi>`. The filters (text, topic, country, languages, publishers, verified) SHALL be kept across a locale switch.
+Every static string, placeholder, aria-label, title, tooltip, empty and error state of Explore SHALL come from the catalogs in en, fr, ar, de and fi. Country names SHALL come from `formatCountryName`, counts and plurals from Intl. Article titles, publishers, snippets, claims, topics, provider dates and API codes are source material: they SHALL stay verbatim and be wrapped in `<bdi>`. The country selection SHALL be kept across a locale switch.
 
 #### Scenario: Explore in Arabic
 - **WHEN** Explore with a loaded job is rendered in ar
 - **THEN** html has dir rtl, labels and notices are Arabic, article titles and publisher names are inside `bdi`, and country names are Arabic
 
 #### Scenario: Locale switch keeps filters
-- **WHEN** the country filter is Finland and the search text is "grid", then the locale becomes fr
-- **THEN** the same country and text stay selected, the list is unchanged and the country option reads "Finlande"
+- **WHEN** Finland is selected on the map, then the locale becomes fr
+- **THEN** Finland stays selected, the list is unchanged and the panel names it "Finlande"
 
 ### Requirement: Global propaganda map
 In global mode the map SHALL be shaded from `GET /api/v1/map/countries` with a 5-step sequential single-hue scale computed client-side over `1..max(items[].analyses)` (log-scaled buckets when the maximum is above 5). The scale SHALL be monotonic: a higher count never gets a lighter step. A country with zero analyses or absent from `items` SHALL keep the existing "none" fill. A legend SHALL show the steps with their count ranges.

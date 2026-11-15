@@ -138,11 +138,11 @@ In every locale, URLs, outlet and model names, API codes, percentages and quoted
 - **THEN** the claim text is inside a `bdi` element and the sentence around it is Arabic
 
 ### Requirement: Language switching keeps state
-Changing the locale SHALL only change the context: the route, Explore filters and search text, the History filter and list, and the Home input SHALL be kept, and no request SHALL be made other than data that is itself locale-specific. The language preference SHALL keep persisting in `localStorage['veil.locale']`.
+Changing the locale SHALL only change the context: the route, the Explore country selection, the History filter and list, and the Home input SHALL be kept, and no request SHALL be made other than data that is itself locale-specific. The language preference SHALL keep persisting in `localStorage['veil.locale']`.
 
 #### Scenario: Filter survives a switch
-- **WHEN** an Explore country filter and search text are set and the locale changes from en to ar
-- **THEN** the filter and the search text are unchanged, `html` has dir rtl, and no new request was sent
+- **WHEN** an Explore country is selected on the map and the locale changes from en to ar
+- **THEN** the country stays selected, `html` has dir rtl, and no new request was sent
 
 ### Requirement: No hardcoded static strings
 User-visible static text of the shell, Home, Explore, Region, History, Ask, Settings and States views and of `src/explore`, `src/history` and `src/ui` SHALL come from the catalogs. A test SHALL fail when those `.tsx` files contain JSX text or `placeholder`, `title`, `aria-label` or `alt` string literals that contain letters, other than an allow-list of the brand name "VEIL" and the avatar initial.
