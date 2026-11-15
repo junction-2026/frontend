@@ -34,11 +34,12 @@ const id = encodeURIComponent
 export const createJob = (body: CreateJobBody) =>
   request<Job>('/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
-export function listJobs({ limit, cursor, status }: { limit?: number; cursor?: string; status?: string } = {}) {
+export function listJobs({ limit, cursor, status, q: search }: { limit?: number; cursor?: string; status?: string; q?: string } = {}) {
   const q = new URLSearchParams()
   if (limit !== undefined) q.set('limit', String(limit))
   if (cursor) q.set('cursor', cursor)
   if (status) q.set('status', status)
+  if (search) q.set('q', search)
   const qs = q.toString()
   return request<Page<JobSummary>>(`/jobs${qs ? `?${qs}` : ''}`)
 }

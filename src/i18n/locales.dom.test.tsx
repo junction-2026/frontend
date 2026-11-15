@@ -15,7 +15,7 @@ const SOURCES = [
   { url: ARTICLES[1].url, domain: 'x', matched: true, match: 'host', outlet: outlet({ name: 'Der Bote', domain: 'bote.de', country_code: 'DE', country: 'Germany' }) },
 ]
 const EXPLORE = exploreJob({ articles: ARTICLES, sources: SOURCES, checks: [factCheck()], queries: [query('q one', 'Topic one'), query('q two', 'Topic two')] })
-const summary = (id: string, status: string) => ({ id, status, done: true, created_at: new Date().toISOString(), finished_at: null, coverage: coverage(), finalization: { status: 'completed', verdict: 'detected' } })
+const summary = (id: string, status: string) => ({ id, status, done: true, created_at: new Date().toISOString(), finished_at: null, coverage: coverage(), finalization: { status: 'completed', verdict: 'detected' }, excerpt: 'The excerpt of the job.' })
 
 const fetchMock = vi.fn()
 beforeEach(() => {
