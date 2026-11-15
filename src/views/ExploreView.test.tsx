@@ -1,7 +1,6 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ExploreView from './ExploreView'
-import HomeView from './HomeView'
 
 beforeEach(() => vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))))
 afterEach(() => {
@@ -9,20 +8,14 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('ExploreView veil', () => {
+describe('ExploreView solid background', () => {
   for (const [name, id] of [['global map', undefined], ['job coverage', 'job-1']] as const) {
-    it(`renders one veil directly before .view for the ${name}`, () => {
+    it(`renders no backdrop layer for the ${name}`, () => {
       const { container } = render(<ExploreView id={id} />)
-      expect(container.querySelectorAll('.explore-veil')).toHaveLength(1)
-      const view = container.querySelector('section.view')
-      expect(view).not.toBeNull()
-      expect(container.querySelector('.explore-veil')!.nextElementSibling).toBe(view)
-      expect(container.querySelector('.view .explore-veil')).toBeNull()
+      expect(container.children).toHaveLength(1) // no sibling backdrop layer before or after the page
+      expect(container.firstElementChild).toBe(container.querySelector('section.view'))
+      expect(container.querySelector('.ambient-bg')).toBeNull()
+      expect(container.querySelector('canvas')).toBeNull()
     })
   }
-
-  it('is not rendered by HomeView', () => {
-    const { container } = render(<HomeView />)
-    expect(container.querySelector('.explore-veil')).toBeNull()
-  })
 })
