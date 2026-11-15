@@ -148,10 +148,15 @@
 }
 .analyzer-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 0.6rem;
   padding: 0.7rem 0;
   border-top: 1px solid var(--line);
+}
+.analyzer-row:first-of-type {
+  border-top: none;
+  padding-top: 0.2rem;
 }
 .analyzer-row .analyzer-main {
   display: grid;

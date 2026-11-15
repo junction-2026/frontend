@@ -9,4 +9,3 @@ backend". Real data is never wrapped in it. Each screen task appends its rows he
 | `/jobs/:id/live` | Ledger caption "Synchronous consensus pool" | No backend counterpart |
 | /explore/region | Selected-region map (Finland), statistics and region details (articles, wire items) | No region or publisher data in the backend |
 | /states | Whole page ("Example states") and the disabled "Retry Wire Retrieval" button | Static showcase; real states render on results, analyzing and history |
-| /settings | Tabs (Interface & Language, Analyzers & Ensembles, Accessibility, Epistemic Framework, Data Retention) | No user settings or i18n in the backend; tabs are non-functional |
