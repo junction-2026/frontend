@@ -34,6 +34,7 @@ export default {
   'focus.select': 'Kysy kohteesta {label}',
   'focus.choose': 'Valitse tuloksen osia',
   'focus.clear': 'Tyhjennä valinta',
+  'focus.select_all': 'Valitse kaikki',
   'focus.remove': 'Poista {label}',
   'focus.limit': 'Voit valita enintään {max} osaa.',
   'focus.hint': 'Kysymyksesi koskee koko analyysia.',

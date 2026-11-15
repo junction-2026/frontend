@@ -1,4 +1,4 @@
-import { useRef, useState, type Ref } from 'react'
+import { useEffect, useRef, useState, type Ref } from 'react'
 import { verdictOf, type Job } from '../api/types'
 import { Chat } from '../ask/Chat'
 import { focusItemsOf, MAX_FOCUS, type FocusEntry } from '../ask/focusItems'
@@ -47,19 +47,29 @@ function ContextBar({ job }: { job: Job }) {
 }
 
 // The result screen's Verdict and detailed region, always open, with a toggle on each element the chat can focus on.
-function ResultPane({ job, items, selected, disabled, headingRef, onToggle, onClear }: {
+function ResultPane({ job, items, selected, disabled, headingRef, onToggle, onClear, onSelectAll }: {
   job: Job; items: FocusEntry[]; selected: ReadonlySet<string>; disabled: boolean
-  headingRef: Ref<HTMLHeadingElement>; onToggle: (key: string) => void; onClear: () => void
+  headingRef: Ref<HTMLHeadingElement>; onToggle: (key: string) => void; onClear: () => void; onSelectAll: (all: boolean) => void
 }) {
   const t = useT()
   const { formatNumber } = useFormat()
   const completed = job.status === 'completed'
   const full = selected.size >= MAX_FOCUS
+  const total = Math.min(items.length, MAX_FOCUS)
+  const all = selected.size === total
+  const allBox = useRef<HTMLInputElement>(null)
+  useEffect(() => { if (allBox.current) allBox.current.indeterminate = selected.size > 0 && !all }, [selected.size, all])
   const selection = items.length > 0 ? { entries: new Map(items.map((i) => [i.key, i])), selected, full, disabled, toggle: onToggle } : null
   return (
     <section className="ask-result" role="region" aria-label={t('ask.focus.region')}>
       <div className="card ask-result-head">
         <h2 ref={headingRef} tabIndex={-1}>{t('ask.focus.title')}</h2>
+        {completed && total > 0 && (
+          <label className="focus-all">
+            <input ref={allBox} type="checkbox" checked={all} disabled={disabled} onChange={() => onSelectAll(!all)} />
+            {t('ask.focus.select_all')}
+          </label>
+        )}
         {selected.size > 0 && <button type="button" className="btn-secondary focus-clear" onClick={onClear} disabled={disabled}>{t('ask.focus.clear')}</button>}
         {!completed || !selection ? (
           <p className="chat-note" role="note">{t(completed ? 'ask.focus.empty' : 'ask.focus.not_completed')}</p>
@@ -91,6 +101,9 @@ function JobChat({ id }: { id: string }) {
   const items = job ? focusItemsOf(job, locale, t) : []
   const picked = new Set(chosen)
   const focus = items.filter((i) => picked.has(i.key)).slice(0, MAX_FOCUS) // panel order; keys of vanished elements drop out
+  const keysOf = () => items.slice(0, MAX_FOCUS).map((i) => i.key)
+  const [seeded, setSeeded] = useState(false) // default selection happens once per mount
+  if (!seeded && job?.status === 'completed' && items.length > 0) { setSeeded(true); setChosen(keysOf()) }
   const toggle = (key: string) => setChosen((c) => (c.includes(key) ? c.filter((k) => k !== key) : [...c, key]))
   const choose = () => {
     heading.current?.scrollIntoView?.({ block: 'start' }) // absent in jsdom
@@ -112,7 +125,7 @@ function JobChat({ id }: { id: string }) {
       {job && (
         <ResultPane
           job={job} items={items} selected={new Set(focus.map((f) => f.key))} disabled={disabled}
-          headingRef={heading} onToggle={toggle} onClear={() => setChosen([])}
+          headingRef={heading} onToggle={toggle} onClear={() => setChosen([])} onSelectAll={(all) => setChosen(all ? keysOf() : [])}
         />
       )}
     </div>

@@ -34,6 +34,7 @@ export default {
   'focus.select': 'Ask about {label}',
   'focus.choose': 'Choose result elements',
   'focus.clear': 'Clear selection',
+  'focus.select_all': 'Select all',
   'focus.remove': 'Remove {label}',
   'focus.limit': 'You can choose at most {max} elements.',
   'focus.hint': 'Your question is about the whole analysis.',
