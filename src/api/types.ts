@@ -29,6 +29,9 @@ export type AnalyzerRun = {
   [k: string]: unknown
 }
 
+// Result of the bot_detection analyzer (shared bot-detection-result): about one text only; score is P(bot_or_generated).
+export type TextBotDetection = { label: 'human' | 'bot_or_generated'; score: number; scope: 'text'; [k: string]: unknown }
+
 export type Coverage = {
   total: number; applicable: number; pending: number; running: number
   succeeded: number; failed: number; skipped: number; settled: number

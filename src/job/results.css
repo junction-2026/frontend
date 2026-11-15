@@ -338,6 +338,7 @@
 .verdict-confidence {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin: 0;
   font-size: 0.85rem;
@@ -359,6 +360,17 @@
   color: var(--v-text);
   display: grid;
   place-items: center;
+}
+.verdict-origin {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: help;
 }
 .confidence-tip {
   position: absolute;

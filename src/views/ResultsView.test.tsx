@@ -587,3 +587,61 @@ describe('Results: risk score placement', () => {
     expect(verdictEl()).not.toBeNull()
   })
 })
+
+describe('text-origin marker (bot_detection)', () => {
+  const origin = (label: string, score = 0.87) => run('bot_detection', 'succeeded', { result: { label, score, scope: 'text', extra: 1 } })
+  const withBot = (r: unknown) => job({ analyzers: [r] })
+  const marker = () => verdictEl().querySelector('.verdict-origin') as HTMLElement | null
+
+  it('shows "Looks generated" after the confidence info with a tooltip about this text only', async () => {
+    await show(withBot(origin('bot_or_generated')))
+    const m = marker()!
+    expect(m).toHaveTextContent('Looks generated')
+    expect(m.closest('.verdict-confidence')).not.toBeNull()
+    expect(m.parentElement!.previousElementSibling).toHaveClass('confidence-info')
+    expect(m).toHaveAttribute('aria-label', expect.stringMatching(/this text only.*not a verdict about the author or account.*not propaganda detection/))
+    expect(verdictEl().textContent).not.toMatch(/87/)
+    act(() => m.focus())
+    const tip = screen.getByRole('tooltip')
+    expect(tip).toHaveTextContent('87%')
+    expect(tip).toHaveTextContent('original language')
+    expect(m).toHaveAttribute('aria-describedby', tip.id)
+    fireEvent.keyDown(m, { key: 'Escape' })
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    fireEvent.mouseEnter(m)
+    expect(screen.getByRole('tooltip')).toBeInTheDocument()
+    fireEvent.mouseLeave(m)
+    expect(screen.queryByRole('tooltip')).toBeNull()
+  })
+
+  it('shows "Looks human-written" and never presents the bot score as confidence in human', async () => {
+    await show(withBot(origin('human', 0.1)))
+    expect(marker()).toHaveTextContent('Looks human-written')
+    act(() => marker()!.focus())
+    expect(screen.getByRole('tooltip')).toHaveTextContent('10% probability that it is bot-written or generated')
+  })
+
+  it.each([
+    ['missing', null],
+    ['skipped', run('bot_detection', 'skipped', { result: null })],
+    ['failed', run('bot_detection', 'failed', { result: null, error: { code: 'timeout', message: 'x' } })],
+    ['without scope', run('bot_detection', 'succeeded', { result: { label: 'human', score: 0.1 } })],
+    ['other scope', run('bot_detection', 'succeeded', { result: { label: 'human', score: 0.1, scope: 'account' } })],
+    ['unknown label', run('bot_detection', 'succeeded', { result: { label: 'mixed', score: 0.5, scope: 'text' } })],
+    ['score out of range', run('bot_detection', 'succeeded', { result: { label: 'human', score: 1.5, scope: 'text' } })],
+    ['non-numeric score', run('bot_detection', 'succeeded', { result: { label: 'human', score: 'x', scope: 'text' } })],
+  ])('has no marker and no error when the run is %s', async (_n, r) => {
+    await show(r ? withBot(r) : job())
+    expect(marker()).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(verdictEl()).toHaveTextContent('86% confidence')
+  })
+
+  it.each(['de', 'fi', 'fr', 'ru', 'ar'] as const)('has localized texts in %s', async (lng) => {
+    fetchMock.mockResolvedValue(json(withBot(origin('human', 0.1))))
+    inLocale(lng, <ResultsView id="j1" />)
+    await screen.findByRole('heading', { level: 2 })
+    expect(marker()!.textContent).not.toMatch(/Looks/)
+    expect(marker()!.getAttribute('aria-label')).not.toMatch(/\{pct\}|results\./)
+  })
+})
